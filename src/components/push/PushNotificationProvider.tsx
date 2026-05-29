@@ -111,6 +111,7 @@ export function PushNotificationProvider({
   const [serviceRoleAvailable, setServiceRoleAvailable] = useState(
     initial.serviceRoleAvailable
   );
+  const [registerApiError, setRegisterApiError] = useState<string | null>(null);
 
   const publicFirebaseReady = missingPublicEnv.length === 0;
 
@@ -162,10 +163,17 @@ export function PushNotificationProvider({
       teamTokenCount: team,
       publicFirebaseReady: ready,
       serviceRoleAvailable: srAvailable,
+      registerApiError,
     });
     setTokenDebug(next);
     return next;
-  }, [refreshPushStatus, subscriptionCount, teamTokenCount, serviceRoleAvailable]);
+  }, [
+    refreshPushStatus,
+    subscriptionCount,
+    teamTokenCount,
+    serviceRoleAvailable,
+    registerApiError,
+  ]);
 
   const bellStatus: PushBellStatus = useMemo(() => {
     if (!publicFirebaseReady || diagnostics.permission === "unsupported") {
@@ -181,9 +189,13 @@ export function PushNotificationProvider({
       const result = await enablePushNotifications();
       refreshDiagnostics();
       if (result.ok) {
+        setRegisterApiError(null);
         setSubscriptionCount((c) => Math.max(1, c + 1));
         toast("Bildirimler aktif", "success");
-        void refreshTokenDebug();
+        await refreshTokenDebug();
+      } else if (result.registerErrorDetail) {
+        setRegisterApiError(result.registerErrorDetail);
+        await refreshTokenDebug();
       }
       return result;
     } finally {
@@ -197,9 +209,11 @@ export function PushNotificationProvider({
       const result = await regeneratePushToken();
       refreshDiagnostics();
       if (result.ok) {
+        setRegisterApiError(null);
         setSubscriptionCount((c) => Math.max(1, c));
         await refreshTokenDebug();
       } else {
+        setRegisterApiError(result.registerErrorDetail ?? result.message);
         await refreshTokenDebug();
       }
       return result;

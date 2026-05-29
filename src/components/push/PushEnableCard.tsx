@@ -23,7 +23,10 @@ export function PushEnableCard() {
     if (diagnostics.iosNeedsHomeScreen) return;
     const result = await enableNotifications();
     if (!result.ok) {
-      toast(result.message, result.reason === "permission_denied" ? "error" : "info");
+      const msg = result.registerErrorDetail
+        ? `${result.message} — ${result.registerErrorDetail}`
+        : result.message;
+      toast(msg, result.reason === "permission_denied" ? "error" : "info");
     }
   };
 

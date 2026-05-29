@@ -7,6 +7,7 @@ export interface PushTokenDebugState {
   teamTokenCount: number;
   serviceRoleAvailable: boolean;
   tokenQueryMismatch: boolean;
+  registerApiError: string | null;
   issueMessage: string | null;
   canPushTest: boolean;
   pushTestBlockReason: string | null;
@@ -27,6 +28,7 @@ export function resolvePushTokenIssues(params: {
   teamTokenCount: number;
   publicFirebaseReady: boolean;
   serviceRoleAvailable: boolean;
+  registerApiError?: string | null;
 }): Pick<
   PushTokenDebugState,
   "issueMessage" | "canPushTest" | "pushTestBlockReason" | "hasLocalToken" | "localTokenPreview"
@@ -103,11 +105,15 @@ export function resolvePushTokenIssues(params: {
     };
   }
 
-  if (params.dbSubscriptionCount === 0) {
+  if (params.dbSubscriptionCount === 0 && hasLocalToken) {
+    const apiDetail = params.registerApiError?.trim();
+    const issueMessage = apiDetail
+      ? `Token veritabanına kaydedilemedi — ${apiDetail}`
+      : "Token veritabanına kaydedilemedi";
     return {
       hasLocalToken: true,
       localTokenPreview,
-      issueMessage: "Token veritabanına kaydedilemedi",
+      issueMessage,
       canPushTest: false,
       pushTestBlockReason:
         "Cihazda FCM token var ama Supabase kaydı yok (service role: 0). Token Yeniden Oluştur ile tekrar kaydedin.",
@@ -130,6 +136,7 @@ export function buildPushTokenDebugState(params: {
   teamTokenCount: number;
   publicFirebaseReady: boolean;
   serviceRoleAvailable: boolean;
+  registerApiError?: string | null;
 }): PushTokenDebugState {
   const resolved = resolvePushTokenIssues(params);
   const tokenQueryMismatch =
@@ -143,6 +150,7 @@ export function buildPushTokenDebugState(params: {
     teamTokenCount: params.teamTokenCount,
     serviceRoleAvailable: params.serviceRoleAvailable,
     tokenQueryMismatch,
+    registerApiError: params.registerApiError ?? null,
     ...resolved,
   };
 }

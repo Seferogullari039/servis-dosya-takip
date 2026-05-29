@@ -5,7 +5,7 @@ import {
   removePushSubscription,
   upsertPushSubscription,
 } from "@/lib/push/subscriptions";
-import type { PushDeviceType } from "@/types/push";
+import type { PushDeviceType, PushRegisterApiResponse } from "@/types/push";
 
 export async function POST(request: Request) {
   const user = await getCurrentUser();
@@ -25,22 +25,52 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Geçersiz istek." }, { status: 400 });
   }
 
+  const userId = user.id;
+
   if (body.action === "reset_all") {
-    const result = await removeAllPushSubscriptionsForUser(user.id);
-    if (!result.ok) {
-      return NextResponse.json({ error: result.error }, { status: 500 });
-    }
-    return NextResponse.json({ ok: true, deleted: result.deleted });
+    const result = await removeAllPushSubscriptionsForUser(userId);
+    const payload: PushRegisterApiResponse = {
+      ok: result.ok,
+      userId,
+      tokenReceived: false,
+      action: "reset_all",
+      rowCount: result.ok ? result.deleted : 0,
+      error: result.ok ? undefined : result.error,
+      deleted: result.ok ? result.deleted : 0,
+    };
+    return NextResponse.json(payload, { status: result.ok ? 200 : 500 });
   }
 
   const token = body.fcmToken?.trim();
-  if (!token) {
-    return NextResponse.json({ error: "FCM token gerekli." }, { status: 400 });
-  }
 
   if (body.action === "unregister") {
-    await removePushSubscription(user.id, token);
-    return NextResponse.json({ ok: true });
+    if (!token) {
+      return NextResponse.json(
+        { error: "FCM token gerekli." },
+        { status: 400 }
+      );
+    }
+    const result = await removePushSubscription(userId, token);
+    const payload: PushRegisterApiResponse = {
+      ok: result.ok,
+      userId,
+      tokenReceived: true,
+      action: "unregistered",
+      rowCount: result.rowCount,
+      error: result.error,
+    };
+    return NextResponse.json(payload, { status: result.ok ? 200 : 500 });
+  }
+
+  if (!token) {
+    const payload: PushRegisterApiResponse = {
+      ok: false,
+      userId,
+      tokenReceived: false,
+      rowCount: 0,
+      error: "FCM token gerekli.",
+    };
+    return NextResponse.json(payload, { status: 400 });
   }
 
   const deviceType: PushDeviceType =
@@ -51,14 +81,19 @@ export async function POST(request: Request) {
       : "unknown";
 
   const result = await upsertPushSubscription({
-    userId: user.id,
+    userId,
     fcmToken: token,
     deviceType,
   });
 
-  if (!result.ok) {
-    return NextResponse.json({ error: result.error }, { status: 500 });
-  }
+  const payload: PushRegisterApiResponse = {
+    ok: result.ok,
+    userId,
+    tokenReceived: true,
+    action: result.ok ? result.action : undefined,
+    rowCount: result.rowCount,
+    error: result.ok ? undefined : result.error,
+  };
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json(payload, { status: result.ok ? 200 : 500 });
 }

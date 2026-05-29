@@ -25,9 +25,7 @@ export type PushPermissionState =
   | "loading";
 
 export interface PushDashboardStatus {
-  /** Service role ile kullanıcı token sayısı */
   subscriptionCount: number;
-  /** Service role ile ekip toplam token */
   teamTokenCount: number;
   tokenRegistered: boolean;
   publicFirebaseReady: boolean;
@@ -49,6 +47,16 @@ export interface PushStatusApiResponse {
   serviceRoleAvailable: boolean;
   serviceRoleConfigured: boolean;
   queryError?: string;
+}
+
+export interface PushRegisterApiResponse {
+  ok: boolean;
+  userId: string;
+  tokenReceived: boolean;
+  action?: "inserted" | "updated" | "unregistered" | "reset_all";
+  rowCount: number;
+  error?: string;
+  deleted?: number;
 }
 
 export interface PushLastPushDisplay {

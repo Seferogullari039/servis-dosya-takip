@@ -14,9 +14,10 @@ export function PushRegenerateTokenButton() {
   const handleClick = async () => {
     const result = await regenerateToken();
     if (result.ok) {
-      toast("Token yenilendi ve kaydedildi", "success");
+      toast("Token veritabanına kaydedildi", "success");
     } else {
-      toast(result.message, "error");
+      const detail = result.registerErrorDetail ?? result.message;
+      toast(detail, "error");
     }
   };
 

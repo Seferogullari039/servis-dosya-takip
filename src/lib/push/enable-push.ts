@@ -9,8 +9,12 @@ import {
   detectPushDeviceType,
   isPushEnvironmentSupported,
 } from "@/lib/push/device";
+import {
+  formatRegisterApiError,
+  registerFcmTokenViaApi,
+} from "@/lib/push/register-client";
 import { getToken } from "firebase/messaging";
-import type { PushDeviceType } from "@/types/push";
+import type { PushDeviceType, PushRegisterApiResponse } from "@/types/push";
 
 export type EnablePushFailureReason =
   | "firebase_not_configured"
@@ -23,8 +27,14 @@ export type EnablePushFailureReason =
   | "register_failed";
 
 export type EnablePushResult =
-  | { ok: true; token: string }
-  | { ok: false; reason: EnablePushFailureReason; message: string };
+  | { ok: true; token: string; registerApi?: PushRegisterApiResponse }
+  | {
+      ok: false;
+      reason: EnablePushFailureReason;
+      message: string;
+      registerApi?: PushRegisterApiResponse | null;
+      registerErrorDetail?: string;
+    };
 
 export {
   canRequestPushPermissionOnDevice,
@@ -120,23 +130,26 @@ export async function enablePushNotifications(): Promise<EnablePushResult> {
   const kind = detectPushDeviceType();
   const deviceType: PushDeviceType =
     kind === "ios" || kind === "android" || kind === "web" ? kind : "unknown";
-  const res = await fetch("/api/push/register", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      fcmToken: token,
-      deviceType,
-      action: "register",
-    }),
-  });
 
-  if (!res.ok) {
+  const register = await registerFcmTokenViaApi(token, deviceType);
+
+  if (!register.ok) {
+    const detail = formatRegisterApiError(
+      register.api,
+      register.errorMessage
+    );
     return {
       ok: false,
       reason: "register_failed",
-      message: "Bildirim kaydı sunucuya yazılamadı.",
+      message: "Token veritabanına kaydedilemedi",
+      registerApi: register.api,
+      registerErrorDetail: detail,
     };
   }
 
-  return { ok: true, token };
+  return {
+    ok: true,
+    token,
+    registerApi: register.api ?? undefined,
+  };
 }
