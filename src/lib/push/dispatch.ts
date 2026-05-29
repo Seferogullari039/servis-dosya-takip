@@ -2,15 +2,29 @@ import { BRAND } from "@/lib/brand";
 import { sendPushToTokens } from "@/lib/push/firebase-admin";
 import { logPush, logPushError } from "@/lib/push/logger";
 import {
-  countTeamPushSubscriptions,
   getTeamPushTokens,
   getUserPushTokensAdmin,
+  resolveTeamPushTargetTokens,
 } from "@/lib/push/subscription-queries";
 import { isServerPushConfigured } from "@/lib/push/server-config";
 import type { DispatchPushResult, PushTestResult } from "@/lib/push/types";
 import type { PushNotificationPayload } from "@/types/push";
 
 const TITLE = BRAND.companyName;
+
+function buildDispatchResult(
+  partial: Omit<DispatchPushResult, "tokensFound" | "targetTokenCount"> & {
+    tokensFound?: number;
+    targetTokenCount?: number;
+  }
+): DispatchPushResult {
+  const tokensFound = partial.tokensFound ?? partial.targetTokenCount ?? 0;
+  return {
+    ...partial,
+    tokensFound,
+    targetTokenCount: tokensFound,
+  };
+}
 
 export async function dispatchTeamPush(
   payload: Omit<PushNotificationPayload, "title"> & { title?: string },
@@ -26,73 +40,107 @@ export async function dispatchTeamPush(
   });
 
   if (!isServerPushConfigured()) {
-    const result: DispatchPushResult = {
+    const result = buildDispatchResult({
       ok: false,
       skipped: true,
       skipReason: "FIREBASE_SERVICE_ACCOUNT_JSON eksik",
       event,
       teamTokenCount: 0,
-      targetTokenCount: 0,
+      tokensFound: 0,
       sent: 0,
       failed: 0,
-    };
+      serviceRoleAvailable: true,
+    });
     logPush("dispatch", "dispatchTeamPush skipped", result);
     return result;
   }
 
   try {
-    const { tokens, teamTokenCount, meta } = await getTeamPushTokens({
-      excludeUserId: options?.excludeUserId,
-    });
+    const { rows, tokens: allTokens, teamTokenCount, meta } =
+      await getTeamPushTokens();
+
+    const baseDebug = {
+      event,
+      serviceRoleAvailable: meta.serviceRoleAvailable,
+      teamTokenCount,
+      queryError: meta.queryError,
+    };
 
     if (!meta.serviceRoleAvailable) {
-      const result: DispatchPushResult = {
+      const result = buildDispatchResult({
         ok: false,
         skipped: true,
         skipReason: meta.queryError ?? "Service role kullanılamıyor",
-        event,
-        teamTokenCount: 0,
-        targetTokenCount: 0,
+        ...baseDebug,
+        tokensFound: 0,
         sent: 0,
         failed: 0,
         adminError: meta.queryError,
-      };
+      });
       logPush("dispatch", "dispatchTeamPush skipped — no service role", result);
+      return result;
+    }
+
+    if (meta.queryError) {
+      const result = buildDispatchResult({
+        ok: false,
+        skipped: true,
+        skipReason: meta.queryError,
+        ...baseDebug,
+        tokensFound: 0,
+        sent: 0,
+        failed: 0,
+        adminError: meta.queryError,
+      });
+      logPush("dispatch", "dispatchTeamPush skipped — query error", result);
       return result;
     }
 
     logPush("dispatch", "push_subscriptions loaded", {
       event,
       teamTokenCount,
-      targetTokenCount: tokens.length,
+      allUniqueTokens: allTokens.length,
+      excludeUserId: options?.excludeUserId ?? null,
+      serviceRoleAvailable: meta.serviceRoleAvailable,
     });
 
-    if (teamTokenCount === 0) {
-      const result: DispatchPushResult = {
+    if (teamTokenCount === 0 || allTokens.length === 0) {
+      const result = buildDispatchResult({
         ok: false,
         skipped: true,
         skipReason: "Kayıtlı token yok",
-        event,
-        teamTokenCount: 0,
-        targetTokenCount: 0,
+        ...baseDebug,
+        tokensFound: 0,
         sent: 0,
         failed: 0,
-      };
+      });
       logPush("dispatch", "dispatchTeamPush skipped — no subscriptions", result);
       return result;
     }
 
+    const tokens = resolveTeamPushTargetTokens(
+      rows,
+      allTokens,
+      options?.excludeUserId
+    );
+
+    logPush("dispatch", "push target tokens resolved", {
+      event,
+      teamTokenCount,
+      tokensFound: tokens.length,
+      excludeUserId: options?.excludeUserId ?? null,
+    });
+
     if (tokens.length === 0) {
-      const result: DispatchPushResult = {
+      const result = buildDispatchResult({
         ok: false,
         skipped: true,
-        skipReason: "Hedef token yok (exclude filtresi?)",
-        event,
-        teamTokenCount,
-        targetTokenCount: 0,
+        skipReason: "Hedef token yok",
+        ...baseDebug,
+        tokensFound: 0,
         sent: 0,
         failed: 0,
-      };
+      });
       logPush("dispatch", "dispatchTeamPush skipped — no target tokens", result);
       return result;
     }
@@ -106,32 +154,32 @@ export async function dispatchTeamPush(
       workOrderId: payload.workOrderId,
     });
 
-    const result: DispatchPushResult = {
+    const result = buildDispatchResult({
       ok: sendResult.ok && sendResult.sent > 0,
       skipped: false,
-      event,
-      teamTokenCount,
-      targetTokenCount: tokens.length,
+      ...baseDebug,
+      tokensFound: tokens.length,
       sent: sendResult.sent,
       failed: sendResult.failed,
       adminError: sendResult.adminError,
       fcmErrors: sendResult.fcmErrors,
-    };
+    });
 
     logPush("dispatch", "dispatchTeamPush finished", result);
     return result;
   } catch (e) {
     logPushError("dispatch", "dispatchTeamPush exception", e, { event });
-    return {
+    return buildDispatchResult({
       ok: false,
       skipped: false,
       event,
       teamTokenCount: 0,
-      targetTokenCount: 0,
+      tokensFound: 0,
       sent: 0,
       failed: 0,
+      serviceRoleAvailable: undefined,
       adminError: e instanceof Error ? e.message : String(e),
-    };
+    });
   }
 }
 
@@ -146,6 +194,7 @@ export function dispatchTeamPushAsync(
   });
 }
 
+/** Push Test — dispatch ile aynı fetchPushSubscriptionTokensAdmin (userId filtresi) */
 export async function sendTestPushToUser(
   userId: string
 ): Promise<PushTestResult> {
@@ -176,6 +225,20 @@ export async function sendTestPushToUser(
       message: "Sunucu push anahtarı eksik",
       adminError: "FIREBASE_SERVICE_ACCOUNT_JSON eksik",
       serviceRoleAvailable: true,
+      queryError: meta.queryError,
+    };
+  }
+
+  if (meta.queryError) {
+    return {
+      ok: false,
+      tokensFound: 0,
+      sent: 0,
+      failed: 0,
+      tokenCount: 0,
+      message: meta.queryError,
+      serviceRoleAvailable: true,
+      queryError: meta.queryError,
     };
   }
 
@@ -217,6 +280,7 @@ export async function sendTestPushToUser(
     adminError: sendResult.adminError,
     fcmErrors: sendResult.fcmErrors,
     serviceRoleAvailable: true,
+    queryError: meta.queryError,
   };
 
   logPush("test", "sendTestPushToUser finished", result);

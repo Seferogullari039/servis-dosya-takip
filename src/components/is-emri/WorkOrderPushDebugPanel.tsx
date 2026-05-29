@@ -50,8 +50,15 @@ function DispatchTable({
             key={`${d.event}-${i}`}
             className="rounded bg-surface-muted/80 px-2 py-1 dark:bg-zinc-800/80"
           >
-            {d.event} · sent={d.sent} failed={d.failed}
-            {d.skipped ? ` · skipped (${d.skipReason ?? "—"})` : ""}
+            <div>
+              {d.event} · sent={d.sent} failed={d.failed}
+              {d.skipped ? ` · skipped (${d.skipReason ?? "—"})` : ""}
+            </div>
+            <div className="mt-0.5 text-[10px] text-ink-muted dark:text-zinc-500">
+              SR={d.serviceRoleAvailable === false ? "hayır" : "evet"} · ekip=
+              {d.teamTokenCount ?? "—"} · tokens={d.tokensFound ?? "—"}
+              {d.queryError ? ` · err=${d.queryError}` : ""}
+            </div>
           </li>
         ))}
       </ul>

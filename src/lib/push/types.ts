@@ -4,11 +4,16 @@ export interface DispatchPushResult {
   skipReason?: string;
   event?: string;
   teamTokenCount: number;
+  /** Gönderime seçilen benzersiz token sayısı */
+  tokensFound: number;
+  /** @deprecated tokensFound kullanın */
   targetTokenCount: number;
   sent: number;
   failed: number;
   adminError?: string;
   fcmErrors?: string[];
+  serviceRoleAvailable?: boolean;
+  queryError?: string;
 }
 
 export interface SendPushResult {

@@ -9,6 +9,21 @@ export interface PushSubscriptionQueryMeta {
   queryError?: string;
 }
 
+export type PushSubscriptionRow = {
+  fcm_token: string;
+  user_id: string;
+};
+
+function dedupeTokens(rows: PushSubscriptionRow[]): string[] {
+  return [
+    ...new Set(
+      rows
+        .map((r) => r.fcm_token)
+        .filter((t) => Boolean(t?.trim()))
+    ),
+  ];
+}
+
 function getAdminOrMeta(): {
   admin: ReturnType<typeof tryCreateAdminClient>;
   meta: PushSubscriptionQueryMeta;
@@ -35,32 +50,73 @@ function getAdminOrMeta(): {
   return { admin, meta: { serviceRoleAvailable: true } };
 }
 
-export async function countTeamPushSubscriptions(): Promise<{
-  count: number;
+/**
+ * Push Test ve dispatchTeamPush için ortak service role sorgusu.
+ * push_subscriptions tablosundan fcm_token + user_id okur (RLS bypass).
+ */
+export async function fetchPushSubscriptionTokensAdmin(options?: {
+  userId?: string;
+}): Promise<{
+  rows: PushSubscriptionRow[];
+  tokens: string[];
   meta: PushSubscriptionQueryMeta;
 }> {
   const { admin, meta } = getAdminOrMeta();
-  if (!admin) return { count: 0, meta };
+  if (!admin) {
+    return { rows: [], tokens: [], meta };
+  }
 
   try {
-    const { count, error } = await admin
-      .from("push_subscriptions")
-      .select("id", { count: "exact", head: true });
-    if (error) {
-      logPushError("subscriptions", "team count failed", error);
-      return { count: 0, meta: { ...meta, queryError: error.message } };
+    let query = admin.from("push_subscriptions").select("fcm_token, user_id");
+
+    if (options?.userId) {
+      query = query.eq("user_id", options.userId);
     }
-    return { count: count ?? 0, meta };
+
+    const { data, error } = await query;
+
+    if (error) {
+      logPushError("subscriptions", "fetchPushSubscriptionTokensAdmin failed", error, {
+        userId: options?.userId ?? null,
+      });
+      return {
+        rows: [],
+        tokens: [],
+        meta: { ...meta, queryError: error.message },
+      };
+    }
+
+    const rows = (data ?? []) as PushSubscriptionRow[];
+    const tokens = dedupeTokens(rows);
+
+    logPush("subscriptions", "fetchPushSubscriptionTokensAdmin", {
+      userId: options?.userId ?? "all",
+      rowCount: rows.length,
+      tokenCount: tokens.length,
+    });
+
+    return { rows, tokens, meta };
   } catch (e) {
-    logPushError("subscriptions", "team count exception", e);
+    logPushError("subscriptions", "fetchPushSubscriptionTokensAdmin exception", e, {
+      userId: options?.userId ?? null,
+    });
     return {
-      count: 0,
+      rows: [],
+      tokens: [],
       meta: {
         ...meta,
         queryError: e instanceof Error ? e.message : "Sorgu hatası",
       },
     };
   }
+}
+
+export async function countTeamPushSubscriptions(): Promise<{
+  count: number;
+  meta: PushSubscriptionQueryMeta;
+}> {
+  const { rows, meta } = await fetchPushSubscriptionTokensAdmin();
+  return { count: rows.length, meta };
 }
 
 /** Kullanıcının token sayısı — yalnızca service role */
@@ -68,135 +124,74 @@ export async function countUserPushSubscriptions(userId: string): Promise<{
   count: number;
   meta: PushSubscriptionQueryMeta;
 }> {
-  const { admin, meta } = getAdminOrMeta();
-  if (!admin) return { count: 0, meta };
-
-  try {
-    const { count, error } = await admin
-      .from("push_subscriptions")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", userId);
-    if (error) {
-      logPushError("subscriptions", "user count failed", error, { userId });
-      return { count: 0, meta: { ...meta, queryError: error.message } };
-    }
-    return { count: count ?? 0, meta };
-  } catch (e) {
-    logPushError("subscriptions", "user count exception", e, { userId });
-    return {
-      count: 0,
-      meta: {
-        ...meta,
-        queryError: e instanceof Error ? e.message : "Sorgu hatası",
-      },
-    };
-  }
+  const { rows, meta } = await fetchPushSubscriptionTokensAdmin({ userId });
+  return { count: rows.length, meta };
 }
 
-/** Giriş yapan kullanıcının FCM tokenları — service role, user_id filtresi */
+/** Push Test ile aynı sorgu — giriş yapan kullanıcının tokenları */
 export async function getUserPushTokensAdmin(userId: string): Promise<{
   tokens: string[];
   userTokenCount: number;
   meta: PushSubscriptionQueryMeta;
 }> {
-  const { admin, meta } = getAdminOrMeta();
-  if (!admin) {
-    return { tokens: [], userTokenCount: 0, meta };
-  }
+  const { rows, tokens, meta } = await fetchPushSubscriptionTokensAdmin({
+    userId,
+  });
 
-  try {
-    const { data, error } = await admin
-      .from("push_subscriptions")
-      .select("fcm_token")
-      .eq("user_id", userId);
+  logPush("subscriptions", "user tokens loaded (service role)", {
+    userId,
+    userTokenCount: tokens.length,
+    rowCount: rows.length,
+  });
 
-    if (error) {
-      logPushError("subscriptions", "user tokens failed", error, { userId });
-      return {
-        tokens: [],
-        userTokenCount: 0,
-        meta: { ...meta, queryError: error.message },
-      };
-    }
-
-    const tokens = [
-      ...new Set(
-        (data ?? [])
-          .map((r) => r.fcm_token as string)
-          .filter((t) => Boolean(t?.trim()))
-      ),
-    ];
-
-    logPush("subscriptions", "user tokens loaded (service role)", {
-      userId,
-      userTokenCount: tokens.length,
-    });
-
-    return { tokens, userTokenCount: tokens.length, meta };
-  } catch (e) {
-    logPushError("subscriptions", "user tokens exception", e, { userId });
-    return {
-      tokens: [],
-      userTokenCount: 0,
-      meta: {
-        ...meta,
-        queryError: e instanceof Error ? e.message : "Sorgu hatası",
-      },
-    };
-  }
+  return { tokens, userTokenCount: tokens.length, meta };
 }
 
-export async function getTeamPushTokens(options?: {
-  excludeUserId?: string;
-}): Promise<{
+/** Tüm ekip tokenları — Push Test ile aynı fetch, exclude gönderimde uygulanır */
+export async function getTeamPushTokens(): Promise<{
+  rows: PushSubscriptionRow[];
   tokens: string[];
   teamTokenCount: number;
   meta: PushSubscriptionQueryMeta;
 }> {
-  const { admin, meta } = getAdminOrMeta();
-  if (!admin) {
-    return { tokens: [], teamTokenCount: 0, meta };
+  const { rows, tokens, meta } = await fetchPushSubscriptionTokensAdmin();
+
+  logPush("subscriptions", "team tokens loaded (service role)", {
+    teamTokenCount: rows.length,
+    uniqueTokenCount: tokens.length,
+  });
+
+  return {
+    rows,
+    tokens,
+    teamTokenCount: rows.length,
+    meta,
+  };
+}
+
+/** exclude sonrası hedef; ekip boş kalmaz (tek kullanıcıda tüm tokenlar) */
+export function resolveTeamPushTargetTokens(
+  rows: PushSubscriptionRow[],
+  allTokens: string[],
+  excludeUserId?: string
+): string[] {
+  if (!excludeUserId) {
+    return allTokens;
   }
 
-  try {
-    let query = admin.from("push_subscriptions").select("fcm_token, user_id");
+  const filteredRows = rows.filter((r) => r.user_id !== excludeUserId);
+  const filtered = dedupeTokens(filteredRows);
 
-    if (options?.excludeUserId) {
-      query = query.neq("user_id", options.excludeUserId);
-    }
+  if (filtered.length > 0) {
+    return filtered;
+  }
 
-    const { data: rows, error } = await query;
-
-    if (error) {
-      logPushError("subscriptions", "team token fetch failed", error);
-      return { tokens: [], teamTokenCount: 0, meta: { ...meta, queryError: error.message } };
-    }
-
-    const teamTokenCount = rows?.length ?? 0;
-    const tokens = [
-      ...new Set(
-        (rows ?? [])
-          .map((r) => r.fcm_token as string)
-          .filter((t) => Boolean(t?.trim()))
-      ),
-    ];
-
-    logPush("subscriptions", "team tokens loaded (service role)", {
-      teamTokenCount,
-      targetTokenCount: tokens.length,
-      excludeUserId: options?.excludeUserId ?? null,
+  if (allTokens.length > 0) {
+    logPush("subscriptions", "exclude yielded zero tokens; using full team list", {
+      excludeUserId,
+      teamTokenCount: rows.length,
     });
-
-    return { tokens, teamTokenCount, meta };
-  } catch (e) {
-    logPushError("subscriptions", "getTeamPushTokens exception", e);
-    return {
-      tokens: [],
-      teamTokenCount: 0,
-      meta: {
-        ...meta,
-        queryError: e instanceof Error ? e.message : "Sorgu hatası",
-      },
-    };
   }
+
+  return allTokens;
 }

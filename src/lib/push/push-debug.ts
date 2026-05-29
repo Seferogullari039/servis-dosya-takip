@@ -17,6 +17,10 @@ export function dispatchResultToSummary(
     sent: result.sent,
     failed: result.failed,
     adminError: result.adminError,
+    serviceRoleAvailable: result.serviceRoleAvailable,
+    teamTokenCount: result.teamTokenCount,
+    tokensFound: result.tokensFound,
+    queryError: result.queryError,
   };
 }
 

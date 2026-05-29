@@ -7,6 +7,10 @@ export interface PushDispatchSummary {
   sent: number;
   failed: number;
   adminError?: string;
+  serviceRoleAvailable?: boolean;
+  teamTokenCount?: number;
+  tokensFound?: number;
+  queryError?: string;
 }
 
 /** Araç durumu anlık kayıt (guncelleAracDurumuAction) */
