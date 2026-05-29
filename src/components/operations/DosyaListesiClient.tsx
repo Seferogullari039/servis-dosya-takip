@@ -13,6 +13,7 @@ import { DosyaAramaUrl } from "@/components/dosyalar/DosyaAramaUrl";
 import { DurumBadge } from "@/components/dosyalar/DurumBadge";
 import { OdemeDurumuPicker } from "@/components/operations/OdemeDurumuPicker";
 import { BulkActionsBar } from "@/components/operations/BulkActionsBar";
+import { DosyaDeleteButton } from "@/components/operations/DosyaDeleteButton";
 import { DosyaTableRow } from "@/components/operations/DosyaTableRow";
 import { MobileBottomSheet } from "@/components/operations/MobileBottomSheet";
 import { EmptyState, LoadingState } from "@/components/ui/DataState";
@@ -107,7 +108,18 @@ export function DosyaListesiClient({
     startRefresh(() => router.refresh());
   }, [router]);
 
+  const onDeleted = useCallback((id: string) => {
+    setItems((prev) => prev.filter((d) => d.id !== id));
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+    if (sheetDosya?.id === id) setSheetDosya(null);
+  }, [sheetDosya?.id]);
+
   const selectedIds = useMemo(() => Array.from(selected), [selected]);
+  const isAdmin = role === "admin";
 
   const handleMobileSwipe = useCallback(
     (dosya: ServisDosyasi) => {
@@ -179,6 +191,7 @@ export function DosyaListesiClient({
                       onSelect={onSelect}
                       onOptimistic={onOptimistic}
                       onRollback={onRollback}
+                      onDeleted={onDeleted}
                     />
                   ))}
                 </tbody>
@@ -220,6 +233,18 @@ export function DosyaListesiClient({
                     Ödeme rozetine tıkla · Kart → durum / not ·{" "}
                     {formatTarih(d.olusturulmaTarihi)}
                   </p>
+                  {isAdmin ? (
+                    <div
+                      className="mt-3 flex justify-end border-t border-border/60 pt-3"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <DosyaDeleteButton
+                        dosyaId={d.id}
+                        compact
+                        onDeleted={onDeleted}
+                      />
+                    </div>
+                  ) : null}
                 </Card>
               ))}
             </div>

@@ -4,6 +4,7 @@ import { memo } from "react";
 import Link from "next/link";
 import { DurumBadge } from "@/components/dosyalar/DurumBadge";
 import { OdemeDurumuPicker } from "@/components/operations/OdemeDurumuPicker";
+import { DosyaDeleteButton } from "@/components/operations/DosyaDeleteButton";
 import { QuickActions } from "@/components/operations/QuickActions";
 import { formatTarih } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
@@ -17,6 +18,7 @@ interface DosyaTableRowProps {
   onSelect: (id: string, checked: boolean) => void;
   onOptimistic: (id: string, patch: Partial<ServisDosyasi>) => void;
   onRollback: (id: string, previous: ServisDosyasi) => void;
+  onDeleted?: (id: string) => void;
 }
 
 export const DosyaTableRow = memo(function DosyaTableRow({
@@ -26,7 +28,10 @@ export const DosyaTableRow = memo(function DosyaTableRow({
   onSelect,
   onOptimistic,
   onRollback,
+  onDeleted,
 }: DosyaTableRowProps) {
+  const isAdmin = role === "admin";
+
   return (
     <tr
       className={cn(
@@ -77,6 +82,13 @@ export const DosyaTableRow = memo(function DosyaTableRow({
               onRollback={onRollback}
             />
           </div>
+          {isAdmin ? (
+            <DosyaDeleteButton
+              dosyaId={dosya.id}
+              compact
+              onDeleted={onDeleted}
+            />
+          ) : null}
         </div>
       </td>
     </tr>

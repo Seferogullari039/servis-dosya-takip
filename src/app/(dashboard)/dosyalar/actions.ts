@@ -6,6 +6,7 @@ import {
   guncelleDosya,
   getDosyaById,
   olusturDosya,
+  silDosya,
 } from "@/lib/data/dosyalar";
 import {
   assertOperationAccess,
@@ -316,4 +317,28 @@ export async function loadMoreEventsAction(
   pageSize?: number
 ) {
   return listEventsByServiceFileId(serviceFileId, { page, pageSize });
+}
+
+export async function silDosyaAction(id: string): Promise<OperationResult> {
+  const auth = await assertOperationAccess();
+  if (!auth.ok) return { ok: false, error: auth.error };
+
+  const profile = await getCurrentProfile();
+  if (profile?.role !== "admin") {
+    return {
+      ok: false,
+      error: "Silme işlemi yalnızca admin tarafından yapılabilir.",
+    };
+  }
+
+  const result = await silDosya(id);
+  if (!result.ok) {
+    return { ok: false, error: result.error ?? "Dosya silinemedi." };
+  }
+
+  invalidateDashboardCache();
+  revalidatePath("/dosyalar");
+  revalidatePath(`/dosyalar/${id}`);
+  revalidatePath("/");
+  return { ok: true };
 }

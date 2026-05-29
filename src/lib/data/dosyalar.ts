@@ -1,6 +1,11 @@
 import { mapRowToServisDosya } from "@/lib/data/map-dosya";
 import { auditDosyaUpdate } from "@/lib/events/audit";
 import { logCreated } from "@/lib/events/logger";
+import { STORAGE_BUCKET } from "@/lib/storage/constants";
+import {
+  isServiceRoleConfigured,
+  tryCreateAdminClient,
+} from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { DataResult } from "@/types/data-result";
 import { fail, ok } from "@/types/data-result";
@@ -62,7 +67,46 @@ function supabaseErrorMessage(error: { message: string; code?: string }): string
   if (error.code === "23505") {
     return "Bu dosya numarası zaten kayıtlı.";
   }
+  if (error.code === "23503") {
+    return "Bu dosyaya bağlı kayıtlar olduğu için silinemez.";
+  }
   return error.message || "Veritabanı işlemi başarısız oldu.";
+}
+
+const DOSYA_SILINEMEDI = "Dosya silinemedi.";
+
+/** Evrak storage nesnelerini siler (DB satırı cascade ile gider). */
+async function purgeServiceFileDocumentStorage(
+  serviceFileId: string
+): Promise<void> {
+  if (!isServiceRoleConfigured()) return;
+
+  const admin = tryCreateAdminClient();
+  if (!admin) return;
+
+  const { data: docs, error } = await admin
+    .from("service_file_documents")
+    .select("storage_path")
+    .eq("service_file_id", serviceFileId);
+
+  if (error) {
+    console.warn("[dosya] evrak listesi okunamadı:", error.message);
+    return;
+  }
+
+  const paths = (docs ?? [])
+    .map((d) => d.storage_path)
+    .filter((p): p is string => Boolean(p?.trim()));
+
+  if (paths.length === 0) return;
+
+  const { error: removeError } = await admin.storage
+    .from(STORAGE_BUCKET)
+    .remove(paths);
+
+  if (removeError) {
+    console.warn("[dosya] storage purge:", removeError.message);
+  }
 }
 
 /** Tüm dosyaları listeler; arama plaka ve dosya_no üzerinde (ilike). */
@@ -180,5 +224,34 @@ export async function guncelleDosya(
     return ok(dosya);
   } catch (e) {
     return fail(e instanceof Error ? e.message : "Dosya güncellenemedi.");
+  }
+}
+
+/** Servis dosyasını ve bağlı event/evrak kayıtlarını siler (cascade). */
+export async function silDosya(id: string): Promise<DataResult<null>> {
+  try {
+    const supabase = await createClient();
+
+    const { data: existing, error: fetchError } = await supabase
+      .from("servis_dosyalari")
+      .select("id")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (fetchError) return fail(supabaseErrorMessage(fetchError));
+    if (!existing) return fail("Dosya bulunamadı.");
+
+    await purgeServiceFileDocumentStorage(id);
+
+    const { error } = await supabase
+      .from("servis_dosyalari")
+      .delete()
+      .eq("id", id);
+
+    if (error) return fail(supabaseErrorMessage(error));
+
+    return ok(null);
+  } catch (e) {
+    return fail(e instanceof Error ? e.message : DOSYA_SILINEMEDI);
   }
 }
