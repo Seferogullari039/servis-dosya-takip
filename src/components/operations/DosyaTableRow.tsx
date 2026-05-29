@@ -18,7 +18,8 @@ interface DosyaTableRowProps {
   onSelect: (id: string, checked: boolean) => void;
   onOptimistic: (id: string, patch: Partial<ServisDosyasi>) => void;
   onRollback: (id: string, previous: ServisDosyasi) => void;
-  onDeleted?: (id: string) => void;
+  onSoftDeleted?: (id: string) => void;
+  onRestored?: (id: string) => void;
 }
 
 export const DosyaTableRow = memo(function DosyaTableRow({
@@ -28,7 +29,8 @@ export const DosyaTableRow = memo(function DosyaTableRow({
   onSelect,
   onOptimistic,
   onRollback,
-  onDeleted,
+  onSoftDeleted,
+  onRestored,
 }: DosyaTableRowProps) {
   const isAdmin = role === "admin";
 
@@ -86,7 +88,8 @@ export const DosyaTableRow = memo(function DosyaTableRow({
             <DosyaDeleteButton
               dosyaId={dosya.id}
               compact
-              onDeleted={onDeleted}
+              onSoftDeleted={onSoftDeleted}
+              onRestored={onRestored}
             />
           ) : null}
         </div>

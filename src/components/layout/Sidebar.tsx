@@ -14,6 +14,10 @@ const navItems = [
   { href: "/tedarik", label: "Tedarik", icon: "📦" },
 ] as const;
 
+const adminNavItems = [
+  { href: "/yedekleme", label: "Yedekleme", icon: "💾" },
+] as const;
+
 interface SidebarProps {
   onNavigate?: () => void;
 }
@@ -39,32 +43,34 @@ export function Sidebar({ onNavigate }: SidebarProps) {
         <h1 className="mt-1 text-lg font-bold">{BRAND.panelSubtitle}</h1>
       </div>
       <nav className="flex-1 space-y-1 p-3" aria-label="Ana menü">
-        {navItems.map((item) => {
-          const active =
-            item.href === "/"
-              ? pathname === "/"
-              : item.href === "/dashboard"
-                ? pathname === "/dashboard"
-                : pathname.startsWith(item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onNavigate}
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 [--tw-ring-offset-color:var(--sidebar-bg)]",
-                active
-                  ? "bg-white/15 text-white shadow-sm"
-                  : "text-white/75 hover:bg-white/10 hover:text-white"
-              )}
-            >
-              <span className="text-base" aria-hidden>
-                {item.icon}
-              </span>
-              {item.label}
-            </Link>
-          );
-        })}
+        {[...navItems, ...(profile.role === "admin" ? adminNavItems : [])].map(
+          (item) => {
+            const active =
+              item.href === "/"
+                ? pathname === "/"
+                : item.href === "/dashboard"
+                  ? pathname === "/dashboard"
+                  : pathname.startsWith(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={onNavigate}
+                className={cn(
+                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 [--tw-ring-offset-color:var(--sidebar-bg)]",
+                  active
+                    ? "bg-white/15 text-white shadow-sm"
+                    : "text-white/75 hover:bg-white/10 hover:text-white"
+                )}
+              >
+                <span className="text-base" aria-hidden>
+                  {item.icon}
+                </span>
+                {item.label}
+              </Link>
+            );
+          }
+        )}
       </nav>
       <div className="border-t border-white/10 p-4 text-xs text-white/50">
         {profile.full_name} · {profile.role}
