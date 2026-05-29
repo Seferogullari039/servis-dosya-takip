@@ -11,6 +11,7 @@ import { assertOperationAccess } from "@/lib/operations/auth-action";
 import { getCurrentProfile } from "@/lib/auth/get-current-profile";
 import type { AracDurumu } from "@/types/vehicle-status";
 import type { OperationResult } from "@/types/operations";
+import type { GuncelleAracDurumuResult } from "@/types/push-debug";
 
 function revalidateIsEmriPaths() {
   revalidatePath("/is-emirleri");
@@ -51,7 +52,7 @@ export async function silIsEmriAction(id: string): Promise<OperationResult> {
 export async function guncelleAracDurumuAction(
   id: string,
   aracDurumu: AracDurumu
-): Promise<OperationResult> {
+): Promise<GuncelleAracDurumuResult> {
   const auth = await assertOperationAccess();
   if (!auth.ok) return { ok: false, error: auth.error };
 
@@ -68,7 +69,7 @@ export async function guncelleAracDurumuAction(
   const result = await guncelleAracDurumu(id, aracDurumu);
   if (!result.ok) return { ok: false, error: result.error };
 
-  notifyVehicleStatusChanged({
+  const pushDebug = await notifyVehicleStatusChanged({
     workOrderId: id,
     workOrderNo: result.data.isEmriNo,
     plaka: result.data.plaka,
@@ -78,7 +79,9 @@ export async function guncelleAracDurumuAction(
     debugAction: "guncelleAracDurumuAction",
   });
 
+  console.log("[push:action] guncelleAracDurumuAction complete", pushDebug);
+
   revalidateIsEmriPaths();
   revalidatePath(`/is-emirleri/${id}`);
-  return { ok: true };
+  return { ok: true, pushDebug };
 }

@@ -5,7 +5,7 @@ import { getIsEmriById, guncelleIsEmri } from "@/lib/data/work-orders";
 import { logPushAction, notifyWorkOrderChanges } from "@/lib/push/events";
 import { assertOperationAccess } from "@/lib/operations/auth-action";
 import type { IsEmriFormState } from "@/types/is-emri";
-import type { OperationResult } from "@/types/operations";
+import type { GuncelleIsEmriKayitResult } from "@/types/push-debug";
 
 function revalidateIsEmriPaths(id: string) {
   revalidatePath("/is-emirleri");
@@ -18,7 +18,7 @@ function revalidateIsEmriPaths(id: string) {
 export async function guncelleIsEmriKayitAction(
   id: string,
   form: IsEmriFormState
-): Promise<OperationResult> {
+): Promise<GuncelleIsEmriKayitResult> {
   const auth = await assertOperationAccess();
   if (!auth.ok) return { ok: false, error: auth.error };
 
@@ -32,9 +32,10 @@ export async function guncelleIsEmriKayitAction(
 
   logPushAction("guncelleIsEmriKayitAction", {
     workOrderId: id,
+    previous: beforeResult.data.aracDurumu,
+    next: form.aracDurumu,
     extra: {
       plaka: form.plaka,
-      aracDurumu: form.aracDurumu,
       parcaCount: form.parcalar.length,
       iscilikCount: form.iscilikSatirlari.length,
     },
@@ -43,13 +44,15 @@ export async function guncelleIsEmriKayitAction(
   const updateResult = await guncelleIsEmri(id, form);
   if (!updateResult.ok) return { ok: false, error: updateResult.error };
 
-  notifyWorkOrderChanges({
+  const pushDebug = await notifyWorkOrderChanges({
     before: beforeResult.data,
     after: updateResult.data,
     excludeUserId: auth.profile.id,
     debugAction: "guncelleIsEmriKayitAction",
   });
 
+  console.log("[push:action] guncelleIsEmriKayitAction complete", pushDebug);
+
   revalidateIsEmriPaths(id);
-  return { ok: true };
+  return { ok: true, pushDebug };
 }

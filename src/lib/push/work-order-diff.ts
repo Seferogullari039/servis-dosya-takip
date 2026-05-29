@@ -63,6 +63,32 @@ export function expertiseChecklistChanged(
   );
 }
 
+export function hasWorkOrderChanges(
+  before: IsEmriKayit,
+  after: IsEmriKayit
+): boolean {
+  if (before.aracDurumu !== after.aracDurumu) return true;
+  if (expertiseChecklistChanged(before, after)) return true;
+  if (workOrderHeaderFieldsChanged(before, after)) return true;
+  const parcaDiff = diffParcaLines(before.parcalar, after.parcalar);
+  if (
+    parcaDiff.added.length > 0 ||
+    parcaDiff.removed.length > 0 ||
+    parcaDiff.updated.length > 0
+  ) {
+    return true;
+  }
+  const iscilikDiff = diffIscilikLines(
+    before.iscilikSatirlari,
+    after.iscilikSatirlari
+  );
+  return (
+    iscilikDiff.added.length > 0 ||
+    iscilikDiff.removed.length > 0 ||
+    iscilikDiff.updated.length > 0
+  );
+}
+
 export function workOrderHeaderFieldsChanged(
   before: IsEmriKayit,
   after: IsEmriKayit

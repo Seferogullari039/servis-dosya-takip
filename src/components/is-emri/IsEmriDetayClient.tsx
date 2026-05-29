@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { guncelleAracDurumuAction } from "@/app/(dashboard)/is-emirleri/actions";
 import { guncelleIsEmriKayitAction } from "@/app/(dashboard)/is-emirleri/[id]/actions";
@@ -8,6 +8,11 @@ import { IsEmriActionBar } from "@/components/is-emri/IsEmriActionBar";
 import { IsEmriForm } from "@/components/is-emri/IsEmriForm";
 import { WorkOrderHasarGorselleriSection } from "@/components/is-emri/WorkOrderHasarGorselleriSection";
 import { VehicleStatusBadge } from "@/components/is-emri/VehicleStatusBadge";
+import { WorkOrderPushDebugPanel } from "@/components/is-emri/WorkOrderPushDebugPanel";
+import type {
+  VehicleStatusPushDebug,
+  WorkOrderSavePushDebug,
+} from "@/types/push-debug";
 import { useToast } from "@/components/ui/ToastProvider";
 import { filterImagesForPdf } from "@/types/work-order-image";
 import { downloadIsEmriPdf } from "@/lib/is-emri/pdf-download";
@@ -34,6 +39,10 @@ export function IsEmriDetayClient({
   const router = useRouter();
   const { toast } = useToast();
   const [pending, startTransition] = useTransition();
+  const [savePushDebug, setSavePushDebug] =
+    useState<WorkOrderSavePushDebug | null>(null);
+  const [vehiclePushDebug, setVehiclePushDebug] =
+    useState<VehicleStatusPushDebug | null>(null);
 
   const initialForm = useMemo(() => isEmriKayitToFormState(kayit), [kayit]);
 
@@ -98,11 +107,19 @@ export function IsEmriDetayClient({
         toast(result.error ?? "Araç durumu kaydedilemedi.", "error");
         return false;
       }
-      toast("Araç durumu güncellendi.", "success");
+      if (isAdmin && result.pushDebug) {
+        setVehiclePushDebug(result.pushDebug);
+      }
+      toast(
+        result.pushDebug?.sameValueNoPush
+          ? "Aynı değer — push gönderilmedi."
+          : "Araç durumu güncellendi.",
+        result.pushDebug?.sameValueNoPush ? "info" : "success"
+      );
       router.refresh();
       return true;
     },
-    [kayit.id, router, toast]
+    [isAdmin, kayit.id, router, toast]
   );
 
   const handleSave = useCallback(
@@ -113,11 +130,19 @@ export function IsEmriDetayClient({
           toast(result.error ?? "Kayıt güncellenemedi.", "error");
           return;
         }
-        toast("İş emri güncellendi.", "success");
+        if (isAdmin) {
+          setSavePushDebug(result.pushDebug);
+        }
+        toast(
+          result.pushDebug.sameValueNoPush
+            ? "Kayıt aynı — push gönderilmedi."
+            : "İş emri güncellendi.",
+          result.pushDebug.sameValueNoPush ? "info" : "success"
+        );
         router.refresh();
       });
     },
-    [kayit.id, router, toast]
+    [isAdmin, kayit.id, router, toast]
   );
 
   return (
@@ -138,6 +163,12 @@ export function IsEmriDetayClient({
         images={images}
         isAdmin={isAdmin}
       />
+      {isAdmin ? (
+        <WorkOrderPushDebugPanel
+          saveDebug={savePushDebug}
+          vehicleDebug={vehiclePushDebug}
+        />
+      ) : null}
       <IsEmriForm
         mode="edit"
         initialForm={initialForm}

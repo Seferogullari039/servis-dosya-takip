@@ -1,12 +1,23 @@
 import { BRAND } from "@/lib/brand";
-import { dispatchTeamPushAsync } from "@/lib/push/dispatch";
+import { dispatchTeamPush } from "@/lib/push/dispatch";
+import {
+  buildVehicleStatusPushDebug,
+  buildWorkOrderSavePushDebug,
+  dispatchResultToSummary,
+} from "@/lib/push/push-debug";
 import { logPush } from "@/lib/push/logger";
 import {
   diffIscilikLines,
   diffParcaLines,
   expertiseChecklistChanged,
+  hasWorkOrderChanges,
   workOrderHeaderFieldsChanged,
 } from "@/lib/push/work-order-diff";
+import type { PushDispatchSummary } from "@/types/push-debug";
+import type {
+  VehicleStatusPushDebug,
+  WorkOrderSavePushDebug,
+} from "@/types/push-debug";
 import type { AracDurumu } from "@/types/vehicle-status";
 import type { TedarikDurumu } from "@/types/tedarik";
 import type { DosyaDurumu } from "@/types/servis-dosya";
@@ -47,13 +58,13 @@ export function logPushAction(
   });
 }
 
-function emitPushEvent(
+async function emitPushEventAwait(
   opts: EmitOptions & {
     debugAction?: string;
     previous?: unknown;
     next?: unknown;
   }
-): void {
+): Promise<PushDispatchSummary> {
   console.log(`[push:event] ${opts.event}`, {
     action: opts.debugAction ?? null,
     previous: opts.previous ?? null,
@@ -73,7 +84,7 @@ function emitPushEvent(
     next: opts.next ?? null,
   });
 
-  dispatchTeamPushAsync(
+  const result = await dispatchTeamPush(
     {
       title: PUSH_TITLE,
       body: opts.body,
@@ -83,6 +94,18 @@ function emitPushEvent(
     },
     { event: opts.event, excludeUserId: opts.excludeUserId }
   );
+
+  return dispatchResultToSummary(opts.event, result);
+}
+
+function emitPushEvent(
+  opts: EmitOptions & {
+    debugAction?: string;
+    previous?: unknown;
+    next?: unknown;
+  }
+): void {
+  void emitPushEventAwait(opts);
 }
 
 // ——— İş emri ———
@@ -138,7 +161,7 @@ export function notifyWorkOrderDeleted(params: {
   });
 }
 
-export function notifyVehicleStatusChanged(params: {
+export async function notifyVehicleStatusChanged(params: {
   workOrderId: string;
   workOrderNo: string;
   plaka: string;
@@ -146,10 +169,15 @@ export function notifyVehicleStatusChanged(params: {
   previousStatus?: AracDurumu;
   excludeUserId?: string;
   debugAction?: string;
-}): void {
-  if (params.previousStatus !== undefined && params.previousStatus === params.status) {
+}): Promise<VehicleStatusPushDebug> {
+  const actionName = params.debugAction ?? "notifyVehicleStatusChanged";
+  const changeDetected =
+    params.previousStatus === undefined ||
+    params.previousStatus !== params.status;
+
+  if (!changeDetected) {
     console.log("[push:event] vehicle_status_changed skipped", {
-      action: params.debugAction ?? "notifyVehicleStatusChanged",
+      action: actionName,
       previous: params.previousStatus,
       next: params.status,
       reason: "unchanged",
@@ -158,13 +186,20 @@ export function notifyVehicleStatusChanged(params: {
       reason: "unchanged",
       status: params.status,
     });
-    return;
+    return buildVehicleStatusPushDebug({
+      actionName,
+      previousVehicleStatus: params.previousStatus ?? null,
+      newVehicleStatus: params.status,
+      changeDetected: false,
+      notifyCalled: false,
+      dispatches: [],
+    });
   }
 
   const plaka = formatPlaka(params.plaka);
-  emitPushEvent({
+  const dispatch = await emitPushEventAwait({
     event: "vehicle_status_changed",
-    debugAction: params.debugAction ?? "notifyVehicleStatusChanged",
+    debugAction: actionName,
     previous: params.previousStatus ?? null,
     next: params.status,
     body: `${plaka} plakalı araç ${params.status} durumuna alındı. (İş Emri: ${params.workOrderNo})`,
@@ -173,30 +208,58 @@ export function notifyVehicleStatusChanged(params: {
     workOrderId: params.workOrderId,
     excludeUserId: params.excludeUserId,
   });
+
+  return buildVehicleStatusPushDebug({
+    actionName,
+    previousVehicleStatus: params.previousStatus ?? null,
+    newVehicleStatus: params.status,
+    changeDetected: true,
+    notifyCalled: true,
+    dispatches: [dispatch],
+  });
 }
 
 /** @deprecated notifyVehicleStatusChanged kullanın */
 export function notifyWorkOrderVehicleStatus(
   params: Parameters<typeof notifyVehicleStatusChanged>[0]
 ): void {
-  notifyVehicleStatusChanged(params);
+  void notifyVehicleStatusChanged(params);
 }
 
 /** İş emri kaydı güncellendiğinde parça / işçilik / üst bilgi diff */
-export function notifyWorkOrderChanges(params: {
+export async function notifyWorkOrderChanges(params: {
   before: IsEmriKayit;
   after: IsEmriKayit;
   excludeUserId?: string;
   debugAction?: string;
-}): void {
+}): Promise<WorkOrderSavePushDebug> {
   const { before, after, excludeUserId } = params;
   const action = params.debugAction ?? "guncelleIsEmriKayitAction";
+  const vehicleChangeDetected = before.aracDurumu !== after.aracDurumu;
+  const anyChangeDetected = hasWorkOrderChanges(before, after);
 
   logPushAction(action, {
     workOrderId: after.id,
-    extra: { phase: "notifyWorkOrderChanges_start" },
+    extra: {
+      phase: "notifyWorkOrderChanges_start",
+      vehicleChangeDetected,
+      anyChangeDetected,
+    },
   });
 
+  if (!anyChangeDetected) {
+    return buildWorkOrderSavePushDebug({
+      actionName: action,
+      previousVehicleStatus: before.aracDurumu,
+      newVehicleStatus: after.aracDurumu,
+      vehicleChangeDetected: false,
+      anyChangeDetected: false,
+      notifyCalled: false,
+      dispatches: [],
+    });
+  }
+
+  const dispatches: PushDispatchSummary[] = [];
   const base = {
     workOrderId: after.id,
     workOrderNo: after.isEmriNo,
@@ -205,63 +268,177 @@ export function notifyWorkOrderChanges(params: {
     debugAction: action,
   };
 
-  if (before.aracDurumu !== after.aracDurumu) {
-    notifyVehicleStatusChanged({
+  if (vehicleChangeDetected) {
+    const vehicleDebug = await notifyVehicleStatusChanged({
       ...base,
       status: after.aracDurumu,
       previousStatus: before.aracDurumu,
+      debugAction: `${action} → notifyVehicleStatusChanged`,
     });
+    dispatches.push(...vehicleDebug.dispatches);
   }
 
+  const plaka = formatPlaka(after.plaka);
   const parcaDiff = diffParcaLines(before.parcalar, after.parcalar);
   for (const row of parcaDiff.added) {
-    notifyPartLineAdded({ ...base, parca: row });
-    notifyProcurementStatusChanged({
-      ...base,
-      parcaAdi: row.parcaAdi,
-      durum: row.tedarikDurumu,
-      previousDurum: undefined,
-    });
+    const ad = row.parcaAdi.trim() || "Parça";
+    dispatches.push(
+      await emitPushEventAwait({
+        event: "part_line_added",
+        debugAction: action,
+        body: `${plaka} plakalı iş emrine yeni parça satırı eklendi: ${ad}`,
+        url: `/is-emirleri/${after.id}`,
+        tag: `wo-part-add-${after.id}-${row.id}`,
+        workOrderId: after.id,
+        excludeUserId,
+      })
+    );
+    dispatches.push(
+      await emitPushEventAwait({
+        event: "procurement_status_changed",
+        debugAction: action,
+        previous: null,
+        next: row.tedarikDurumu,
+        body: `${plaka} plakalı araç için tedarik durumu ${row.tedarikDurumu} olarak güncellendi. (${ad})`,
+        url: `/tedarik`,
+        tag: `tedarik-${after.id}-${row.tedarikDurumu}-${ad.slice(0, 24)}`,
+        workOrderId: after.id,
+        excludeUserId,
+      })
+    );
   }
   for (const row of parcaDiff.removed) {
-    notifyPartLineRemoved({ ...base, parcaAdi: row.parcaAdi });
+    const ad = row.parcaAdi.trim() || "Parça";
+    dispatches.push(
+      await emitPushEventAwait({
+        event: "part_line_removed",
+        debugAction: action,
+        body: `${plaka} plakalı iş emrinden parça satırı silindi: ${ad}`,
+        url: `/is-emirleri/${after.id}`,
+        tag: `wo-part-del-${after.id}-${Date.now()}`,
+        workOrderId: after.id,
+        excludeUserId,
+      })
+    );
   }
   for (const { before: prev, after: next } of parcaDiff.updated) {
     if (prev.tedarikDurumu !== next.tedarikDurumu) {
-      notifyProcurementStatusChanged({
-        ...base,
-        parcaAdi: next.parcaAdi,
-        durum: next.tedarikDurumu,
-        previousDurum: prev.tedarikDurumu,
-      });
+      const ad = next.parcaAdi.trim() || "Parça";
+      dispatches.push(
+        await emitPushEventAwait({
+          event: "procurement_status_changed",
+          debugAction: action,
+          previous: prev.tedarikDurumu,
+          next: next.tedarikDurumu,
+          body: `${plaka} plakalı araç için tedarik durumu ${next.tedarikDurumu} olarak güncellendi. (${ad})`,
+          url: `/tedarik`,
+          tag: `tedarik-${after.id}-${next.tedarikDurumu}-${ad.slice(0, 24)}`,
+          workOrderId: after.id,
+          excludeUserId,
+        })
+      );
     }
     if (
       prev.parcaAdi !== next.parcaAdi ||
       prev.adet !== next.adet ||
       prev.birimFiyat !== next.birimFiyat
     ) {
-      notifyPartLineUpdated({ ...base, parcaAdi: next.parcaAdi });
+      const ad = next.parcaAdi.trim() || "Parça";
+      dispatches.push(
+        await emitPushEventAwait({
+          event: "part_line_updated",
+          debugAction: action,
+          body: `${plaka} plakalı iş emrinde parça satırı güncellendi: ${ad}`,
+          url: `/is-emirleri/${after.id}`,
+          tag: `wo-part-upd-${after.id}-${Date.now()}`,
+          workOrderId: after.id,
+          excludeUserId,
+        })
+      );
     }
   }
 
   const iscilikDiff = diffIscilikLines(before.iscilikSatirlari, after.iscilikSatirlari);
   for (const row of iscilikDiff.added) {
-    notifyLaborLineAdded({ ...base, aciklama: row.aciklama });
+    const aciklama = row.aciklama.trim() || "İşçilik";
+    dispatches.push(
+      await emitPushEventAwait({
+        event: "labor_line_added",
+        debugAction: action,
+        body: `${plaka} plakalı iş emrine yeni işçilik satırı eklendi: ${aciklama}`,
+        url: `/is-emirleri/${after.id}`,
+        tag: `wo-labor-add-${after.id}-${Date.now()}`,
+        workOrderId: after.id,
+        excludeUserId,
+      })
+    );
   }
   for (const row of iscilikDiff.removed) {
-    notifyLaborLineRemoved({ ...base, aciklama: row.aciklama });
+    const aciklama = row.aciklama.trim() || "İşçilik";
+    dispatches.push(
+      await emitPushEventAwait({
+        event: "labor_line_removed",
+        debugAction: action,
+        body: `${plaka} plakalı iş emrinden işçilik satırı silindi: ${aciklama}`,
+        url: `/is-emirleri/${after.id}`,
+        tag: `wo-labor-del-${after.id}-${Date.now()}`,
+        workOrderId: after.id,
+        excludeUserId,
+      })
+    );
   }
   for (const { after: next } of iscilikDiff.updated) {
-    notifyLaborLineUpdated({ ...base, aciklama: next.aciklama });
+    const aciklama = next.aciklama.trim() || "İşçilik";
+    dispatches.push(
+      await emitPushEventAwait({
+        event: "labor_line_updated",
+        debugAction: action,
+        body: `${plaka} plakalı iş emrinde işçilik satırı güncellendi: ${aciklama}`,
+        url: `/is-emirleri/${after.id}`,
+        tag: `wo-labor-upd-${after.id}-${Date.now()}`,
+        workOrderId: after.id,
+        excludeUserId,
+      })
+    );
   }
 
   if (expertiseChecklistChanged(before, after)) {
-    notifyExpertiseChecklistChanged(base);
+    dispatches.push(
+      await emitPushEventAwait({
+        event: "expertise_checklist_changed",
+        debugAction: action,
+        body: `${plaka} plakalı iş emrinde ekspertiz kontrol listesi güncellendi. (${after.isEmriNo})`,
+        url: `/is-emirleri/${after.id}`,
+        tag: `wo-checklist-${after.id}-${Date.now()}`,
+        workOrderId: after.id,
+        excludeUserId,
+      })
+    );
   }
 
   if (workOrderHeaderFieldsChanged(before, after)) {
-    notifyWorkOrderUpdated({ ...base, debugAction: action });
+    dispatches.push(
+      await emitPushEventAwait({
+        event: "work_order_updated",
+        debugAction: action,
+        body: `İş emri güncellendi. İş Emri No: ${after.isEmriNo} · ${plaka}`,
+        url: `/is-emirleri/${after.id}`,
+        tag: `wo-updated-${after.id}-${Date.now()}`,
+        workOrderId: after.id,
+        excludeUserId,
+      })
+    );
   }
+
+  return buildWorkOrderSavePushDebug({
+    actionName: action,
+    previousVehicleStatus: before.aracDurumu,
+    newVehicleStatus: after.aracDurumu,
+    vehicleChangeDetected,
+    anyChangeDetected: true,
+    notifyCalled: true,
+    dispatches,
+  });
 }
 
 export function notifyExpertiseChecklistChanged(params: {
