@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
-import { useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useTransition } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { guncelleAracDurumuAction } from "@/app/(dashboard)/is-emirleri/actions";
+import { guncelleIsEmriKayitAction } from "@/app/(dashboard)/is-emirleri/[id]/actions";
 import { IsEmriActionBar } from "@/components/is-emri/IsEmriActionBar";
 import { IsEmriForm } from "@/components/is-emri/IsEmriForm";
 import { WorkOrderHasarGorselleriSection } from "@/components/is-emri/WorkOrderHasarGorselleriSection";
@@ -10,8 +12,9 @@ import { useToast } from "@/components/ui/ToastProvider";
 import { filterImagesForPdf } from "@/types/work-order-image";
 import { downloadIsEmriPdf } from "@/lib/is-emri/pdf-download";
 import { isEmriKayitToFormState } from "@/lib/data/map-work-order";
-import type { IsEmriKayit } from "@/types/is-emri";
+import type { IsEmriFormState, IsEmriKayit } from "@/types/is-emri";
 import type { WorkOrderImage } from "@/types/work-order-image";
+import type { AracDurumu } from "@/types/vehicle-status";
 
 interface IsEmriDetayClientProps {
   kayit: IsEmriKayit;
@@ -28,7 +31,11 @@ export function IsEmriDetayClient({
 }: IsEmriDetayClientProps) {
   const printRef = useRef<HTMLElement | null>(null);
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { toast } = useToast();
+  const [pending, startTransition] = useTransition();
+
+  const initialForm = useMemo(() => isEmriKayitToFormState(kayit), [kayit]);
 
   const printImages = useMemo(() => filterImagesForPdf(images), [images]);
   const imageUrls = useMemo(
@@ -84,6 +91,35 @@ export function IsEmriDetayClient({
     };
   }, [searchParams, kayit.isEmriNo, toast]);
 
+  const handleVehicleStatusPersist = useCallback(
+    async (aracDurumu: AracDurumu): Promise<boolean> => {
+      const result = await guncelleAracDurumuAction(kayit.id, aracDurumu);
+      if (!result.ok) {
+        toast(result.error ?? "Araç durumu kaydedilemedi.", "error");
+        return false;
+      }
+      toast("Araç durumu güncellendi.", "success");
+      router.refresh();
+      return true;
+    },
+    [kayit.id, router, toast]
+  );
+
+  const handleSave = useCallback(
+    (form: IsEmriFormState) => {
+      startTransition(async () => {
+        const result = await guncelleIsEmriKayitAction(kayit.id, form);
+        if (!result.ok) {
+          toast(result.error ?? "Kayıt güncellenemedi.", "error");
+          return;
+        }
+        toast("İş emri güncellendi.", "success");
+        router.refresh();
+      });
+    },
+    [kayit.id, router, toast]
+  );
+
   return (
     <div className="mx-auto max-w-4xl space-y-4">
       <div className="flex flex-wrap items-center gap-2">
@@ -103,12 +139,16 @@ export function IsEmriDetayClient({
         isAdmin={isAdmin}
       />
       <IsEmriForm
-        mode="view"
-        initialForm={isEmriKayitToFormState(kayit)}
+        mode="edit"
+        initialForm={initialForm}
+        workOrderId={kayit.id}
         workOrderNo={kayit.isEmriNo}
         printRef={printRef}
         printImages={printImages}
         autoPrint={false}
+        onSave={handleSave}
+        onVehicleStatusPersist={handleVehicleStatusPersist}
+        saving={pending}
       />
     </div>
   );

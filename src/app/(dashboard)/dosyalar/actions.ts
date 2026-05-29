@@ -30,7 +30,7 @@ import { invalidateDashboardCache } from "@/lib/cache";
 import { getCurrentProfile } from "@/lib/auth/get-current-profile";
 import { assertProductWriteAccess } from "@/lib/system/feature-freeze";
 import { assertSafeModeOperation } from "@/lib/system/freeze";
-import { notifyServiceFileStatus } from "@/lib/push/events";
+import { logPushAction, notifyServiceFileStatus } from "@/lib/push/events";
 
 function revalidateDosya(id: string) {
   invalidateDashboardCache();
@@ -67,6 +67,10 @@ async function applyStatusUpdate(
   const current = await getDosyaById(id);
   const previousDurum =
     current.ok && current.data ? current.data.durum : undefined;
+
+  logPushAction("applyStatusUpdate", {
+    extra: { fileId: id, previous: previousDurum ?? null, next: durum },
+  });
 
   const result = await guncelleDosya(id, { durum });
   if (!result.ok) return { ok: false, error: result.error };

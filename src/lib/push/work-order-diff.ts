@@ -53,6 +53,16 @@ function iscilikChanged(a: IscilikSatir, b: IscilikSatir): boolean {
   return a.aciklama !== b.aciklama || a.tutar !== b.tutar;
 }
 
+export function expertiseChecklistChanged(
+  before: IsEmriKayit,
+  after: IsEmriKayit
+): boolean {
+  return (
+    JSON.stringify(before.ekspertizChecklist) !==
+    JSON.stringify(after.ekspertizChecklist)
+  );
+}
+
 export function workOrderHeaderFieldsChanged(
   before: IsEmriKayit,
   after: IsEmriKayit
@@ -66,8 +76,6 @@ export function workOrderHeaderFieldsChanged(
     before.km !== after.km ||
     before.serviseGirisTarihi !== after.serviseGirisTarihi ||
     before.ekspertizAlani !== after.ekspertizAlani ||
-    before.yapilacakIslemler !== after.yapilacakIslemler ||
-    JSON.stringify(before.ekspertizChecklist) !==
-      JSON.stringify(after.ekspertizChecklist)
+    before.yapilacakIslemler !== after.yapilacakIslemler
   );
 }

@@ -4,6 +4,7 @@ import { logPush } from "@/lib/push/logger";
 import {
   diffIscilikLines,
   diffParcaLines,
+  expertiseChecklistChanged,
   workOrderHeaderFieldsChanged,
 } from "@/lib/push/work-order-diff";
 import type { AracDurumu } from "@/types/vehicle-status";
@@ -28,13 +29,48 @@ function formatPlaka(plaka: string): string {
   return p || "—";
 }
 
-function emitPushEvent(opts: EmitOptions): void {
+/** Vercel / sunucu loglarında action izleme */
+export function logPushAction(
+  action: string,
+  details: {
+    workOrderId?: string;
+    previous?: unknown;
+    next?: unknown;
+    extra?: Record<string, unknown>;
+  }
+): void {
+  console.log(`[push:action] ${action}`, {
+    workOrderId: details.workOrderId ?? null,
+    previous: details.previous ?? null,
+    next: details.next ?? null,
+    ...details.extra,
+  });
+}
+
+function emitPushEvent(
+  opts: EmitOptions & {
+    debugAction?: string;
+    previous?: unknown;
+    next?: unknown;
+  }
+): void {
+  console.log(`[push:event] ${opts.event}`, {
+    action: opts.debugAction ?? null,
+    previous: opts.previous ?? null,
+    next: opts.next ?? null,
+    body: opts.body,
+    workOrderId: opts.workOrderId ?? null,
+  });
+
   logPush("event", opts.event, {
     body: opts.body,
     url: opts.url,
     tag: opts.tag,
     workOrderId: opts.workOrderId ?? null,
     excludeUserId: opts.excludeUserId ?? null,
+    debugAction: opts.debugAction ?? null,
+    previous: opts.previous ?? null,
+    next: opts.next ?? null,
   });
 
   dispatchTeamPushAsync(
@@ -71,10 +107,12 @@ export function notifyWorkOrderUpdated(params: {
   workOrderNo: string;
   plaka: string;
   excludeUserId?: string;
+  debugAction?: string;
 }): void {
   const plaka = formatPlaka(params.plaka);
   emitPushEvent({
     event: "work_order_updated",
+    debugAction: params.debugAction ?? "notifyWorkOrderUpdated",
     body: `İş emri güncellendi. İş Emri No: ${params.workOrderNo} · ${plaka}`,
     url: `/is-emirleri/${params.workOrderId}`,
     tag: `wo-updated-${params.workOrderId}-${Date.now()}`,
@@ -100,16 +138,23 @@ export function notifyWorkOrderDeleted(params: {
   });
 }
 
-export function notifyWorkOrderVehicleStatus(params: {
+export function notifyVehicleStatusChanged(params: {
   workOrderId: string;
   workOrderNo: string;
   plaka: string;
   status: AracDurumu;
   previousStatus?: AracDurumu;
   excludeUserId?: string;
+  debugAction?: string;
 }): void {
   if (params.previousStatus !== undefined && params.previousStatus === params.status) {
-    logPush("event", "work_order_vehicle_status_skipped", {
+    console.log("[push:event] vehicle_status_changed skipped", {
+      action: params.debugAction ?? "notifyVehicleStatusChanged",
+      previous: params.previousStatus,
+      next: params.status,
+      reason: "unchanged",
+    });
+    logPush("event", "vehicle_status_changed_skipped", {
       reason: "unchanged",
       status: params.status,
     });
@@ -118,7 +163,10 @@ export function notifyWorkOrderVehicleStatus(params: {
 
   const plaka = formatPlaka(params.plaka);
   emitPushEvent({
-    event: "work_order_vehicle_status",
+    event: "vehicle_status_changed",
+    debugAction: params.debugAction ?? "notifyVehicleStatusChanged",
+    previous: params.previousStatus ?? null,
+    next: params.status,
     body: `${plaka} plakalı araç ${params.status} durumuna alındı. (İş Emri: ${params.workOrderNo})`,
     url: `/is-emirleri/${params.workOrderId}`,
     tag: `wo-vehicle-${params.workOrderId}-${params.status}`,
@@ -127,22 +175,38 @@ export function notifyWorkOrderVehicleStatus(params: {
   });
 }
 
+/** @deprecated notifyVehicleStatusChanged kullanın */
+export function notifyWorkOrderVehicleStatus(
+  params: Parameters<typeof notifyVehicleStatusChanged>[0]
+): void {
+  notifyVehicleStatusChanged(params);
+}
+
 /** İş emri kaydı güncellendiğinde parça / işçilik / üst bilgi diff */
 export function notifyWorkOrderChanges(params: {
   before: IsEmriKayit;
   after: IsEmriKayit;
   excludeUserId?: string;
+  debugAction?: string;
 }): void {
   const { before, after, excludeUserId } = params;
+  const action = params.debugAction ?? "guncelleIsEmriKayitAction";
+
+  logPushAction(action, {
+    workOrderId: after.id,
+    extra: { phase: "notifyWorkOrderChanges_start" },
+  });
+
   const base = {
     workOrderId: after.id,
     workOrderNo: after.isEmriNo,
     plaka: after.plaka,
     excludeUserId,
+    debugAction: action,
   };
 
   if (before.aracDurumu !== after.aracDurumu) {
-    notifyWorkOrderVehicleStatus({
+    notifyVehicleStatusChanged({
       ...base,
       status: after.aracDurumu,
       previousStatus: before.aracDurumu,
@@ -152,7 +216,7 @@ export function notifyWorkOrderChanges(params: {
   const parcaDiff = diffParcaLines(before.parcalar, after.parcalar);
   for (const row of parcaDiff.added) {
     notifyPartLineAdded({ ...base, parca: row });
-    notifyProcurementStatus({
+    notifyProcurementStatusChanged({
       ...base,
       parcaAdi: row.parcaAdi,
       durum: row.tedarikDurumu,
@@ -164,7 +228,7 @@ export function notifyWorkOrderChanges(params: {
   }
   for (const { before: prev, after: next } of parcaDiff.updated) {
     if (prev.tedarikDurumu !== next.tedarikDurumu) {
-      notifyProcurementStatus({
+      notifyProcurementStatusChanged({
         ...base,
         parcaAdi: next.parcaAdi,
         durum: next.tedarikDurumu,
@@ -191,9 +255,32 @@ export function notifyWorkOrderChanges(params: {
     notifyLaborLineUpdated({ ...base, aciklama: next.aciklama });
   }
 
-  if (workOrderHeaderFieldsChanged(before, after)) {
-    notifyWorkOrderUpdated(base);
+  if (expertiseChecklistChanged(before, after)) {
+    notifyExpertiseChecklistChanged(base);
   }
+
+  if (workOrderHeaderFieldsChanged(before, after)) {
+    notifyWorkOrderUpdated({ ...base, debugAction: action });
+  }
+}
+
+export function notifyExpertiseChecklistChanged(params: {
+  workOrderId: string;
+  workOrderNo: string;
+  plaka: string;
+  excludeUserId?: string;
+  debugAction?: string;
+}): void {
+  const plaka = formatPlaka(params.plaka);
+  emitPushEvent({
+    event: "expertise_checklist_changed",
+    debugAction: params.debugAction ?? "notifyExpertiseChecklistChanged",
+    body: `${plaka} plakalı iş emrinde ekspertiz kontrol listesi güncellendi. (${params.workOrderNo})`,
+    url: `/is-emirleri/${params.workOrderId}`,
+    tag: `wo-checklist-${params.workOrderId}-${Date.now()}`,
+    workOrderId: params.workOrderId,
+    excludeUserId: params.excludeUserId,
+  });
 }
 
 // ——— Parça / işçilik satırları ———
@@ -314,16 +401,23 @@ export function notifyLaborLineRemoved(params: {
 
 // ——— Tedarik ———
 
-export function notifyProcurementStatus(params: {
+export function notifyProcurementStatusChanged(params: {
   workOrderId: string;
   plaka: string;
   parcaAdi: string;
   durum: TedarikDurumu;
   previousDurum?: TedarikDurumu;
   excludeUserId?: string;
+  debugAction?: string;
 }): void {
   if (params.previousDurum !== undefined && params.previousDurum === params.durum) {
-    logPush("event", "procurement_status_skipped", {
+    console.log("[push:event] procurement_status_changed skipped", {
+      action: params.debugAction ?? "notifyProcurementStatusChanged",
+      previous: params.previousDurum,
+      next: params.durum,
+      reason: "unchanged",
+    });
+    logPush("event", "procurement_status_changed_skipped", {
       reason: "unchanged",
       durum: params.durum,
     });
@@ -333,13 +427,23 @@ export function notifyProcurementStatus(params: {
   const plaka = formatPlaka(params.plaka);
   const parca = params.parcaAdi.trim() || "Parça";
   emitPushEvent({
-    event: "procurement_status",
+    event: "procurement_status_changed",
+    debugAction: params.debugAction ?? "notifyProcurementStatusChanged",
+    previous: params.previousDurum ?? null,
+    next: params.durum,
     body: `${plaka} plakalı araç için tedarik durumu ${params.durum} olarak güncellendi. (${parca})`,
     url: `/tedarik`,
     tag: `tedarik-${params.workOrderId}-${params.durum}-${parca.slice(0, 24)}`,
     workOrderId: params.workOrderId,
     excludeUserId: params.excludeUserId,
   });
+}
+
+/** @deprecated notifyProcurementStatusChanged kullanın */
+export function notifyProcurementStatus(
+  params: Parameters<typeof notifyProcurementStatusChanged>[0]
+): void {
+  notifyProcurementStatusChanged(params);
 }
 
 export function notifyProcurementStatusesOnCreate(params: {
@@ -352,12 +456,13 @@ export function notifyProcurementStatusesOnCreate(params: {
     if (!parca.parcaAdi.trim() && parca.tedarikDurumu === "Sigortadan Bekleniyor") {
       continue;
     }
-    notifyProcurementStatus({
+    notifyProcurementStatusChanged({
       workOrderId: params.workOrderId,
       plaka: params.plaka,
       parcaAdi: parca.parcaAdi,
       durum: parca.tedarikDurumu,
       excludeUserId: params.excludeUserId,
+      debugAction: "notifyProcurementStatusesOnCreate",
     });
   }
 }

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getIsEmriById, guncelleIsEmri } from "@/lib/data/work-orders";
-import { notifyWorkOrderChanges } from "@/lib/push/events";
+import { logPushAction, notifyWorkOrderChanges } from "@/lib/push/events";
 import { assertOperationAccess } from "@/lib/operations/auth-action";
 import type { IsEmriFormState } from "@/types/is-emri";
 import type { OperationResult } from "@/types/operations";
@@ -30,6 +30,16 @@ export async function guncelleIsEmriKayitAction(
     return { ok: false, error: "İş emri bulunamadı." };
   }
 
+  logPushAction("guncelleIsEmriKayitAction", {
+    workOrderId: id,
+    extra: {
+      plaka: form.plaka,
+      aracDurumu: form.aracDurumu,
+      parcaCount: form.parcalar.length,
+      iscilikCount: form.iscilikSatirlari.length,
+    },
+  });
+
   const updateResult = await guncelleIsEmri(id, form);
   if (!updateResult.ok) return { ok: false, error: updateResult.error };
 
@@ -37,6 +47,7 @@ export async function guncelleIsEmriKayitAction(
     before: beforeResult.data,
     after: updateResult.data,
     excludeUserId: auth.profile.id,
+    debugAction: "guncelleIsEmriKayitAction",
   });
 
   revalidateIsEmriPaths(id);

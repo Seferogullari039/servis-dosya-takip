@@ -49,6 +49,7 @@ import {
 } from "@/lib/is-emri/calculations";
 
 import { initialIsEmriState, type IsEmriFormState } from "@/types/is-emri";
+import type { AracDurumu } from "@/types/vehicle-status";
 
 import type { WorkOrderImage } from "@/types/work-order-image";
 
@@ -62,11 +63,13 @@ import "./is-emri-print.css";
 
 export interface IsEmriFormProps {
 
-  mode?: "create" | "view";
+  mode?: "create" | "view" | "edit";
 
   initialForm?: IsEmriFormState;
 
   workOrderNo?: string;
+
+  workOrderId?: string;
 
   autoPrint?: boolean;
 
@@ -75,6 +78,9 @@ export interface IsEmriFormProps {
   printImages?: WorkOrderImage[];
 
   onSave?: (form: IsEmriFormState) => void;
+
+  /** Detay sayfasında araç durumu seçilince anında kaydet */
+  onVehicleStatusPersist?: (status: AracDurumu) => Promise<boolean>;
 
   saving?: boolean;
 
@@ -98,6 +104,10 @@ export function IsEmriForm({
 
   onSave,
 
+  workOrderId,
+
+  onVehicleStatusPersist,
+
   saving = false,
 
 }: IsEmriFormProps) {
@@ -109,6 +119,12 @@ export function IsEmriForm({
     () => initialForm ?? initialIsEmriState()
 
   );
+
+  const [vehicleStatusSaving, setVehicleStatusSaving] = useState(false);
+
+  useEffect(() => {
+    if (initialForm) setForm(initialForm);
+  }, [initialForm]);
 
   const [draftNo] = useState(() => generateWorkOrderNo());
 
@@ -269,7 +285,9 @@ export function IsEmriForm({
 
           <p className="text-sm text-ink-muted">
 
-            Formu doldurun; yazdırma ve PDF kurumsal iş emri formatında çıkar.
+            {mode === "edit"
+              ? "Değişiklikleri kaydedin; ekip push bildirimi alır."
+              : "Formu doldurun; yazdırma ve PDF kurumsal iş emri formatında çıkar."}
 
           </p>
 
@@ -429,9 +447,17 @@ export function IsEmriForm({
 
                 value={form.aracDurumu}
 
-                onChange={(aracDurumu) => patch("aracDurumu", aracDurumu)}
+                onChange={(aracDurumu) => {
+                  patch("aracDurumu", aracDurumu);
+                  if (workOrderId && onVehicleStatusPersist) {
+                    setVehicleStatusSaving(true);
+                    void onVehicleStatusPersist(aracDurumu).finally(() =>
+                      setVehicleStatusSaving(false)
+                    );
+                  }
+                }}
 
-                disabled={readOnly}
+                disabled={readOnly || vehicleStatusSaving}
 
               />
 

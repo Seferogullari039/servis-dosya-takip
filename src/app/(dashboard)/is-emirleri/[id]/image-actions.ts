@@ -5,6 +5,7 @@ import { requireAuth } from "@/lib/auth/require-auth";
 import { getCurrentProfile } from "@/lib/auth/get-current-profile";
 import { getIsEmriById } from "@/lib/data/work-orders";
 import {
+  logPushAction,
   notifyWorkOrderImageDeleted,
   notifyWorkOrderImageUploaded,
 } from "@/lib/push/events";
@@ -56,6 +57,21 @@ export async function uploadWorkOrderImageAction(
     return { error: result.error };
   }
 
+  logPushAction("uploadWorkOrderImageAction", {
+    workOrderId,
+    extra: { category },
+  });
+
+  const wo = await getIsEmriById(workOrderId);
+  if (wo.ok && wo.data) {
+    notifyWorkOrderImageUploaded({
+      workOrderId,
+      workOrderNo: wo.data.isEmriNo,
+      plaka: wo.data.plaka,
+      category,
+    });
+  }
+
   revalidatePath(`/is-emirleri/${workOrderId}`);
   return { success: true };
 }
@@ -70,6 +86,8 @@ export async function deleteWorkOrderImageAction(
   if (!profile || profile.role !== "admin") {
     return { error: "Görsel silme yalnızca yöneticiler içindir." };
   }
+
+  logPushAction("deleteWorkOrderImageAction", { workOrderId, extra: { imageId } });
 
   const wo = await getIsEmriById(workOrderId);
   const result = await deleteWorkOrderImage(imageId);
