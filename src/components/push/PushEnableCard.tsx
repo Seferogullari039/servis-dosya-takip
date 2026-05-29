@@ -1,13 +1,20 @@
 "use client";
 
 import { Button } from "@/components/ui/Button";
+import { PushConfigDebug } from "@/components/push/PushConfigDebug";
 import { usePushNotifications } from "@/components/push/PushNotificationProvider";
 import { useToast } from "@/components/ui/ToastProvider";
 import { cn } from "@/lib/utils/cn";
 
 export function PushEnableCard() {
-  const { firebaseConfigured, diagnostics, enabling, enableNotifications } =
-    usePushNotifications();
+  const {
+    publicFirebaseReady,
+    missingPublicEnv,
+    serverPushReady,
+    diagnostics,
+    enabling,
+    enableNotifications,
+  } = usePushNotifications();
   const { toast } = useToast();
 
   const active = diagnostics.tokenRegistered;
@@ -71,13 +78,16 @@ export function PushEnableCard() {
         ) : null}
       </div>
 
-      {!firebaseConfigured ? (
-        <p className="mt-4 rounded-lg bg-amber-50 px-3 py-2.5 text-sm text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
-          Bildirim ayarları henüz tamamlanmamış.
-        </p>
+      {!publicFirebaseReady ? (
+        <PushConfigDebug
+          className="mt-4"
+          publicFirebaseReady={publicFirebaseReady}
+          missingPublicEnv={missingPublicEnv}
+          serverPushReady={serverPushReady}
+        />
       ) : null}
 
-      {firebaseConfigured && diagnostics.iosNeedsHomeScreen ? (
+      {publicFirebaseReady && diagnostics.iosNeedsHomeScreen ? (
         <div className="mt-4 space-y-3">
           <p className="rounded-lg bg-amber-50 px-3 py-2.5 text-sm text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
             Bildirim için Ana Ekrana Eklemeniz gerekir. Safari’de Paylaş →{" "}
@@ -90,7 +100,7 @@ export function PushEnableCard() {
         </div>
       ) : null}
 
-      {firebaseConfigured && !active && !diagnostics.iosNeedsHomeScreen ? (
+      {publicFirebaseReady && !active && !diagnostics.iosNeedsHomeScreen ? (
         <div className="mt-4">
           <Button
             type="button"
@@ -107,6 +117,12 @@ export function PushEnableCard() {
           {diagnostics.permission === "denied" ? (
             <p className="mt-2 text-xs text-ink-muted dark:text-zinc-400">
               Bildirim izni kapalı. Tarayıcı veya cihaz ayarlarından izin verin.
+            </p>
+          ) : null}
+          {serverPushReady === false ? (
+            <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">
+              Bu cihazda bildirim açılabilir; sunucudan gönderim için sunucu push
+              anahtarı gerekir.
             </p>
           ) : null}
         </div>

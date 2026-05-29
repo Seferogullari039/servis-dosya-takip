@@ -17,7 +17,7 @@ export interface PushClientDiagnostics {
 
 export function readPushClientDiagnostics(
   subscriptionCount: number,
-  firebaseConfigured: boolean
+  publicFirebaseReady: boolean
 ): PushClientDiagnostics {
   const iosNeedsHomeScreen =
     typeof window !== "undefined" &&
@@ -37,7 +37,7 @@ export function readPushClientDiagnostics(
 
   const permission = Notification.permission;
   const tokenRegistered =
-    firebaseConfigured && permission === "granted" && subscriptionCount > 0;
+    publicFirebaseReady && permission === "granted" && subscriptionCount > 0;
 
   return {
     device: getDeviceLabel(),
@@ -45,7 +45,7 @@ export function readPushClientDiagnostics(
     permission,
     tokenRegistered,
     canEnable:
-      firebaseConfigured &&
+      publicFirebaseReady &&
       canRequestPushPermissionOnDevice() &&
       permission !== "granted",
     iosNeedsHomeScreen,

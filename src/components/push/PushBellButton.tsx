@@ -17,7 +17,7 @@ export function PushBellButton() {
     unreadCount,
     diagnostics,
     enabling,
-    firebaseConfigured,
+    publicFirebaseReady,
     enableNotifications,
   } = usePushNotifications();
   const { toast } = useToast();
@@ -27,8 +27,8 @@ export function PushBellButton() {
     setOpen((v) => !v);
     if (bellStatus === "active") return;
 
-    if (!firebaseConfigured) {
-      toast("Bildirim ayarları henüz tamamlanmamış.", "info");
+    if (!publicFirebaseReady) {
+      toast("Public Firebase env eksik. Dashboard’daki eksik değişkenlere bakın.", "info");
       return;
     }
 
@@ -87,7 +87,7 @@ export function PushBellButton() {
           >
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
-        ) : bellStatus === "off" && firebaseConfigured ? (
+        ) : bellStatus === "off" && publicFirebaseReady ? (
           <span
             className="absolute right-1 top-1 h-2 w-2 rounded-full bg-amber-500"
             aria-hidden

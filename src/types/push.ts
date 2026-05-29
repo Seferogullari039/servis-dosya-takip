@@ -26,5 +26,17 @@ export type PushPermissionState =
 
 export interface PushDashboardStatus {
   subscriptionCount: number;
-  firebaseConfigured: boolean;
+  /** Tüm NEXT_PUBLIC_FIREBASE_* değişkenleri dolu */
+  publicFirebaseReady: boolean;
+  missingPublicEnv: string[];
+  /** FIREBASE_SERVICE_ACCOUNT_JSON (sunucu) */
+  serverPushReady: boolean;
+}
+
+export interface PushStatusApiResponse {
+  publicFirebaseReady: boolean;
+  missingPublicEnv: string[];
+  missingPublicEnvLabel: string;
+  serverPushReady: boolean;
+  subscriptionCount: number;
 }

@@ -2,7 +2,8 @@ import {
   ensureFirebaseMessagingServiceWorker,
   getFirebaseMessaging,
 } from "@/lib/firebase/client";
-import { getFirebasePublicConfig, isFirebaseConfigured } from "@/lib/firebase/config";
+import { getFirebasePublicConfig } from "@/lib/firebase/config";
+import { isFirebasePublicConfigured } from "@/lib/firebase/public-env";
 import {
   canRequestPushPermissionOnDevice,
   detectPushDeviceType,
@@ -33,7 +34,7 @@ export {
 } from "@/lib/push/device";
 
 export async function enablePushNotifications(): Promise<EnablePushResult> {
-  if (!isFirebaseConfigured()) {
+  if (!isFirebasePublicConfigured()) {
     return {
       ok: false,
       reason: "firebase_not_configured",

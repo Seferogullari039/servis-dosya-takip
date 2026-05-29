@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { PushConfigDebug } from "@/components/push/PushConfigDebug";
 import { usePushNotifications } from "@/components/push/PushNotificationProvider";
 import { cn } from "@/lib/utils/cn";
 
@@ -16,12 +17,20 @@ function tokenLabel(registered: boolean): string {
 }
 
 export function PushStatusCard() {
-  const { diagnostics, subscriptionCount, firebaseConfigured, refreshDiagnostics } =
-    usePushNotifications();
+  const {
+    diagnostics,
+    subscriptionCount,
+    publicFirebaseReady,
+    missingPublicEnv,
+    serverPushReady,
+    refreshDiagnostics,
+    refreshPushStatus,
+  } = usePushNotifications();
 
   useEffect(() => {
     refreshDiagnostics();
-  }, [refreshDiagnostics]);
+    void refreshPushStatus();
+  }, [refreshDiagnostics, refreshPushStatus]);
 
   const enabled = diagnostics.tokenRegistered;
 
@@ -40,9 +49,9 @@ export function PushStatusCard() {
           <p className="mt-1 text-xs text-ink-muted dark:text-zinc-400">
             {enabled
               ? `Aktif · ${subscriptionCount} cihaz kayıtlı`
-              : firebaseConfigured
+              : publicFirebaseReady
                 ? "Bildirimler henüz etkin değil"
-                : "Bildirim ayarları henüz tamamlanmamış"}
+                : "Public Firebase env eksik"}
           </p>
         </div>
         <span
@@ -56,6 +65,13 @@ export function PushStatusCard() {
           {enabled ? "Açık" : "Kapalı"}
         </span>
       </div>
+
+      <PushConfigDebug
+        className="mt-4"
+        publicFirebaseReady={publicFirebaseReady}
+        missingPublicEnv={missingPublicEnv}
+        serverPushReady={serverPushReady}
+      />
 
       <dl className="mt-4 grid gap-2 text-xs sm:grid-cols-2">
         <div className="flex justify-between gap-2 rounded-lg bg-surface-muted px-2.5 py-2 dark:bg-zinc-800/60">

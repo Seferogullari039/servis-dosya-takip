@@ -156,7 +156,9 @@ export async function getAracDashboardData(): Promise<
         ? getPushDashboardStatus(user.id)
         : Promise.resolve({
             subscriptionCount: 0,
-            firebaseConfigured: false,
+            publicFirebaseReady: false,
+            missingPublicEnv: [],
+            serverPushReady: false,
           }),
     ]);
     const tedarik = tedarikResult.ok

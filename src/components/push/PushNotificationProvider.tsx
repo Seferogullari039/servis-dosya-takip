@@ -10,19 +10,24 @@ import {
 } from "react";
 import { useToast } from "@/components/ui/ToastProvider";
 import {
+  getMissingFirebasePublicEnvVars,
+  type FirebasePublicEnvKey,
+} from "@/lib/firebase/public-env";
+import {
   readPushClientDiagnostics,
   type PushClientDiagnostics,
 } from "@/lib/push/client-diagnostics";
 import { enablePushNotifications } from "@/lib/push/enable-push";
 import { subscribeForegroundMessages } from "@/lib/firebase/client";
-import { isFirebaseConfigured } from "@/lib/firebase/config";
 import type { EnablePushResult } from "@/lib/push/enable-push";
-import type { PushDashboardStatus } from "@/types/push";
+import type { PushDashboardStatus, PushStatusApiResponse } from "@/types/push";
 
 export type PushBellStatus = "active" | "off" | "unsupported";
 
 interface PushNotificationContextValue {
-  firebaseConfigured: boolean;
+  publicFirebaseReady: boolean;
+  missingPublicEnv: FirebasePublicEnvKey[];
+  serverPushReady: boolean | null;
   subscriptionCount: number;
   unreadCount: number;
   diagnostics: PushClientDiagnostics;
@@ -30,6 +35,7 @@ interface PushNotificationContextValue {
   enabling: boolean;
   enableNotifications: () => Promise<EnablePushResult>;
   refreshDiagnostics: () => void;
+  refreshPushStatus: () => Promise<void>;
 }
 
 const PushNotificationContext = createContext<PushNotificationContextValue | null>(
@@ -58,27 +64,51 @@ export function PushNotificationProvider({
     initial.subscriptionCount
   );
   const [enabling, setEnabling] = useState(false);
+  const [missingPublicEnv, setMissingPublicEnv] = useState<
+    FirebasePublicEnvKey[]
+  >(initial.missingPublicEnv as FirebasePublicEnvKey[]);
+  const [serverPushReady, setServerPushReady] = useState<boolean | null>(
+    initial.serverPushReady
+  );
 
-  const firebaseConfigured =
-    initial.firebaseConfigured || isFirebaseConfigured();
+  const publicFirebaseReady = missingPublicEnv.length === 0;
 
   const [diagnostics, setDiagnostics] = useState(() =>
-    readPushClientDiagnostics(initial.subscriptionCount, initial.firebaseConfigured)
+    readPushClientDiagnostics(
+      initial.subscriptionCount,
+      initial.publicFirebaseReady
+    )
   );
 
   const refreshDiagnostics = useCallback(() => {
     setDiagnostics(
-      readPushClientDiagnostics(subscriptionCount, firebaseConfigured)
+      readPushClientDiagnostics(subscriptionCount, publicFirebaseReady)
     );
-  }, [subscriptionCount, firebaseConfigured]);
+  }, [subscriptionCount, publicFirebaseReady]);
+
+  const refreshPushStatus = useCallback(async () => {
+    const clientMissing = getMissingFirebasePublicEnvVars();
+    setMissingPublicEnv(clientMissing);
+
+    try {
+      const res = await fetch("/api/push/status", { cache: "no-store" });
+      if (!res.ok) return;
+      const data = (await res.json()) as PushStatusApiResponse;
+      setMissingPublicEnv(data.missingPublicEnv as FirebasePublicEnvKey[]);
+      setServerPushReady(data.serverPushReady);
+      setSubscriptionCount(data.subscriptionCount);
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   const bellStatus: PushBellStatus = useMemo(() => {
-    if (!firebaseConfigured || diagnostics.permission === "unsupported") {
+    if (!publicFirebaseReady || diagnostics.permission === "unsupported") {
       return "unsupported";
     }
     if (diagnostics.tokenRegistered) return "active";
     return "off";
-  }, [firebaseConfigured, diagnostics]);
+  }, [publicFirebaseReady, diagnostics]);
 
   const enableNotifications = useCallback(async () => {
     setEnabling(true);
@@ -88,15 +118,16 @@ export function PushNotificationProvider({
       if (result.ok) {
         setSubscriptionCount((c) => Math.max(1, c + 1));
         toast("Bildirimler aktif", "success");
+        void refreshPushStatus();
       }
       return result;
     } finally {
       setEnabling(false);
     }
-  }, [refreshDiagnostics, toast]);
+  }, [refreshDiagnostics, refreshPushStatus, toast]);
 
   useEffect(() => {
-    if (!firebaseConfigured) return;
+    if (!publicFirebaseReady) return;
     const unsub = subscribeForegroundMessages((payload) => {
       toast(`${payload.title}: ${payload.body}`, "success");
       if (payload.url && typeof window !== "undefined") {
@@ -109,15 +140,21 @@ export function PushNotificationProvider({
       }
     });
     return () => unsub?.();
-  }, [firebaseConfigured, toast]);
+  }, [publicFirebaseReady, toast]);
 
   useEffect(() => {
     refreshDiagnostics();
-  }, [refreshDiagnostics, subscriptionCount, firebaseConfigured]);
+  }, [refreshDiagnostics, subscriptionCount, publicFirebaseReady]);
+
+  useEffect(() => {
+    void refreshPushStatus();
+  }, [refreshPushStatus]);
 
   const value = useMemo(
     () => ({
-      firebaseConfigured,
+      publicFirebaseReady,
+      missingPublicEnv,
+      serverPushReady,
       subscriptionCount,
       unreadCount: 0,
       diagnostics,
@@ -125,15 +162,19 @@ export function PushNotificationProvider({
       enabling,
       enableNotifications,
       refreshDiagnostics,
+      refreshPushStatus,
     }),
     [
-      firebaseConfigured,
+      publicFirebaseReady,
+      missingPublicEnv,
+      serverPushReady,
       subscriptionCount,
       diagnostics,
       bellStatus,
       enabling,
       enableNotifications,
       refreshDiagnostics,
+      refreshPushStatus,
     ]
   );
 
