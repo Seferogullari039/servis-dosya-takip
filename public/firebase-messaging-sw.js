@@ -16,7 +16,9 @@ if (firebaseConfig.apiKey) {
   const messaging = firebase.messaging();
 
   messaging.onBackgroundMessage(function (payload) {
+    console.log("[firebase-messaging-sw] onBackgroundMessage", payload);
     const data = payload.data || {};
+    const origin = self.location.origin;
     const title =
       payload.notification?.title ||
       data.title ||
@@ -26,19 +28,31 @@ if (firebaseConfig.apiKey) {
       data.body ||
       "Yeni operasyon bildirimi";
     const url = data.url || data.link || "/dashboard";
+    const workOrderId = data.workOrderId || "";
     const tag = data.tag || "seferogullari-ops";
+    const iconPath = data.icon || "/icons/icon-192.png";
+    const icon =
+      iconPath.indexOf("http") === 0 ? iconPath : origin + iconPath;
+    const badge = origin + "/icons/badge-72.png";
 
     const options = {
       body: body,
-      icon: data.icon || "/icons/icon-192.png",
-      badge: "/icons/badge-72.png",
+      icon: icon,
+      badge: badge,
       tag: tag,
-      data: { url: url, ...data },
-      vibrate: [120, 60, 120],
       requireInteraction: false,
+      data: {
+        title: title,
+        body: body,
+        url: url,
+        workOrderId: workOrderId,
+        link: url,
+        ...data,
+      },
+      vibrate: [120, 60, 120],
     };
 
-    self.registration.showNotification(title, options);
+    return self.registration.showNotification(title, options);
   });
 
   self.addEventListener("notificationclick", function (event) {

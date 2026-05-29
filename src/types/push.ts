@@ -15,6 +15,8 @@ export interface PushNotificationPayload {
   url: string;
   tag?: string;
   badge?: number;
+  /** İş emri deep link ve SW data payload için */
+  workOrderId?: string;
 }
 
 export type PushPermissionState =

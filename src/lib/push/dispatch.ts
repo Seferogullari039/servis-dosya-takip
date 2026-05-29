@@ -103,6 +103,7 @@ export async function dispatchTeamPush(
       url: payload.url.startsWith("/") ? payload.url : `/${payload.url}`,
       tag: payload.tag,
       badge: payload.badge,
+      workOrderId: payload.workOrderId,
     });
 
     const result: DispatchPushResult = {
@@ -198,6 +199,7 @@ export async function sendTestPushToUser(
     body: "Push test bildirimi başarılı.",
     url: "/dashboard",
     tag: "push-test",
+    workOrderId: "",
   });
 
   const ok = sendResult.sent > 0;

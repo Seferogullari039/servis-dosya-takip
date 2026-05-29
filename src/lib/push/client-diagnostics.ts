@@ -2,8 +2,10 @@ import {
   canRequestPushPermissionOnDevice,
   detectPushDeviceType,
   getDeviceLabel,
-  isIosStandalonePwa,
+  isPWA,
   isPushEnvironmentSupported,
+  readDeviceDetectionDebug,
+  type DeviceDetectionDebug,
 } from "@/lib/push/device";
 
 export interface PushClientDiagnostics {
@@ -13,25 +15,28 @@ export interface PushClientDiagnostics {
   tokenRegistered: boolean;
   canEnable: boolean;
   iosNeedsHomeScreen: boolean;
+  deviceDebug: DeviceDetectionDebug;
 }
 
 export function readPushClientDiagnostics(
   subscriptionCount: number,
   publicFirebaseReady: boolean
 ): PushClientDiagnostics {
+  const deviceDebug = readDeviceDetectionDebug();
   const iosNeedsHomeScreen =
     typeof window !== "undefined" &&
     detectPushDeviceType() === "ios" &&
-    !isIosStandalonePwa();
+    !isPWA();
 
   if (!isPushEnvironmentSupported()) {
     return {
       device: getDeviceLabel(),
-      pwaMode: isIosStandalonePwa(),
+      pwaMode: isPWA(),
       permission: "unsupported",
       tokenRegistered: false,
       canEnable: false,
       iosNeedsHomeScreen,
+      deviceDebug,
     };
   }
 
@@ -41,7 +46,7 @@ export function readPushClientDiagnostics(
 
   return {
     device: getDeviceLabel(),
-    pwaMode: isIosStandalonePwa(),
+    pwaMode: isPWA(),
     permission,
     tokenRegistered,
     canEnable:
@@ -49,5 +54,6 @@ export function readPushClientDiagnostics(
       canRequestPushPermissionOnDevice() &&
       permission !== "granted",
     iosNeedsHomeScreen,
+    deviceDebug: readDeviceDetectionDebug(),
   };
 }

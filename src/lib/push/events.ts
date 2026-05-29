@@ -14,6 +14,7 @@ export function notifyWorkOrderCreated(params: {
       body: `Yeni iş emri oluşturuldu · ${params.plaka} (${params.workOrderNo})`,
       url: `/is-emirleri/${params.workOrderId}`,
       tag: `wo-created-${params.workOrderId}`,
+      workOrderId: params.workOrderId,
     },
     { event: "work_order_created" }
   );
@@ -32,6 +33,7 @@ export function notifyWorkOrderVehicleStatus(params: {
         body: `Araç teslimata hazır · ${params.plaka} (${params.workOrderNo})`,
         url: `/is-emirleri/${params.workOrderId}`,
         tag: `wo-ready-${params.workOrderId}`,
+        workOrderId: params.workOrderId,
       },
       { excludeUserId: params.excludeUserId }
     );
@@ -43,6 +45,7 @@ export function notifyWorkOrderVehicleStatus(params: {
         body: `Araç teslim edildi · ${params.plaka} (${params.workOrderNo})`,
         url: `/is-emirleri/${params.workOrderId}`,
         tag: `wo-delivered-${params.workOrderId}`,
+        workOrderId: params.workOrderId,
       },
       { excludeUserId: params.excludeUserId }
     );
@@ -82,6 +85,7 @@ export function notifyProcurementStatusesOnCreate(params: {
         body: tpl.body({ parca: name, plaka }),
         url: `/tedarik`,
         tag: `tedarik-${params.workOrderId}-${parca.id}-${parca.tedarikDurumu}`,
+        workOrderId: params.workOrderId,
       },
       { excludeUserId: params.excludeUserId }
     );

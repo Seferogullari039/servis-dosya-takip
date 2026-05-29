@@ -1,3 +1,4 @@
+import { buildFcmMulticastFields } from "@/lib/push/fcm-payload";
 import { logPush, logPushError } from "@/lib/push/logger";
 import type { SendPushResult } from "@/lib/push/types";
 import type { PushNotificationPayload } from "@/types/push";
@@ -61,17 +62,7 @@ export async function sendPushToTokens(
   }
 
   const unique = [...new Set(tokens.filter(Boolean))];
-  const data: Record<string, string> = {
-    title: payload.title,
-    body: payload.body,
-    url: payload.url,
-    link: payload.url,
-    tag: payload.tag ?? "seferogullari-ops",
-    icon: "/icons/icon-192.png",
-  };
-  if (payload.badge !== undefined) {
-    data.badge = String(payload.badge);
-  }
+  const fcmFields = buildFcmMulticastFields(payload);
 
   let sent = 0;
   let failed = 0;
@@ -83,22 +74,17 @@ export async function sendPushToTokens(
     try {
       const response = await msg.sendEachForMulticast({
         tokens: chunk,
-        notification: {
-          title: payload.title,
-          body: payload.body,
-        },
-        data,
-        webpush: {
-          fcmOptions: { link: payload.url },
-          notification: {
-            icon: "/icons/icon-192.png",
-            badge: "/icons/badge-72.png",
-            vibrate: [120, 60, 120],
-          },
-        },
+        ...fcmFields,
         apns: {
+          headers: {
+            "apns-priority": "10",
+          },
           payload: {
             aps: {
+              alert: {
+                title: payload.title,
+                body: payload.body,
+              },
               badge: payload.badge,
               sound: "default",
             },
@@ -108,20 +94,43 @@ export async function sendPushToTokens(
       sent += response.successCount;
       failed += response.failureCount;
 
+      logPush("admin", "FCM multicast batch result", {
+        successCount: response.successCount,
+        failureCount: response.failureCount,
+        payload: {
+          notification: fcmFields.notification,
+          data: fcmFields.data,
+          webpush: fcmFields.webpush,
+        },
+      });
+
       response.responses.forEach((r, idx) => {
-        if (!r.success && r.error) {
-          const tokenPreview = chunk[idx]?.slice(0, 12) ?? "?";
+        const tokenPreview = chunk[idx]?.slice(0, 12) ?? "?";
+        if (r.success) {
+          logPush("admin", "FCM token send success", {
+            tokenPreview,
+            messageId: r.messageId,
+            title: payload.title,
+            body: payload.body,
+            url: payload.url,
+            workOrderId: payload.workOrderId ?? "",
+            webpushLink: fcmFields.webpush.fcmOptions.link,
+          });
+        } else if (r.error) {
           const errLine = `${tokenPreview}…: ${r.error.code} — ${r.error.message}`;
           fcmErrors.push(errLine);
           logPushError("admin", "FCM token send failed", r.error, {
             tokenPreview,
             code: r.error.code,
+            payloadTitle: payload.title,
           });
         }
       });
     } catch (e) {
       logPushError("admin", "multicast batch failed", e, {
         chunkSize: chunk.length,
+        payloadTitle: payload.title,
+        webpushLink: fcmFields.webpush.fcmOptions.link,
       });
       failed += chunk.length;
       fcmErrors.push(
@@ -136,6 +145,13 @@ export async function sendPushToTokens(
     failed,
     total: unique.length,
     ok,
+    payloadSummary: {
+      title: payload.title,
+      body: payload.body,
+      url: payload.url,
+      workOrderId: payload.workOrderId,
+      webpush: fcmFields.webpush,
+    },
   });
 
   return {

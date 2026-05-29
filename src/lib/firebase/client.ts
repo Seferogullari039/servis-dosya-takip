@@ -88,6 +88,7 @@ export function subscribeForegroundMessages(
     title: string;
     body: string;
     url?: string;
+    workOrderId?: string;
   }) => void
 ): (() => void) | null {
   let unsub: (() => void) | undefined;
@@ -106,6 +107,7 @@ export function subscribeForegroundMessages(
         title,
         body,
         url: payload.data?.url ?? payload.data?.link,
+        workOrderId: payload.data?.workOrderId,
       });
     });
   });
