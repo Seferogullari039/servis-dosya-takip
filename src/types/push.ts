@@ -26,6 +26,8 @@ export type PushPermissionState =
 
 export interface PushDashboardStatus {
   subscriptionCount: number;
+  teamTokenCount: number;
+  tokenRegistered: boolean;
   /** Tüm NEXT_PUBLIC_FIREBASE_* değişkenleri dolu */
   publicFirebaseReady: boolean;
   missingPublicEnv: string[];
@@ -39,4 +41,26 @@ export interface PushStatusApiResponse {
   missingPublicEnvLabel: string;
   serverPushReady: boolean;
   subscriptionCount: number;
+  teamTokenCount: number;
+  tokenRegistered: boolean;
+}
+
+export interface PushLastPushDisplay {
+  ok: boolean;
+  at: string;
+  message?: string;
+  sent?: number;
+  failed?: number;
+  adminError?: string;
+  fcmErrors?: string[];
+}
+
+export interface PushTestApiResponse {
+  ok: boolean;
+  sent: number;
+  failed: number;
+  tokenCount: number;
+  message?: string;
+  adminError?: string;
+  fcmErrors?: string[];
 }

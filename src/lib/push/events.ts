@@ -8,7 +8,6 @@ export function notifyWorkOrderCreated(params: {
   workOrderId: string;
   workOrderNo: string;
   plaka: string;
-  excludeUserId?: string;
 }): void {
   dispatchTeamPushAsync(
     {
@@ -16,7 +15,7 @@ export function notifyWorkOrderCreated(params: {
       url: `/is-emirleri/${params.workOrderId}`,
       tag: `wo-created-${params.workOrderId}`,
     },
-    { excludeUserId: params.excludeUserId }
+    { event: "work_order_created" }
   );
 }
 

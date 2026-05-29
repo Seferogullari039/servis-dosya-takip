@@ -20,7 +20,11 @@ import {
 import { enablePushNotifications } from "@/lib/push/enable-push";
 import { subscribeForegroundMessages } from "@/lib/firebase/client";
 import type { EnablePushResult } from "@/lib/push/enable-push";
-import type { PushDashboardStatus, PushStatusApiResponse } from "@/types/push";
+import type {
+  PushDashboardStatus,
+  PushLastPushDisplay,
+  PushStatusApiResponse,
+} from "@/types/push";
 
 export type PushBellStatus = "active" | "off" | "unsupported";
 
@@ -29,13 +33,17 @@ interface PushNotificationContextValue {
   missingPublicEnv: FirebasePublicEnvKey[];
   serverPushReady: boolean | null;
   subscriptionCount: number;
+  teamTokenCount: number;
+  tokenRegistered: boolean;
   unreadCount: number;
   diagnostics: PushClientDiagnostics;
   bellStatus: PushBellStatus;
   enabling: boolean;
+  lastPushResult: PushLastPushDisplay | null;
   enableNotifications: () => Promise<EnablePushResult>;
   refreshDiagnostics: () => void;
   refreshPushStatus: () => Promise<void>;
+  setLastPushResult: (result: PushLastPushDisplay | null) => void;
 }
 
 const PushNotificationContext = createContext<PushNotificationContextValue | null>(
@@ -62,6 +70,11 @@ export function PushNotificationProvider({
   const { toast } = useToast();
   const [subscriptionCount, setSubscriptionCount] = useState(
     initial.subscriptionCount
+  );
+  const [teamTokenCount, setTeamTokenCount] = useState(initial.teamTokenCount);
+  const [tokenRegistered, setTokenRegistered] = useState(initial.tokenRegistered);
+  const [lastPushResult, setLastPushResult] = useState<PushLastPushDisplay | null>(
+    null
   );
   const [enabling, setEnabling] = useState(false);
   const [missingPublicEnv, setMissingPublicEnv] = useState<
@@ -97,6 +110,8 @@ export function PushNotificationProvider({
       setMissingPublicEnv(data.missingPublicEnv as FirebasePublicEnvKey[]);
       setServerPushReady(data.serverPushReady);
       setSubscriptionCount(data.subscriptionCount);
+      setTeamTokenCount(data.teamTokenCount);
+      setTokenRegistered(data.tokenRegistered);
     } catch {
       /* ignore */
     }
@@ -156,22 +171,29 @@ export function PushNotificationProvider({
       missingPublicEnv,
       serverPushReady,
       subscriptionCount,
+      teamTokenCount,
+      tokenRegistered,
       unreadCount: 0,
       diagnostics,
       bellStatus,
       enabling,
+      lastPushResult,
       enableNotifications,
       refreshDiagnostics,
       refreshPushStatus,
+      setLastPushResult,
     }),
     [
       publicFirebaseReady,
       missingPublicEnv,
       serverPushReady,
       subscriptionCount,
+      teamTokenCount,
+      tokenRegistered,
       diagnostics,
       bellStatus,
       enabling,
+      lastPushResult,
       enableNotifications,
       refreshDiagnostics,
       refreshPushStatus,

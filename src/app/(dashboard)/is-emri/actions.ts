@@ -35,7 +35,6 @@ export async function kaydetIsEmri(
     workOrderId: kayit.id,
     workOrderNo: kayit.isEmriNo,
     plaka: kayit.plaka,
-    excludeUserId: auth.profile.id,
   });
   notifyProcurementStatusesOnCreate({
     workOrderId: kayit.id,

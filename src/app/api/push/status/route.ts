@@ -6,7 +6,10 @@ import {
   isFirebasePublicConfigured,
 } from "@/lib/firebase/public-env";
 import { isServerPushConfigured } from "@/lib/push/server-config";
-import { countUserPushSubscriptions } from "@/lib/push/subscriptions";
+import {
+  countTeamPushSubscriptions,
+  countUserPushSubscriptions,
+} from "@/lib/push/subscription-queries";
 
 export async function GET() {
   const user = await getCurrentUser();
@@ -18,6 +21,7 @@ export async function GET() {
   const publicFirebaseReady = isFirebasePublicConfigured();
   const serverPushReady = isServerPushConfigured();
   const subscriptionCount = await countUserPushSubscriptions(user.id);
+  const teamTokenCount = await countTeamPushSubscriptions();
 
   return NextResponse.json({
     publicFirebaseReady,
@@ -25,5 +29,7 @@ export async function GET() {
     missingPublicEnvLabel: formatMissingFirebasePublicEnv(missingPublicEnv),
     serverPushReady,
     subscriptionCount,
+    teamTokenCount,
+    tokenRegistered: subscriptionCount > 0,
   });
 }

@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { PushConfigDebug } from "@/components/push/PushConfigDebug";
+import { PushTestButton } from "@/components/push/PushTestButton";
 import { usePushNotifications } from "@/components/push/PushNotificationProvider";
 import { cn } from "@/lib/utils/cn";
 
@@ -12,17 +13,16 @@ function permissionLabel(
   return permission;
 }
 
-function tokenLabel(registered: boolean): string {
-  return registered ? "kayıtlı" : "kayıtlı değil";
-}
-
 export function PushStatusCard() {
   const {
     diagnostics,
     subscriptionCount,
+    teamTokenCount,
+    tokenRegistered,
     publicFirebaseReady,
     missingPublicEnv,
     serverPushReady,
+    lastPushResult,
     refreshDiagnostics,
     refreshPushStatus,
   } = usePushNotifications();
@@ -48,22 +48,25 @@ export function PushStatusCard() {
           </h2>
           <p className="mt-1 text-xs text-ink-muted dark:text-zinc-400">
             {enabled
-              ? `Aktif · ${subscriptionCount} cihaz kayıtlı`
+              ? `Aktif · ${subscriptionCount} cihaz kayıtlı (sizin hesap)`
               : publicFirebaseReady
                 ? "Bildirimler henüz etkin değil"
                 : "Public Firebase env eksik"}
           </p>
         </div>
-        <span
-          className={cn(
-            "rounded-full px-2.5 py-1 text-xs font-semibold",
-            enabled
-              ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
-              : "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
-          )}
-        >
-          {enabled ? "Açık" : "Kapalı"}
-        </span>
+        <div className="flex flex-wrap items-center gap-2">
+          <PushTestButton />
+          <span
+            className={cn(
+              "rounded-full px-2.5 py-1 text-xs font-semibold",
+              enabled
+                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
+                : "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+            )}
+          >
+            {enabled ? "Açık" : "Kapalı"}
+          </span>
+        </div>
       </div>
 
       <PushConfigDebug
@@ -75,7 +78,44 @@ export function PushStatusCard() {
 
       <dl className="mt-4 grid gap-2 text-xs sm:grid-cols-2">
         <div className="flex justify-between gap-2 rounded-lg bg-surface-muted px-2.5 py-2 dark:bg-zinc-800/60">
-          <dt className="text-ink-muted dark:text-zinc-400">Cihaz</dt>
+          <dt className="text-ink-muted dark:text-zinc-400">Token kayıtlı</dt>
+          <dd className="font-medium text-ink dark:text-zinc-200">
+            {tokenRegistered ? "Evet" : "Hayır"}
+          </dd>
+        </div>
+        <div className="flex justify-between gap-2 rounded-lg bg-surface-muted px-2.5 py-2 dark:bg-zinc-800/60">
+          <dt className="text-ink-muted dark:text-zinc-400">Cihaz (sizin)</dt>
+          <dd className="font-medium text-ink dark:text-zinc-200">
+            {subscriptionCount}
+          </dd>
+        </div>
+        <div className="flex justify-between gap-2 rounded-lg bg-surface-muted px-2.5 py-2 dark:bg-zinc-800/60">
+          <dt className="text-ink-muted dark:text-zinc-400">Ekip token (toplam)</dt>
+          <dd className="font-medium text-ink dark:text-zinc-200">
+            {teamTokenCount}
+          </dd>
+        </div>
+        <div className="flex justify-between gap-2 rounded-lg bg-surface-muted px-2.5 py-2 dark:bg-zinc-800/60">
+          <dt className="text-ink-muted dark:text-zinc-400">Son push testi</dt>
+          <dd
+            className={cn(
+              "font-medium",
+              lastPushResult?.ok
+                ? "text-emerald-700 dark:text-emerald-300"
+                : lastPushResult
+                  ? "text-red-700 dark:text-red-300"
+                  : "text-ink dark:text-zinc-200"
+            )}
+          >
+            {lastPushResult
+              ? lastPushResult.ok
+                ? "Başarılı"
+                : "Başarısız"
+              : "Henüz test yok"}
+          </dd>
+        </div>
+        <div className="flex justify-between gap-2 rounded-lg bg-surface-muted px-2.5 py-2 dark:bg-zinc-800/60">
+          <dt className="text-ink-muted dark:text-zinc-400">Cihaz tipi</dt>
           <dd className="font-medium text-ink dark:text-zinc-200">
             {diagnostics.device}
           </dd>
@@ -93,18 +133,49 @@ export function PushStatusCard() {
           </dd>
         </div>
         <div className="flex justify-between gap-2 rounded-lg bg-surface-muted px-2.5 py-2 dark:bg-zinc-800/60">
-          <dt className="text-ink-muted dark:text-zinc-400">Token durumu</dt>
+          <dt className="text-ink-muted dark:text-zinc-400">Token + izin</dt>
           <dd className="font-medium text-ink dark:text-zinc-200">
-            {tokenLabel(diagnostics.tokenRegistered)}
+            {enabled ? "Tamam" : "Eksik"}
           </dd>
         </div>
       </dl>
+
+      {lastPushResult ? (
+        <div className="mt-3 rounded-lg bg-surface-muted px-2.5 py-2 text-xs dark:bg-zinc-800/60">
+          <p className="text-ink-muted dark:text-zinc-400">
+            Son test: {new Date(lastPushResult.at).toLocaleString("tr-TR")}
+            {lastPushResult.sent !== undefined
+              ? ` · gönderilen: ${lastPushResult.sent}, başarısız: ${lastPushResult.failed ?? 0}`
+              : null}
+          </p>
+          {lastPushResult.message ? (
+            <p className="mt-1 text-ink dark:text-zinc-200">{lastPushResult.message}</p>
+          ) : null}
+          {lastPushResult.adminError ? (
+            <p className="mt-1 text-red-700 dark:text-red-300">
+              Admin: {lastPushResult.adminError}
+            </p>
+          ) : null}
+          {lastPushResult.fcmErrors?.length ? (
+            <ul className="mt-1 list-inside list-disc text-red-700 dark:text-red-300">
+              {lastPushResult.fcmErrors.slice(0, 3).map((e) => (
+                <li key={e}>{e}</li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      ) : null}
 
       {diagnostics.iosNeedsHomeScreen ? (
         <p className="mt-3 text-xs text-amber-700 dark:text-amber-300">
           iOS: Bildirim için Ana Ekrana Eklemeniz gerekir (Safari PWA).
         </p>
       ) : null}
+
+      <p className="mt-3 text-[10px] text-ink-muted dark:text-zinc-500">
+        İş emri push logları: Vercel → Functions →{" "}
+        <code className="rounded bg-surface-muted px-1">[push:dispatch]</code>
+      </p>
     </div>
   );
 }

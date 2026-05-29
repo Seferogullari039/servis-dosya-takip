@@ -156,6 +156,8 @@ export async function getAracDashboardData(): Promise<
         ? getPushDashboardStatus(user.id)
         : Promise.resolve({
             subscriptionCount: 0,
+            teamTokenCount: 0,
+            tokenRegistered: false,
             publicFirebaseReady: false,
             missingPublicEnv: [],
             serverPushReady: false,

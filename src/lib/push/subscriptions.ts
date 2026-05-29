@@ -59,18 +59,4 @@ export async function removePushSubscription(
   }
 }
 
-export async function countUserPushSubscriptions(
-  userId: string
-): Promise<number> {
-  try {
-    const supabase = await createClient();
-    const { count, error } = await supabase
-      .from("push_subscriptions")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", userId);
-    if (error) return 0;
-    return count ?? 0;
-  } catch {
-    return 0;
-  }
-}
+export { countUserPushSubscriptions, countTeamPushSubscriptions } from "@/lib/push/subscription-queries";
