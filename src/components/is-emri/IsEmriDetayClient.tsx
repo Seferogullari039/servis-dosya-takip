@@ -1,0 +1,115 @@
+"use client";
+
+import { useEffect, useMemo, useRef } from "react";
+import { useSearchParams } from "next/navigation";
+import { IsEmriActionBar } from "@/components/is-emri/IsEmriActionBar";
+import { IsEmriForm } from "@/components/is-emri/IsEmriForm";
+import { WorkOrderHasarGorselleriSection } from "@/components/is-emri/WorkOrderHasarGorselleriSection";
+import { VehicleStatusBadge } from "@/components/is-emri/VehicleStatusBadge";
+import { useToast } from "@/components/ui/ToastProvider";
+import { filterImagesForPdf } from "@/types/work-order-image";
+import { downloadIsEmriPdf } from "@/lib/is-emri/pdf-download";
+import { isEmriKayitToFormState } from "@/lib/data/map-work-order";
+import type { IsEmriKayit } from "@/types/is-emri";
+import type { WorkOrderImage } from "@/types/work-order-image";
+
+interface IsEmriDetayClientProps {
+  kayit: IsEmriKayit;
+  images: WorkOrderImage[];
+  isAdmin?: boolean;
+  autoPrint?: boolean;
+}
+
+export function IsEmriDetayClient({
+  kayit,
+  images,
+  isAdmin = false,
+  autoPrint = false,
+}: IsEmriDetayClientProps) {
+  const printRef = useRef<HTMLElement | null>(null);
+  const searchParams = useSearchParams();
+  const { toast } = useToast();
+
+  const printImages = useMemo(() => filterImagesForPdf(images), [images]);
+  const imageUrls = useMemo(
+    () => images.map((img) => img.imageUrl),
+    [images]
+  );
+
+  useEffect(() => {
+    if (searchParams.get("kaydedildi") === "1") {
+      toast("İş emri başarıyla kaydedildi.", "success");
+      const url = new URL(window.location.href);
+      url.searchParams.delete("kaydedildi");
+      window.history.replaceState({}, "", url.pathname + url.search);
+    }
+  }, [searchParams, toast]);
+
+  useEffect(() => {
+    if (autoPrint) {
+      const t = window.setTimeout(() => window.print(), 400);
+      return () => window.clearTimeout(t);
+    }
+  }, [autoPrint]);
+
+  useEffect(() => {
+    if (searchParams.get("pdf") !== "1") return;
+    const el = printRef.current;
+    if (!el) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        await downloadIsEmriPdf({
+          element: el,
+          workOrderNo: kayit.isEmriNo,
+        });
+        if (!cancelled) toast("PDF indirildi.", "success");
+      } catch (e) {
+        if (!cancelled) {
+          toast(
+            e instanceof Error ? e.message : "PDF oluşturulamadı.",
+            "error"
+          );
+        }
+      } finally {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("pdf");
+        window.history.replaceState({}, "", url.pathname + url.search);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [searchParams, kayit.isEmriNo, toast]);
+
+  return (
+    <div className="mx-auto max-w-4xl space-y-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <VehicleStatusBadge durum={kayit.aracDurumu} />
+      </div>
+      <IsEmriActionBar
+        workOrderId={kayit.id}
+        workOrderNo={kayit.isEmriNo}
+        phone={kayit.telefon}
+        plaka={kayit.plaka}
+        printRootRef={printRef}
+        imageUrls={imageUrls}
+      />
+      <WorkOrderHasarGorselleriSection
+        workOrderId={kayit.id}
+        images={images}
+        isAdmin={isAdmin}
+      />
+      <IsEmriForm
+        mode="view"
+        initialForm={isEmriKayitToFormState(kayit)}
+        workOrderNo={kayit.isEmriNo}
+        printRef={printRef}
+        printImages={printImages}
+        autoPrint={false}
+      />
+    </div>
+  );
+}

@@ -14,12 +14,12 @@ export function AppShell({ title, children }: AppShellProps) {
 
   return (
     <div className="flex min-h-screen">
-      <div className="hidden w-64 shrink-0 lg:block">
+      <div className="no-print hidden w-64 shrink-0 lg:block">
         <Sidebar />
       </div>
 
       {menuOpen && (
-        <div className="fixed inset-0 z-40 lg:hidden">
+        <div className="no-print fixed inset-0 z-40 lg:hidden">
           <button
             type="button"
             className="absolute inset-0 bg-black/40"
@@ -33,8 +33,10 @@ export function AppShell({ title, children }: AppShellProps) {
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <TopBar title={title} onMenuClick={() => setMenuOpen(true)} />
-        <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>
+        <div className="no-print">
+          <TopBar title={title} onMenuClick={() => setMenuOpen(true)} />
+        </div>
+        <main className="flex-1 p-4 md:p-6 lg:p-8 print:p-0">{children}</main>
       </div>
     </div>
   );

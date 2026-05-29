@@ -1,0 +1,379 @@
+/* ——— Ekran: yazdırma belgesi PDF yakalama için off-screen ——— */
+.is-emri-print-document-screen {
+  position: fixed;
+  left: -12000px;
+  top: 0;
+  z-index: -1;
+  width: 210mm;
+  max-width: 210mm;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+/* ——— Kurumsal iş emri belgesi (yazdır / PDF) ——— */
+.is-emri-print-document {
+  box-sizing: border-box;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-size: 11pt;
+  line-height: 1.35;
+  color: #111827;
+  background: #fff;
+  padding: 0;
+}
+
+.is-emri-doc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 2px solid #374151;
+}
+
+.is-emri-doc-company {
+  font-size: 9pt;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #4b5563;
+  margin: 0;
+}
+
+.is-emri-doc-title {
+  margin: 4px 0 0;
+  font-size: 16pt;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.02em;
+}
+
+.is-emri-doc-meta {
+  text-align: right;
+  font-size: 10pt;
+  min-width: 140px;
+}
+
+.is-emri-doc-meta > div {
+  margin-bottom: 4px;
+}
+
+.is-emri-doc-meta-label {
+  display: block;
+  font-size: 8pt;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.is-emri-doc-meta-value {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #111827;
+}
+
+.is-emri-doc-section {
+  margin-bottom: 8px;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.is-emri-doc-section-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  padding-bottom: 3px;
+  border-bottom: 1px solid #9ca3af;
+}
+
+.is-emri-doc-section-no {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  font-size: 9pt;
+  font-weight: 700;
+  color: #fff;
+  background: #374151;
+  border-radius: 2px;
+}
+
+.is-emri-doc-section-title {
+  margin: 0;
+  font-size: 10.5pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #111827;
+}
+
+.is-emri-doc-info-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10.5pt;
+}
+
+.is-emri-doc-info-table th {
+  width: 28%;
+  padding: 3px 8px 3px 0;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  vertical-align: top;
+}
+
+.is-emri-doc-info-table td {
+  padding: 3px 0;
+  font-weight: 500;
+  color: #111827;
+}
+
+.is-emri-doc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9.5pt;
+}
+
+.is-emri-doc-table thead th {
+  padding: 4px 6px;
+  text-align: left;
+  font-size: 8.5pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #374151;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+}
+
+.is-emri-doc-table tbody td {
+  padding: 3px 6px;
+  border: 1px solid #e5e7eb;
+  vertical-align: top;
+  color: #111827;
+}
+
+.is-emri-doc-table-compact tbody td,
+.is-emri-doc-table-compact thead th {
+  padding: 2px 5px;
+}
+
+.is-emri-doc-empty {
+  margin: 0;
+  font-size: 9.5pt;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.is-emri-doc-note-block {
+  margin-bottom: 6px;
+}
+
+.is-emri-doc-note-label {
+  margin: 0 0 2px;
+  font-size: 8.5pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #4b5563;
+}
+
+.is-emri-doc-note-text {
+  margin: 0;
+  font-size: 10pt;
+  line-height: 1.4;
+  color: #111827;
+  white-space: pre-wrap;
+}
+
+.is-emri-doc-notes {
+  margin: 6px 0;
+  padding: 6px 8px;
+  border: 1px solid #d1d5db;
+  background: #fafafa;
+}
+
+.is-emri-doc-totals {
+  margin: 8px 0;
+  break-inside: avoid;
+}
+
+.is-emri-doc-totals-table {
+  width: 100%;
+  max-width: 280px;
+  margin-left: auto;
+  border-collapse: collapse;
+  font-size: 10pt;
+}
+
+.is-emri-doc-totals-table th {
+  padding: 3px 8px;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+}
+
+.is-emri-doc-totals-table td {
+  padding: 3px 8px;
+  text-align: right;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #111827;
+}
+
+.is-emri-doc-totals-grand th,
+.is-emri-doc-totals-grand td {
+  padding-top: 5px;
+  font-size: 11.5pt;
+  font-weight: 800;
+  border-top: 2px solid #374151;
+}
+
+.is-emri-doc-images {
+  margin: 6px 0;
+}
+
+.is-emri-doc-images-title {
+  margin: 0 0 4px;
+  font-size: 9pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #374151;
+}
+
+.is-emri-doc-images-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+
+.is-emri-doc-images-grid img {
+  max-height: 44px !important;
+  width: 100%;
+  object-fit: cover;
+}
+
+.is-emri-doc-signatures {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid #9ca3af;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.is-emri-doc-signature-title {
+  margin: 0 0 4px;
+  font-size: 10pt;
+  font-weight: 700;
+  color: #111827;
+}
+
+.is-emri-doc-signature-name {
+  margin: 6px 0 0;
+  font-size: 9.5pt;
+  color: #374151;
+}
+
+.is-emri-doc-footer-note {
+  margin: 8px 0 0;
+  text-align: center;
+  font-size: 8pt;
+  color: #6b7280;
+}
+
+/* Islak imza kutusu — çizgili */
+.is-emri-signature-pad-box {
+  height: 64px;
+  border: 1px solid #374151;
+  background-color: #fff;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 14px,
+    #d1d5db 14px,
+    #d1d5db 15px
+  );
+}
+
+.is-emri-wet-signature .is-emri-signature-pad-box {
+  height: 72px;
+}
+
+/* ——— Yazdırma ——— */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm;
+  }
+
+  html,
+  body {
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    color: #111 !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .no-print,
+  .is-emri-edit-layer,
+  nav,
+  aside,
+  header.app-header,
+  [data-sidebar] {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .is-emri-print-document-screen {
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    z-index: auto !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  .is-emri-print-document {
+    padding: 0;
+    box-shadow: none !important;
+  }
+
+  .is-emri-doc-section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .is-emri-doc-signatures {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+
+/* Ekran düzenleme katmanı */
+.is-emri-edit-layer {
+  /* normal flow */
+}
+
+.is-emri-print-only {
+  display: none;
+}
+
+@media screen {
+  .is-emri-print-only {
+    display: none !important;
+  }
+}

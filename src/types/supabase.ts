@@ -170,6 +170,113 @@ export interface Database {
           },
         ];
       };
+      work_order_images: {
+        Row: {
+          id: string;
+          work_order_id: string;
+          image_url: string;
+          storage_path: string;
+          category: string;
+          note: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          work_order_id: string;
+          image_url: string;
+          storage_path: string;
+          category: string;
+          note?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          work_order_id?: string;
+          image_url?: string;
+          storage_path?: string;
+          category?: string;
+          note?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "work_order_images_work_order_id_fkey";
+            columns: ["work_order_id"];
+            isOneToOne: false;
+            referencedRelation: "work_orders";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      work_orders: {
+        Row: {
+          id: string;
+          work_order_no: string;
+          customer_name: string;
+          phone: string | null;
+          plate: string;
+          brand: string | null;
+          model: string | null;
+          km: string | null;
+          entry_date: string;
+          expertise_notes: string | null;
+          expertise_checklist: Json;
+          work_description: string | null;
+          labor_total: number;
+          labor_items: Json;
+          parts_total: number;
+          grand_total: number;
+          parts: Json;
+          customer_signature: string | null;
+          vehicle_status: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          work_order_no: string;
+          customer_name: string;
+          phone?: string | null;
+          plate: string;
+          brand?: string | null;
+          model?: string | null;
+          km?: string | null;
+          entry_date?: string;
+          expertise_notes?: string | null;
+          expertise_checklist?: Json;
+          work_description?: string | null;
+          labor_total?: number;
+          labor_items?: Json;
+          parts_total?: number;
+          grand_total?: number;
+          parts?: Json;
+          customer_signature?: string | null;
+          vehicle_status?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          work_order_no?: string;
+          customer_name?: string;
+          phone?: string | null;
+          plate?: string;
+          brand?: string | null;
+          model?: string | null;
+          km?: string | null;
+          entry_date?: string;
+          expertise_notes?: string | null;
+          expertise_checklist?: Json;
+          work_description?: string | null;
+          labor_total?: number;
+          labor_items?: Json;
+          parts_total?: number;
+          grand_total?: number;
+          parts?: Json;
+          customer_signature?: string | null;
+          vehicle_status?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       servis_dosyalari: {
         Row: {
           id: string;
@@ -262,6 +369,14 @@ export interface Database {
 }
 
 export type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
+
+export type WorkOrderRow = Database["public"]["Tables"]["work_orders"]["Row"];
+
+export type WorkOrderInsert =
+  Database["public"]["Tables"]["work_orders"]["Insert"];
+
+export type WorkOrderUpdate =
+  Database["public"]["Tables"]["work_orders"]["Update"];
 
 export type ServisDosyasiRow =
   Database["public"]["Tables"]["servis_dosyalari"]["Row"];

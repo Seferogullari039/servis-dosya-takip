@@ -7,8 +7,11 @@ import { useAuth } from "@/components/layout/AuthProvider";
 import { cn } from "@/lib/utils/cn";
 
 const navItems = [
-  { href: "/", label: "Dashboard", icon: "◉" },
+  { href: "/dashboard", label: "Dashboard", icon: "◉" },
+  { href: "/", label: "Dosya Özeti", icon: "📊" },
   { href: "/dosyalar", label: "Dosyalar", icon: "☰" },
+  { href: "/is-emirleri", label: "İş Emirleri", icon: "📋" },
+  { href: "/tedarik", label: "Tedarik", icon: "📦" },
 ] as const;
 
 interface SidebarProps {
@@ -40,7 +43,9 @@ export function Sidebar({ onNavigate }: SidebarProps) {
           const active =
             item.href === "/"
               ? pathname === "/"
-              : pathname.startsWith(item.href);
+              : item.href === "/dashboard"
+                ? pathname === "/dashboard"
+                : pathname.startsWith(item.href);
           return (
             <Link
               key={item.href}
