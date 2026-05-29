@@ -26,6 +26,8 @@ import {
 
   labelClass,
 
+  IsEmriNoBadge,
+
   SectionTitle,
 
 } from "@/components/is-emri/is-emri-form-ui";
@@ -313,25 +315,23 @@ export function IsEmriForm({
 
         <header className="border-b border-border px-4 py-4 sm:px-6">
 
-          <p className="text-xs font-medium uppercase tracking-widest text-ink-muted">
+          <p className="text-xs font-medium uppercase tracking-widest text-ink-muted dark:text-zinc-400">
 
             {BRAND.companyName}
 
           </p>
 
-          <div className="mt-1 flex flex-wrap items-baseline justify-between gap-2">
+          <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
 
-            <h1 className="text-xl font-bold text-ink">İş emri düzenleme</h1>
+            <h1 className="text-xl font-bold text-ink dark:text-zinc-50">
+              İş emri düzenleme
+            </h1>
 
-            <p className="font-mono text-sm font-semibold text-ink">
-
-              {isEmriNo}
-
-            </p>
+            <IsEmriNoBadge workOrderNo={isEmriNo} />
 
           </div>
 
-          <p className="mt-1 text-xs text-ink-muted">
+          <p className="mt-1 text-xs text-ink-muted dark:text-zinc-400">
 
             Giriş: {formatTarih(form.serviseGirisTarihi)}
 

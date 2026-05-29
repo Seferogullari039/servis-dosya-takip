@@ -1,5 +1,6 @@
 import {
   MAX_WORK_ORDER_IMAGE_BYTES,
+  MAX_WORK_ORDER_IMAGE_UPLOAD_BYTES,
   WORK_ORDER_IMAGE_BUCKET,
   WORK_ORDER_IMAGE_MIME_TYPES,
 } from "@/lib/storage/work-order-image-constants";
@@ -13,8 +14,8 @@ import {
 } from "@/types/work-order-image";
 
 function extensionFromMime(mime: string): string {
-  if (mime.includes("png")) return "png";
   if (mime.includes("webp")) return "webp";
+  if (mime.includes("png")) return "png";
   if (mime.includes("heic")) return "heic";
   return "jpg";
 }
@@ -22,7 +23,12 @@ function extensionFromMime(mime: string): string {
 function validateImageFile(file: File): DataResult<{ mimeType: string }> {
   if (file.size === 0) return fail("Boş dosya yüklenemez.");
   if (file.size > MAX_WORK_ORDER_IMAGE_BYTES) {
-    return fail("Görsel en fazla 10 MB olabilir.");
+    return fail("Görsel çok büyük. Lütfen tekrar deneyin.");
+  }
+  if (file.size > MAX_WORK_ORDER_IMAGE_UPLOAD_BYTES) {
+    return fail(
+      "Optimize edilmiş görsel 2 MB sınırını aşıyor. Tekrar yüklemeyi deneyin."
+    );
   }
   const mime = file.type || "image/jpeg";
   if (

@@ -1,7 +1,7 @@
 "use client";
 
 import type { EkspertizCheckItem } from "@/types/is-emri";
-import { fieldClass, labelClass } from "@/components/is-emri/is-emri-form-ui";
+import { fieldClass, tableHeadClass } from "@/components/is-emri/is-emri-form-ui";
 import { cn } from "@/lib/utils/cn";
 
 interface EkspertizChecklistProps {
@@ -29,7 +29,7 @@ export function EkspertizChecklist({
         {items.map((item) => (
           <li
             key={item.key}
-            className="rounded-xl border border-border bg-surface-muted/30 p-4"
+            className="rounded-xl border border-border bg-surface-muted/30 p-4 dark:border-zinc-600 dark:bg-zinc-800/40"
           >
             <label className="flex cursor-pointer items-start gap-3">
               <input
@@ -39,7 +39,9 @@ export function EkspertizChecklist({
                 onChange={(e) => patchItem(item.key, { checked: e.target.checked })}
                 className="mt-0.5 h-6 w-6 shrink-0 rounded border-border text-accent focus:ring-accent"
               />
-              <span className="text-sm font-medium text-ink">{item.label}</span>
+              <span className="text-sm font-medium text-ink dark:text-zinc-100">
+                {item.label}
+              </span>
             </label>
             <input
               className={cn(fieldClass(), "mt-3")}
@@ -54,7 +56,7 @@ export function EkspertizChecklist({
 
       <div className="hidden overflow-hidden rounded-lg border border-border md:block">
         <table className="w-full text-left text-sm">
-          <thead className="bg-surface-muted text-xs uppercase text-ink-muted">
+          <thead className={tableHeadClass()}>
             <tr>
               <th className="w-12 px-3 py-2" />
               <th className="px-3 py-2 font-semibold">Kontrol</th>
@@ -76,7 +78,7 @@ export function EkspertizChecklist({
                     aria-label={item.label}
                   />
                 </td>
-                <td className="px-3 py-2 align-top font-medium text-ink">
+                <td className="px-3 py-2 align-top font-medium text-ink dark:text-zinc-100">
                   {item.label}
                 </td>
                 <td className="px-3 py-2">

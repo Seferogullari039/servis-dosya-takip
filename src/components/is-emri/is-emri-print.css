@@ -14,8 +14,8 @@
 .is-emri-print-document {
   box-sizing: border-box;
   font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
-  font-size: 11pt;
-  line-height: 1.35;
+  font-size: 9.5pt;
+  line-height: 1.22;
   color: #111827;
   background: #fff;
   padding: 0;
@@ -25,24 +25,24 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 12px;
-  padding-bottom: 10px;
-  margin-bottom: 10px;
-  border-bottom: 2px solid #374151;
+  gap: 8px;
+  padding-bottom: 5px;
+  margin-bottom: 5px;
+  border-bottom: 1.5px solid #374151;
 }
 
 .is-emri-doc-company {
-  font-size: 9pt;
+  font-size: 7.5pt;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: #4b5563;
   margin: 0;
 }
 
 .is-emri-doc-title {
-  margin: 4px 0 0;
-  font-size: 16pt;
+  margin: 2px 0 0;
+  font-size: 13pt;
   font-weight: 700;
   color: #111827;
   letter-spacing: -0.02em;
@@ -50,17 +50,17 @@
 
 .is-emri-doc-meta {
   text-align: right;
-  font-size: 10pt;
-  min-width: 140px;
+  font-size: 8.5pt;
+  min-width: 120px;
 }
 
 .is-emri-doc-meta > div {
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .is-emri-doc-meta-label {
   display: block;
-  font-size: 8pt;
+  font-size: 6.5pt;
   font-weight: 600;
   text-transform: uppercase;
   color: #6b7280;
@@ -70,10 +70,11 @@
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: #111827;
+  font-size: 8.5pt;
 }
 
 .is-emri-doc-section {
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   break-inside: avoid;
   page-break-inside: avoid;
 }
@@ -81,9 +82,9 @@
 .is-emri-doc-section-head {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
-  padding-bottom: 3px;
+  gap: 6px;
+  margin-bottom: 2px;
+  padding-bottom: 2px;
   border-bottom: 1px solid #9ca3af;
 }
 
@@ -91,9 +92,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
-  font-size: 9pt;
+  width: 18px;
+  height: 18px;
+  font-size: 7.5pt;
   font-weight: 700;
   color: #fff;
   background: #374151;
@@ -102,22 +103,22 @@
 
 .is-emri-doc-section-title {
   margin: 0;
-  font-size: 10.5pt;
+  font-size: 8.5pt;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
   color: #111827;
 }
 
 .is-emri-doc-info-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 10.5pt;
+  font-size: 8.5pt;
 }
 
 .is-emri-doc-info-table th {
   width: 28%;
-  padding: 3px 8px 3px 0;
+  padding: 1px 6px 1px 0;
   text-align: left;
   font-weight: 600;
   color: #374151;
@@ -125,7 +126,7 @@
 }
 
 .is-emri-doc-info-table td {
-  padding: 3px 0;
+  padding: 1px 0;
   font-weight: 500;
   color: #111827;
 }
@@ -133,23 +134,24 @@
 .is-emri-doc-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 9.5pt;
+  font-size: 7.5pt;
+  line-height: 1.2;
 }
 
 .is-emri-doc-table thead th {
-  padding: 4px 6px;
+  padding: 2px 4px;
   text-align: left;
-  font-size: 8.5pt;
+  font-size: 6.5pt;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
   color: #374151;
   background: #f3f4f6;
   border: 1px solid #d1d5db;
 }
 
 .is-emri-doc-table tbody td {
-  padding: 3px 6px;
+  padding: 1px 4px;
   border: 1px solid #e5e7eb;
   vertical-align: top;
   color: #111827;
@@ -157,23 +159,23 @@
 
 .is-emri-doc-table-compact tbody td,
 .is-emri-doc-table-compact thead th {
-  padding: 2px 5px;
+  padding: 1px 3px;
 }
 
 .is-emri-doc-empty {
   margin: 0;
-  font-size: 9.5pt;
+  font-size: 7.5pt;
   color: #6b7280;
   font-style: italic;
 }
 
 .is-emri-doc-note-block {
-  margin-bottom: 6px;
+  margin-bottom: 3px;
 }
 
 .is-emri-doc-note-label {
-  margin: 0 0 2px;
-  font-size: 8.5pt;
+  margin: 0 0 1px;
+  font-size: 6.5pt;
   font-weight: 700;
   text-transform: uppercase;
   color: #4b5563;
@@ -181,41 +183,41 @@
 
 .is-emri-doc-note-text {
   margin: 0;
-  font-size: 10pt;
-  line-height: 1.4;
+  font-size: 7.5pt;
+  line-height: 1.25;
   color: #111827;
   white-space: pre-wrap;
 }
 
 .is-emri-doc-notes {
-  margin: 6px 0;
-  padding: 6px 8px;
+  margin: 3px 0;
+  padding: 4px 6px;
   border: 1px solid #d1d5db;
   background: #fafafa;
 }
 
 .is-emri-doc-totals {
-  margin: 8px 0;
+  margin: 4px 0;
   break-inside: avoid;
 }
 
 .is-emri-doc-totals-table {
   width: 100%;
-  max-width: 280px;
+  max-width: 240px;
   margin-left: auto;
   border-collapse: collapse;
-  font-size: 10pt;
+  font-size: 8pt;
 }
 
 .is-emri-doc-totals-table th {
-  padding: 3px 8px;
+  padding: 1px 6px;
   text-align: left;
   font-weight: 600;
   color: #374151;
 }
 
 .is-emri-doc-totals-table td {
-  padding: 3px 8px;
+  padding: 1px 6px;
   text-align: right;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -224,19 +226,19 @@
 
 .is-emri-doc-totals-grand th,
 .is-emri-doc-totals-grand td {
-  padding-top: 5px;
-  font-size: 11.5pt;
+  padding-top: 3px;
+  font-size: 9pt;
   font-weight: 800;
-  border-top: 2px solid #374151;
+  border-top: 1.5px solid #374151;
 }
 
 .is-emri-doc-images {
-  margin: 6px 0;
+  margin: 3px 0;
 }
 
 .is-emri-doc-images-title {
-  margin: 0 0 4px;
-  font-size: 9pt;
+  margin: 0 0 2px;
+  font-size: 6.5pt;
   font-weight: 700;
   text-transform: uppercase;
   color: #374151;
@@ -245,11 +247,11 @@
 .is-emri-doc-images-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 4px;
+  gap: 2px;
 }
 
 .is-emri-doc-images-grid img {
-  max-height: 44px !important;
+  max-height: 36px !important;
   width: 100%;
   object-fit: cover;
 }
@@ -257,57 +259,73 @@
 .is-emri-doc-signatures {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-top: 12px;
-  padding-top: 8px;
+  gap: 10px;
+  margin-top: 6px;
+  padding-top: 4px;
   border-top: 1px solid #9ca3af;
   break-inside: avoid;
   page-break-inside: avoid;
 }
 
 .is-emri-doc-signature-title {
-  margin: 0 0 4px;
-  font-size: 10pt;
+  margin: 0 0 2px;
+  font-size: 8pt;
   font-weight: 700;
   color: #111827;
 }
 
 .is-emri-doc-signature-name {
-  margin: 6px 0 0;
-  font-size: 9.5pt;
+  margin: 3px 0 0;
+  font-size: 7pt;
   color: #374151;
 }
 
 .is-emri-doc-footer-note {
-  margin: 8px 0 0;
+  margin: 4px 0 0;
   text-align: center;
-  font-size: 8pt;
+  font-size: 6.5pt;
   color: #6b7280;
 }
 
 /* Islak imza kutusu — çizgili */
 .is-emri-signature-pad-box {
-  height: 64px;
+  height: 52px;
   border: 1px solid #374151;
   background-color: #fff;
   background-image: repeating-linear-gradient(
     to bottom,
     transparent,
-    transparent 14px,
-    #d1d5db 14px,
-    #d1d5db 15px
+    transparent 11px,
+    #d1d5db 11px,
+    #d1d5db 12px
   );
 }
 
 .is-emri-wet-signature .is-emri-signature-pad-box {
-  height: 72px;
+  height: 64px;
+}
+
+.is-emri-wet-signature .is-emri-signature-pad-box {
+  border-color: #9ca3af;
+}
+
+.dark .is-emri-wet-signature .is-emri-signature-pad-box {
+  border-color: #52525b;
+  background-color: #18181b;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 11px,
+    #3f3f46 11px,
+    #3f3f46 12px
+  );
 }
 
 /* ——— Yazdırma ——— */
 @media print {
   @page {
     size: A4 portrait;
-    margin: 10mm;
+    margin: 8mm;
   }
 
   html,
@@ -350,16 +368,23 @@
   .is-emri-print-document {
     padding: 0;
     box-shadow: none !important;
+    font-size: 9pt;
   }
 
   .is-emri-doc-section {
+    margin-bottom: 3px;
     break-inside: avoid;
     page-break-inside: avoid;
   }
 
   .is-emri-doc-signatures {
+    margin-top: 5px;
     break-inside: avoid;
     page-break-inside: avoid;
+  }
+
+  .is-emri-signature-pad-box {
+    height: 48px;
   }
 }
 

@@ -1,7 +1,12 @@
 "use client";
 
 import { TedarikDurumBadge } from "@/components/is-emri/TedarikDurumBadge";
-import { fieldClass, labelClass } from "@/components/is-emri/is-emri-form-ui";
+import {
+  fieldClass,
+  labelClass,
+  mutedHintClass,
+  tableHeadClass,
+} from "@/components/is-emri/is-emri-form-ui";
 import {
   calcParcaSatirToplam,
   syncParcaToplamFiyat,
@@ -67,7 +72,7 @@ export function ParcaListesi({
       <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <label className={labelClass()}>Sigorta tedarik parça listesi</label>
-          <p className="text-xs text-ink-muted">
+          <p className={mutedHintClass()}>
             Hasar dosyası parça takibi · fiyatlar otomatik hesaplanır
           </p>
         </div>
@@ -98,7 +103,7 @@ export function ParcaListesi({
 
       <div className="hidden overflow-x-auto rounded-lg border border-border lg:block">
         <table className="w-full min-w-[960px] text-left text-sm">
-          <thead className="bg-surface-muted text-xs uppercase text-ink-muted">
+          <thead className={tableHeadClass()}>
             <tr>
               <th className="px-2 py-2 font-semibold">Parça</th>
               <th className="w-14 px-2 py-2">Adet</th>
@@ -267,7 +272,7 @@ function ParcaMobileCard({
       />
       <div className="mt-3 grid grid-cols-2 gap-2">
         <div>
-          <span className="text-xs text-ink-muted">Adet</span>
+          <span className={mutedHintClass()}>Adet</span>
           <input
             className={cn(fieldClass(), "mt-1")}
             value={row.adet}
@@ -276,7 +281,7 @@ function ParcaMobileCard({
           />
         </div>
         <div>
-          <span className="text-xs text-ink-muted">Birim (₺)</span>
+          <span className={mutedHintClass()}>Birim (₺)</span>
           <input
             className={cn(fieldClass(), "mt-1 text-right")}
             value={row.birimFiyat}
@@ -310,7 +315,7 @@ function ParcaMobileCard({
       </div>
       <div className="mt-3 grid grid-cols-2 gap-2">
         <div>
-          <span className="text-xs text-ink-muted">Tedarik tarihi</span>
+          <span className={mutedHintClass()}>Tedarik tarihi</span>
           <input
             type="date"
             className={cn(fieldClass(), "mt-1 min-h-11")}
@@ -322,7 +327,7 @@ function ParcaMobileCard({
           />
         </div>
         <div>
-          <span className="text-xs text-ink-muted">Geldi tarihi</span>
+          <span className={mutedHintClass()}>Geldi tarihi</span>
           <input
             type="date"
             className={cn(fieldClass(), "mt-1 min-h-11")}

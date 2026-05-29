@@ -2,6 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { olusturIsEmri } from "@/lib/data/work-orders";
+import {
+  notifyProcurementStatusesOnCreate,
+  notifyWorkOrderCreated,
+} from "@/lib/push/events";
 import { assertOperationAccess } from "@/lib/operations/auth-action";
 import type { IsEmriFormState } from "@/types/is-emri";
 
@@ -26,6 +30,20 @@ export async function kaydetIsEmri(
   const result = await olusturIsEmri(form);
   if (!result.ok) return { ok: false, error: result.error };
 
-  revalidateIsEmriPaths(result.data.id);
-  return { ok: true, id: result.data.id };
+  const kayit = result.data;
+  notifyWorkOrderCreated({
+    workOrderId: kayit.id,
+    workOrderNo: kayit.isEmriNo,
+    plaka: kayit.plaka,
+    excludeUserId: auth.profile.id,
+  });
+  notifyProcurementStatusesOnCreate({
+    workOrderId: kayit.id,
+    plaka: kayit.plaka,
+    parcalar: form.parcalar,
+    excludeUserId: auth.profile.id,
+  });
+
+  revalidateIsEmriPaths(kayit.id);
+  return { ok: true, id: kayit.id };
 }

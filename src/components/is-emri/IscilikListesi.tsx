@@ -1,6 +1,6 @@
 "use client";
 
-import { fieldClass, labelClass } from "@/components/is-emri/is-emri-form-ui";
+import { fieldClass, labelClass, tableHeadClass } from "@/components/is-emri/is-emri-form-ui";
 import { calcIscilikToplam } from "@/lib/is-emri/calculations";
 import { formatPara, parseTutarInput } from "@/lib/utils/para";
 import { createEmptyIscilikSatir, type IscilikSatir } from "@/types/is-emri";
@@ -87,7 +87,7 @@ export function IscilikListesi({
 
       <div className="hidden overflow-x-auto rounded-lg border border-border md:block">
         <table className="w-full min-w-[480px] text-left text-sm">
-          <thead className="bg-surface-muted text-xs uppercase text-ink-muted print:bg-gray-100">
+          <thead className={tableHeadClass()}>
             <tr>
               <th className="px-3 py-2 font-semibold">İşçilik açıklaması</th>
               <th className="w-32 px-3 py-2 text-right font-semibold">

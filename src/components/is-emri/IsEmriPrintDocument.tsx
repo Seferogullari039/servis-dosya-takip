@@ -105,7 +105,7 @@ export const IsEmriPrintDocument = forwardRef<
         </div>
         <div className="is-emri-doc-meta">
           <div>
-            <span className="is-emri-doc-meta-label">İş emri no</span>
+            <span className="is-emri-doc-meta-label">İş Emri No</span>
             <span className="is-emri-doc-meta-value">{isEmriNo}</span>
           </div>
           <div>

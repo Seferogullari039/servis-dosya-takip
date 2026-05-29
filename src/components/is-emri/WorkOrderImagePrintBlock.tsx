@@ -1,3 +1,7 @@
+import {
+  getWorkOrderImageThumbnailUrl,
+  WORK_ORDER_THUMB_PDF,
+} from "@/lib/images/work-order-image-urls";
 import type { WorkOrderImage } from "@/types/work-order-image";
 
 function formatShortDate(iso: string): string {
@@ -33,10 +37,14 @@ export function WorkOrderImagePrintBlock({
             {/* html2pdf: native img */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={img.imageUrl}
+              src={getWorkOrderImageThumbnailUrl(
+                img.imageUrl,
+                WORK_ORDER_THUMB_PDF
+              )}
               alt={img.category}
               className="h-20 w-full object-cover print:h-16"
               loading="lazy"
+              decoding="async"
             />
             <figcaption className="px-1 py-0.5 text-[9px] leading-tight text-ink-muted print:text-gray-600">
               <span className="font-semibold">{img.category}</span>

@@ -5,6 +5,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { deleteWorkOrderImageAction } from "@/app/(dashboard)/is-emirleri/[id]/image-actions";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/ToastProvider";
+import {
+  getWorkOrderImageThumbnailUrl,
+  WORK_ORDER_THUMB_GRID,
+  WORK_ORDER_THUMB_LIGHTBOX,
+} from "@/lib/images/work-order-image-urls";
 import { cn } from "@/lib/utils/cn";
 import type { WorkOrderImage } from "@/types/work-order-image";
 
@@ -97,12 +102,16 @@ export function WorkOrderImageGallery({
             >
               <div className="relative aspect-[4/3] w-full bg-surface-muted">
                 <Image
-                  src={img.imageUrl}
+                  src={getWorkOrderImageThumbnailUrl(
+                    img.imageUrl,
+                    WORK_ORDER_THUMB_GRID
+                  )}
                   alt={img.category}
                   fill
                   sizes="72vw"
                   className="object-cover"
                   loading="lazy"
+                  quality={70}
                 />
               </div>
               <div className="p-3">
@@ -131,12 +140,16 @@ export function WorkOrderImageGallery({
           >
             <div className="relative aspect-square w-full bg-surface-muted">
               <Image
-                src={img.imageUrl}
+                src={getWorkOrderImageThumbnailUrl(
+                  img.imageUrl,
+                  WORK_ORDER_THUMB_GRID
+                )}
                 alt={img.category}
                 fill
                 sizes="(max-width: 768px) 50vw, 200px"
                 className="object-cover transition-transform group-hover:scale-[1.02]"
                 loading="lazy"
+                quality={70}
               />
             </div>
             <div className="space-y-0.5 p-2.5">
@@ -167,12 +180,16 @@ export function WorkOrderImageGallery({
           >
             <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-black">
               <Image
-                src={active.imageUrl}
+                src={getWorkOrderImageThumbnailUrl(
+                  active.imageUrl,
+                  WORK_ORDER_THUMB_LIGHTBOX
+                )}
                 alt={active.category}
                 fill
                 sizes="100vw"
                 className="object-contain"
                 priority
+                quality={80}
               />
             </div>
             <div className="mt-3 rounded-lg bg-surface p-4 text-ink">

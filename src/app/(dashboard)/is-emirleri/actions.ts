@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { guncelleAracDurumu, silIsEmri } from "@/lib/data/work-orders";
+import { notifyWorkOrderVehicleStatus } from "@/lib/push/events";
 import { assertOperationAccess } from "@/lib/operations/auth-action";
 import { getCurrentProfile } from "@/lib/auth/get-current-profile";
 import type { AracDurumu } from "@/types/vehicle-status";
@@ -42,6 +43,14 @@ export async function guncelleAracDurumuAction(
 
   const result = await guncelleAracDurumu(id, aracDurumu);
   if (!result.ok) return { ok: false, error: result.error };
+
+  notifyWorkOrderVehicleStatus({
+    workOrderId: id,
+    workOrderNo: result.data.isEmriNo,
+    plaka: result.data.plaka,
+    status: aracDurumu,
+    excludeUserId: auth.profile.id,
+  });
 
   revalidateIsEmriPaths();
   revalidatePath(`/is-emirleri/${id}`);

@@ -22,7 +22,7 @@ export async function downloadIsEmriPdf({
 
   await html2pdf()
     .set({
-      margin: [10, 10, 10, 10],
+      margin: [8, 8, 8, 8],
       filename,
       image: { type: "jpeg", quality: 0.92 },
       html2canvas: {

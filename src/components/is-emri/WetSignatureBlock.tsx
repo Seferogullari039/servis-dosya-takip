@@ -21,14 +21,14 @@ export function WetSignatureBlock({
 }: WetSignatureBlockProps) {
   return (
     <div className="is-emri-wet-signature">
-      <p className="text-sm font-bold text-ink">{title}</p>
+      <p className="text-sm font-bold text-ink dark:text-zinc-100">{title}</p>
       <div
         className="is-emri-signature-pad-box mt-2"
         aria-label={`${title} — kalemle imza alanı`}
       />
       <label className={cn(labelClass(), "mt-3")}>{nameLabel}</label>
       {readOnly ? (
-        <p className="mt-1 border-b border-gray-400 pb-1 text-sm font-medium text-ink">
+        <p className="mt-1 border-b border-gray-400 pb-1 text-sm font-medium text-ink dark:border-zinc-500 dark:text-zinc-200">
           {name || "\u00a0"}
         </p>
       ) : (

@@ -1,5 +1,6 @@
 import type { AracDurumu } from "@/types/vehicle-status";
 import type { WorkOrderImageStats } from "@/types/work-order-image";
+import type { PushDashboardStatus } from "@/types/push";
 
 export interface AracDashboardStats {
   bugunGelen: number;
@@ -42,6 +43,7 @@ export interface AracDashboardData {
   stats: AracDashboardStats;
   tedarik: TedarikDashboardStats;
   gorsel: WorkOrderImageStats;
+  push: PushDashboardStatus;
   gunlukIsEmirleri: GunlukIsEmriNokta[];
   durumDagilimi: DurumDagilimNokta[];
   canliPanel: CanliIsEmriSatir[];

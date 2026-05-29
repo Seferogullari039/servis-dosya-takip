@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
+import withPWAInit from "@ducanh2912/next-pwa";
 import { loadEnvLocal } from "./scripts/load-env.mjs";
 
-// Windows sistem env (ör. example.supabase.co) .env.local'i ezmesin diye
 loadEnvLocal(true);
 
 function supabaseImageRemotePatterns():
@@ -16,20 +16,62 @@ function supabaseImageRemotePatterns():
         hostname: host,
         pathname: "/storage/v1/object/public/work-order-images/**",
       },
+      {
+        protocol: "https",
+        hostname: host,
+        pathname: "/storage/v1/render/image/public/work-order-images/**",
+      },
     ];
   } catch {
     return [];
   }
 }
 
+const withPWA = withPWAInit({
+  dest: "public",
+  disable: process.env.NODE_ENV === "development",
+  register: true,
+  fallbacks: {
+    document: "/offline",
+  },
+  workboxOptions: {
+    disableDevLogs: true,
+    runtimeCaching: [
+      {
+        urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
+        handler: "NetworkFirst",
+        options: {
+          cacheName: "supabase-api",
+          expiration: { maxEntries: 32, maxAgeSeconds: 24 * 60 * 60 },
+          networkTimeoutSeconds: 10,
+        },
+      },
+      {
+        urlPattern: /\/_next\/static\/.*/i,
+        handler: "CacheFirst",
+        options: {
+          cacheName: "next-static",
+          expiration: { maxEntries: 64, maxAgeSeconds: 30 * 24 * 60 * 60 },
+        },
+      },
+      {
+        urlPattern: ({ request }) => request.destination === "document",
+        handler: "NetworkFirst",
+        options: {
+          cacheName: "pages",
+          expiration: { maxEntries: 16, maxAgeSeconds: 24 * 60 * 60 },
+        },
+      },
+    ],
+  },
+});
+
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: supabaseImageRemotePatterns(),
   },
-  // Supabase vendor-chunk kaybını önler; sunucu doğrudan node_modules kullanır
   webpack: (config, { dev }) => {
     if (dev) {
-      // Bozuk HMR chunk'larında "__webpack_modules__[id] is not a function" riskini azaltır
       config.optimization = {
         ...config.optimization,
         moduleIds: "named",
@@ -42,6 +84,7 @@ const nextConfig: NextConfig = {
     "pg",
     "@supabase/supabase-js",
     "@supabase/ssr",
+    "firebase-admin",
   ],
   outputFileTracingIncludes: {
     "/api/pdf/**": [
@@ -57,4 +100,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withPWA(nextConfig);

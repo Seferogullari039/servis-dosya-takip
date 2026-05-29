@@ -4,6 +4,8 @@ import {
   listeleTedarikParcalari,
 } from "@/lib/data/tedarik";
 import { getWorkOrderImageDashboardStats } from "@/lib/data/work-order-images";
+import { getPushDashboardStatus } from "@/lib/push/status";
+import { getCurrentUser } from "@/lib/auth/get-current-user";
 import { createClient } from "@/lib/supabase/server";
 import type { WorkOrderRow } from "@/types/supabase";
 import type { DataResult } from "@/types/data-result";
@@ -146,9 +148,16 @@ export async function getAracDashboardData(): Promise<
         };
       });
 
-    const [tedarikResult, gorselResult] = await Promise.all([
+    const user = await getCurrentUser();
+    const [tedarikResult, gorselResult, push] = await Promise.all([
       listeleTedarikParcalari(),
       getWorkOrderImageDashboardStats(),
+      user
+        ? getPushDashboardStatus(user.id)
+        : Promise.resolve({
+            subscriptionCount: 0,
+            firebaseConfigured: false,
+          }),
     ]);
     const tedarik = tedarikResult.ok
       ? countTedarikFromParts(tedarikResult.data)
@@ -167,6 +176,7 @@ export async function getAracDashboardData(): Promise<
       stats,
       tedarik,
       gorsel,
+      push,
       gunlukIsEmirleri,
       durumDagilimi,
       canliPanel,
