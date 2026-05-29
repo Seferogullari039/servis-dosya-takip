@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { PushConfigDebug } from "@/components/push/PushConfigDebug";
+import { PushRegenerateTokenButton } from "@/components/push/PushRegenerateTokenButton";
 import { PushTestButton } from "@/components/push/PushTestButton";
 import { usePushNotifications } from "@/components/push/PushNotificationProvider";
 import { cn } from "@/lib/utils/cn";
@@ -23,14 +24,15 @@ export function PushStatusCard() {
     missingPublicEnv,
     serverPushReady,
     lastPushResult,
+    tokenDebug,
     refreshDiagnostics,
-    refreshPushStatus,
+    refreshTokenDebug,
   } = usePushNotifications();
 
   useEffect(() => {
     refreshDiagnostics();
-    void refreshPushStatus();
-  }, [refreshDiagnostics, refreshPushStatus]);
+    void refreshTokenDebug();
+  }, [refreshDiagnostics, refreshTokenDebug]);
 
   const enabled = diagnostics.tokenRegistered;
 
@@ -55,6 +57,7 @@ export function PushStatusCard() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <PushRegenerateTokenButton />
           <PushTestButton />
           <span
             className={cn(
@@ -76,23 +79,57 @@ export function PushStatusCard() {
         serverPushReady={serverPushReady}
       />
 
+      {tokenDebug.issueMessage ? (
+        <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm font-medium text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+          {tokenDebug.issueMessage}
+        </p>
+      ) : null}
+
+      {tokenDebug.pushTestBlockReason && !tokenDebug.canPushTest ? (
+        <p className="mt-2 text-xs text-ink-muted dark:text-zinc-400">
+          {tokenDebug.pushTestBlockReason}
+        </p>
+      ) : null}
+
       <dl className="mt-4 grid gap-2 text-xs sm:grid-cols-2">
         <div className="flex justify-between gap-2 rounded-lg bg-surface-muted px-2.5 py-2 dark:bg-zinc-800/60">
-          <dt className="text-ink-muted dark:text-zinc-400">Token kayıtlı</dt>
+          <dt className="text-ink-muted dark:text-zinc-400">Notification.permission</dt>
           <dd className="font-medium text-ink dark:text-zinc-200">
-            {tokenRegistered ? "Evet" : "Hayır"}
+            {permissionLabel(tokenDebug.permission)}
           </dd>
         </div>
         <div className="flex justify-between gap-2 rounded-lg bg-surface-muted px-2.5 py-2 dark:bg-zinc-800/60">
-          <dt className="text-ink-muted dark:text-zinc-400">Cihaz (sizin)</dt>
+          <dt className="text-ink-muted dark:text-zinc-400">FCM token var mı</dt>
           <dd className="font-medium text-ink dark:text-zinc-200">
-            {subscriptionCount}
+            {tokenDebug.hasLocalToken ? "Evet" : "Hayır"}
+          </dd>
+        </div>
+        <div className="flex justify-between gap-2 rounded-lg bg-surface-muted px-2.5 py-2 dark:bg-zinc-800/60 sm:col-span-2">
+          <dt className="shrink-0 text-ink-muted dark:text-zinc-400">
+            FCM token (ilk 20)
+          </dt>
+          <dd className="truncate font-mono text-[11px] font-medium text-ink dark:text-zinc-200">
+            {tokenDebug.localTokenPreview ?? "—"}
+          </dd>
+        </div>
+        <div className="flex justify-between gap-2 rounded-lg bg-surface-muted px-2.5 py-2 dark:bg-zinc-800/60">
+          <dt className="text-ink-muted dark:text-zinc-400">
+            push_subscriptions (sizin)
+          </dt>
+          <dd className="font-medium text-ink dark:text-zinc-200">
+            {tokenDebug.dbSubscriptionCount}
           </dd>
         </div>
         <div className="flex justify-between gap-2 rounded-lg bg-surface-muted px-2.5 py-2 dark:bg-zinc-800/60">
           <dt className="text-ink-muted dark:text-zinc-400">Ekip token (toplam)</dt>
           <dd className="font-medium text-ink dark:text-zinc-200">
             {teamTokenCount}
+          </dd>
+        </div>
+        <div className="flex justify-between gap-2 rounded-lg bg-surface-muted px-2.5 py-2 dark:bg-zinc-800/60">
+          <dt className="text-ink-muted dark:text-zinc-400">Token kayıtlı</dt>
+          <dd className="font-medium text-ink dark:text-zinc-200">
+            {tokenRegistered ? "Evet" : "Hayır"}
           </dd>
         </div>
         <div className="flex justify-between gap-2 rounded-lg bg-surface-muted px-2.5 py-2 dark:bg-zinc-800/60">
@@ -124,18 +161,6 @@ export function PushStatusCard() {
           <dt className="text-ink-muted dark:text-zinc-400">PWA modu</dt>
           <dd className="font-medium text-ink dark:text-zinc-200">
             {diagnostics.pwaMode ? "Evet" : "Hayır"}
-          </dd>
-        </div>
-        <div className="flex justify-between gap-2 rounded-lg bg-surface-muted px-2.5 py-2 dark:bg-zinc-800/60">
-          <dt className="text-ink-muted dark:text-zinc-400">Bildirim izni</dt>
-          <dd className="font-medium text-ink dark:text-zinc-200">
-            {permissionLabel(diagnostics.permission)}
-          </dd>
-        </div>
-        <div className="flex justify-between gap-2 rounded-lg bg-surface-muted px-2.5 py-2 dark:bg-zinc-800/60">
-          <dt className="text-ink-muted dark:text-zinc-400">Token + izin</dt>
-          <dd className="font-medium text-ink dark:text-zinc-200">
-            {enabled ? "Tamam" : "Eksik"}
           </dd>
         </div>
       </dl>

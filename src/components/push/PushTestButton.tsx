@@ -9,7 +9,7 @@ import type { PushTestApiResponse } from "@/types/push";
 
 export function PushTestButton() {
   const { profile } = useAuth();
-  const { setLastPushResult } = usePushNotifications();
+  const { setLastPushResult, refreshTokenDebug } = usePushNotifications();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
@@ -18,6 +18,24 @@ export function PushTestButton() {
   const handleTest = async () => {
     setLoading(true);
     try {
+      const debug = await refreshTokenDebug();
+
+      if (!debug.canPushTest) {
+        const msg =
+          debug.pushTestBlockReason ??
+          debug.issueMessage ??
+          "Push test için token hazır değil";
+        setLastPushResult({
+          ok: false,
+          at: new Date().toISOString(),
+          message: msg,
+          sent: 0,
+          failed: 0,
+        });
+        toast(msg, "info");
+        return;
+      }
+
       const res = await fetch("/api/push/test", { method: "POST" });
       const data = (await res.json()) as PushTestApiResponse & { error?: string };
 

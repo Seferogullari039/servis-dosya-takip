@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/get-current-user";
-import { upsertPushSubscription, removePushSubscription } from "@/lib/push/subscriptions";
+import {
+  removeAllPushSubscriptionsForUser,
+  removePushSubscription,
+  upsertPushSubscription,
+} from "@/lib/push/subscriptions";
 import type { PushDeviceType } from "@/types/push";
 
 export async function POST(request: Request) {
@@ -12,13 +16,21 @@ export async function POST(request: Request) {
   let body: {
     fcmToken?: string;
     deviceType?: PushDeviceType;
-    action?: "register" | "unregister";
+    action?: "register" | "unregister" | "reset_all";
   };
 
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: "Geçersiz istek." }, { status: 400 });
+  }
+
+  if (body.action === "reset_all") {
+    const result = await removeAllPushSubscriptionsForUser(user.id);
+    if (!result.ok) {
+      return NextResponse.json({ error: result.error }, { status: 500 });
+    }
+    return NextResponse.json({ ok: true, deleted: result.deleted });
   }
 
   const token = body.fcmToken?.trim();

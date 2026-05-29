@@ -59,4 +59,25 @@ export async function removePushSubscription(
   }
 }
 
+export async function removeAllPushSubscriptionsForUser(
+  userId: string
+): Promise<{ ok: true; deleted: number } | { ok: false; error: string }> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("push_subscriptions")
+      .delete()
+      .eq("user_id", userId)
+      .select("id");
+
+    if (error) return { ok: false, error: error.message };
+    return { ok: true, deleted: data?.length ?? 0 };
+  } catch (e) {
+    return {
+      ok: false,
+      error: e instanceof Error ? e.message : "Kayıtlar silinemedi.",
+    };
+  }
+}
+
 export { countUserPushSubscriptions, countTeamPushSubscriptions } from "@/lib/push/subscription-queries";

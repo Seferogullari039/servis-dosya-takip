@@ -17,7 +17,16 @@ import {
   readPushClientDiagnostics,
   type PushClientDiagnostics,
 } from "@/lib/push/client-diagnostics";
+import {
+  readLocalFcmToken,
+  readNotificationPermission,
+  regeneratePushToken,
+} from "@/lib/push/client-token";
 import { enablePushNotifications } from "@/lib/push/enable-push";
+import {
+  buildPushTokenDebugState,
+  type PushTokenDebugState,
+} from "@/lib/push/token-debug";
 import { subscribeForegroundMessages } from "@/lib/firebase/client";
 import type { EnablePushResult } from "@/lib/push/enable-push";
 import type {
@@ -39,10 +48,14 @@ interface PushNotificationContextValue {
   diagnostics: PushClientDiagnostics;
   bellStatus: PushBellStatus;
   enabling: boolean;
+  regenerating: boolean;
+  tokenDebug: PushTokenDebugState;
   lastPushResult: PushLastPushDisplay | null;
   enableNotifications: () => Promise<EnablePushResult>;
+  regenerateToken: () => Promise<EnablePushResult>;
   refreshDiagnostics: () => void;
-  refreshPushStatus: () => Promise<void>;
+  refreshPushStatus: () => Promise<PushStatusApiResponse | null>;
+  refreshTokenDebug: () => Promise<PushTokenDebugState>;
   setLastPushResult: (result: PushLastPushDisplay | null) => void;
 }
 
@@ -77,6 +90,15 @@ export function PushNotificationProvider({
     null
   );
   const [enabling, setEnabling] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
+  const [tokenDebug, setTokenDebug] = useState<PushTokenDebugState>(() =>
+    buildPushTokenDebugState({
+      permission: "default",
+      localToken: null,
+      dbSubscriptionCount: initial.subscriptionCount,
+      publicFirebaseReady: initial.publicFirebaseReady,
+    })
+  );
   const [missingPublicEnv, setMissingPublicEnv] = useState<
     FirebasePublicEnvKey[]
   >(initial.missingPublicEnv as FirebasePublicEnvKey[]);
@@ -99,23 +121,40 @@ export function PushNotificationProvider({
     );
   }, [subscriptionCount, publicFirebaseReady]);
 
-  const refreshPushStatus = useCallback(async () => {
+  const refreshPushStatus = useCallback(async (): Promise<PushStatusApiResponse | null> => {
     const clientMissing = getMissingFirebasePublicEnvVars();
     setMissingPublicEnv(clientMissing);
 
     try {
       const res = await fetch("/api/push/status", { cache: "no-store" });
-      if (!res.ok) return;
+      if (!res.ok) return null;
       const data = (await res.json()) as PushStatusApiResponse;
       setMissingPublicEnv(data.missingPublicEnv as FirebasePublicEnvKey[]);
       setServerPushReady(data.serverPushReady);
       setSubscriptionCount(data.subscriptionCount);
       setTeamTokenCount(data.teamTokenCount);
       setTokenRegistered(data.tokenRegistered);
+      return data;
     } catch {
-      /* ignore */
+      return null;
     }
   }, []);
+
+  const refreshTokenDebug = useCallback(async (): Promise<PushTokenDebugState> => {
+    const status = await refreshPushStatus();
+    const dbCount = status?.subscriptionCount ?? subscriptionCount;
+    const permission = readNotificationPermission();
+    const { token } = await readLocalFcmToken();
+    const ready = getMissingFirebasePublicEnvVars().length === 0;
+    const next = buildPushTokenDebugState({
+      permission,
+      localToken: token,
+      dbSubscriptionCount: dbCount,
+      publicFirebaseReady: ready,
+    });
+    setTokenDebug(next);
+    return next;
+  }, [refreshPushStatus, subscriptionCount]);
 
   const bellStatus: PushBellStatus = useMemo(() => {
     if (!publicFirebaseReady || diagnostics.permission === "unsupported") {
@@ -133,13 +172,30 @@ export function PushNotificationProvider({
       if (result.ok) {
         setSubscriptionCount((c) => Math.max(1, c + 1));
         toast("Bildirimler aktif", "success");
-        void refreshPushStatus();
+        void refreshTokenDebug();
       }
       return result;
     } finally {
       setEnabling(false);
     }
-  }, [refreshDiagnostics, refreshPushStatus, toast]);
+  }, [refreshDiagnostics, refreshTokenDebug, toast]);
+
+  const regenerateToken = useCallback(async () => {
+    setRegenerating(true);
+    try {
+      const result = await regeneratePushToken();
+      refreshDiagnostics();
+      if (result.ok) {
+        setSubscriptionCount((c) => Math.max(1, c));
+        await refreshTokenDebug();
+      } else {
+        await refreshTokenDebug();
+      }
+      return result;
+    } finally {
+      setRegenerating(false);
+    }
+  }, [refreshDiagnostics, refreshTokenDebug]);
 
   useEffect(() => {
     if (!publicFirebaseReady) return;
@@ -162,8 +218,8 @@ export function PushNotificationProvider({
   }, [refreshDiagnostics, subscriptionCount, publicFirebaseReady]);
 
   useEffect(() => {
-    void refreshPushStatus();
-  }, [refreshPushStatus]);
+    void refreshTokenDebug();
+  }, [refreshTokenDebug]);
 
   const value = useMemo(
     () => ({
@@ -177,10 +233,14 @@ export function PushNotificationProvider({
       diagnostics,
       bellStatus,
       enabling,
+      regenerating,
+      tokenDebug,
       lastPushResult,
       enableNotifications,
+      regenerateToken,
       refreshDiagnostics,
       refreshPushStatus,
+      refreshTokenDebug,
       setLastPushResult,
     }),
     [
@@ -193,10 +253,14 @@ export function PushNotificationProvider({
       diagnostics,
       bellStatus,
       enabling,
+      regenerating,
+      tokenDebug,
       lastPushResult,
       enableNotifications,
+      regenerateToken,
       refreshDiagnostics,
       refreshPushStatus,
+      refreshTokenDebug,
     ]
   );
 
