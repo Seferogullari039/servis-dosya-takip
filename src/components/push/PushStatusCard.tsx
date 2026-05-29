@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { PushConfigDebug } from "@/components/push/PushConfigDebug";
 import { PushRegenerateTokenButton } from "@/components/push/PushRegenerateTokenButton";
+import { LocalNotificationTestButton } from "@/components/push/LocalNotificationTestButton";
 import { PushTestButton } from "@/components/push/PushTestButton";
 import { usePushNotifications } from "@/components/push/PushNotificationProvider";
 import { cn } from "@/lib/utils/cn";
@@ -57,9 +58,10 @@ export function PushStatusCard() {
                 : "Public Firebase env eksik"}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-start gap-2">
           <PushRegenerateTokenButton />
           <PushTestButton />
+          <LocalNotificationTestButton />
           <span
             className={cn(
               "rounded-full px-2.5 py-1 text-xs font-semibold",
