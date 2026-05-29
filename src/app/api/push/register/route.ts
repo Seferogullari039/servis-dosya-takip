@@ -5,7 +5,22 @@ import {
   removePushSubscription,
   upsertPushSubscription,
 } from "@/lib/push/subscriptions";
+import { logPushRegisterError } from "@/lib/push/supabase-error";
 import type { PushDeviceType, PushRegisterApiResponse } from "@/types/push";
+
+function tokenPreview(token: string | undefined): string | null {
+  if (!token?.trim()) return null;
+  const t = token.trim();
+  return t.length <= 30 ? t : `${t.slice(0, 30)}…`;
+}
+
+function buildPayload(
+  base: Omit<PushRegisterApiResponse, "debug"> & {
+    debug?: PushRegisterApiResponse["debug"];
+  }
+): PushRegisterApiResponse {
+  return base as PushRegisterApiResponse;
+}
 
 export async function POST(request: Request) {
   const user = await getCurrentUser();
@@ -26,18 +41,27 @@ export async function POST(request: Request) {
   }
 
   const userId = user.id;
+  const email = user.email ?? null;
 
   if (body.action === "reset_all") {
-    const result = await removeAllPushSubscriptionsForUser(userId);
-    const payload: PushRegisterApiResponse = {
+    const result = await removeAllPushSubscriptionsForUser(userId, email);
+    if (!result.ok) {
+      logPushRegisterError("reset_all", {
+        userId,
+        email,
+        error: result.error,
+      });
+    }
+    const payload = buildPayload({
       ok: result.ok,
       userId,
+      email,
       tokenReceived: false,
       action: "reset_all",
       rowCount: result.ok ? result.deleted : 0,
       error: result.ok ? undefined : result.error,
       deleted: result.ok ? result.deleted : 0,
-    };
+    });
     return NextResponse.json(payload, { status: result.ok ? 200 : 500 });
   }
 
@@ -50,26 +74,36 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-    const result = await removePushSubscription(userId, token);
-    const payload: PushRegisterApiResponse = {
+    const result = await removePushSubscription(userId, token, email);
+    if (!result.ok) {
+      logPushRegisterError("unregister", {
+        userId,
+        email,
+        error: result.error ?? "unregister failed",
+      });
+    }
+    const payload = buildPayload({
       ok: result.ok,
       userId,
+      email,
       tokenReceived: true,
+      tokenPreview: tokenPreview(token),
       action: "unregistered",
       rowCount: result.rowCount,
       error: result.error,
-    };
+    });
     return NextResponse.json(payload, { status: result.ok ? 200 : 500 });
   }
 
   if (!token) {
-    const payload: PushRegisterApiResponse = {
+    const payload = buildPayload({
       ok: false,
       userId,
+      email,
       tokenReceived: false,
       rowCount: 0,
       error: "FCM token gerekli.",
-    };
+    });
     return NextResponse.json(payload, { status: 400 });
   }
 
@@ -84,16 +118,33 @@ export async function POST(request: Request) {
     userId,
     fcmToken: token,
     deviceType,
+    email,
   });
 
-  const payload: PushRegisterApiResponse = {
+  if (!result.ok) {
+    logPushRegisterError("register", {
+      userId,
+      email,
+      error: {
+        message: result.error,
+        code: result.debug.supabaseCode,
+        details: result.debug.supabaseDetails,
+        hint: result.debug.supabaseHint,
+      },
+    });
+  }
+
+  const payload = buildPayload({
     ok: result.ok,
     userId,
+    email,
     tokenReceived: true,
+    tokenPreview: tokenPreview(token),
     action: result.ok ? result.action : undefined,
     rowCount: result.rowCount,
     error: result.ok ? undefined : result.error,
-  };
+    debug: result.debug,
+  });
 
   return NextResponse.json(payload, { status: result.ok ? 200 : 500 });
 }

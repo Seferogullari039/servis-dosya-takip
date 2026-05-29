@@ -4,6 +4,7 @@ import { CanliDurumPaneli } from "@/components/work-order-dashboard/CanliDurumPa
 import { TedarikStatCards } from "@/components/work-order-dashboard/TedarikStatCards";
 import { WorkOrderImageStatCards } from "@/components/work-order-dashboard/WorkOrderImageStatCards";
 import { PushEnableCard } from "@/components/push/PushEnableCard";
+import { PushRegisterDebug } from "@/components/push/PushRegisterDebug";
 import { PushStatusCard } from "@/components/push/PushStatusCard";
 import type { AracDashboardData } from "@/types/work-order-dashboard";
 
@@ -19,6 +20,7 @@ export function AracDashboard({ data }: AracDashboardProps) {
       <TedarikStatCards stats={data.tedarik} />
       <WorkOrderImageStatCards stats={data.gorsel} />
       <PushStatusCard />
+      <PushRegisterDebug />
       <AracDashboardCharts
         gunlukIsEmirleri={data.gunlukIsEmirleri}
         durumDagilimi={data.durumDagilimi}

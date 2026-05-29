@@ -49,14 +49,35 @@ export interface PushStatusApiResponse {
   queryError?: string;
 }
 
+export interface PushRegisterDebugPayload {
+  insertAttempted: boolean;
+  insertSuccess: boolean | null;
+  updateAttempted: boolean;
+  updateSuccess: boolean | null;
+  existingRowFound: boolean;
+  serviceRoleConfigured: boolean;
+  authUserExists: boolean | null;
+  authUserCheckError?: string;
+  supabaseCode?: string | null;
+  supabaseMessage?: string;
+  supabaseDetails?: string | null;
+  supabaseHint?: string | null;
+  errorCategory?: string;
+  errorCategoryLabel?: string;
+  schemaNote?: string;
+}
+
 export interface PushRegisterApiResponse {
   ok: boolean;
   userId: string;
+  email?: string | null;
   tokenReceived: boolean;
+  tokenPreview?: string | null;
   action?: "inserted" | "updated" | "unregistered" | "reset_all";
   rowCount: number;
   error?: string;
   deleted?: number;
+  debug?: PushRegisterDebugPayload;
 }
 
 export interface PushLastPushDisplay {

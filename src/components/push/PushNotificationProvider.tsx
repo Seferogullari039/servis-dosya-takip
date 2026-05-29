@@ -32,6 +32,7 @@ import type { EnablePushResult } from "@/lib/push/enable-push";
 import type {
   PushDashboardStatus,
   PushLastPushDisplay,
+  PushRegisterApiResponse,
   PushStatusApiResponse,
 } from "@/types/push";
 
@@ -52,6 +53,8 @@ interface PushNotificationContextValue {
   regenerating: boolean;
   tokenDebug: PushTokenDebugState;
   lastPushResult: PushLastPushDisplay | null;
+  lastRegisterResponse: PushRegisterApiResponse | null;
+  setLastRegisterResponse: (response: PushRegisterApiResponse | null) => void;
   enableNotifications: () => Promise<EnablePushResult>;
   regenerateToken: () => Promise<EnablePushResult>;
   refreshDiagnostics: () => void;
@@ -90,6 +93,8 @@ export function PushNotificationProvider({
   const [lastPushResult, setLastPushResult] = useState<PushLastPushDisplay | null>(
     null
   );
+  const [lastRegisterResponse, setLastRegisterResponse] =
+    useState<PushRegisterApiResponse | null>(null);
   const [enabling, setEnabling] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
   const [tokenDebug, setTokenDebug] = useState<PushTokenDebugState>(() =>
@@ -190,11 +195,15 @@ export function PushNotificationProvider({
       refreshDiagnostics();
       if (result.ok) {
         setRegisterApiError(null);
+        if (result.registerApi) setLastRegisterResponse(result.registerApi);
         setSubscriptionCount((c) => Math.max(1, c + 1));
         toast("Bildirimler aktif", "success");
         await refreshTokenDebug();
-      } else if (result.registerErrorDetail) {
-        setRegisterApiError(result.registerErrorDetail);
+      } else {
+        if (result.registerApi) setLastRegisterResponse(result.registerApi);
+        if (result.registerErrorDetail) {
+          setRegisterApiError(result.registerErrorDetail);
+        }
         await refreshTokenDebug();
       }
       return result;
@@ -210,9 +219,11 @@ export function PushNotificationProvider({
       refreshDiagnostics();
       if (result.ok) {
         setRegisterApiError(null);
+        if (result.registerApi) setLastRegisterResponse(result.registerApi);
         setSubscriptionCount((c) => Math.max(1, c));
         await refreshTokenDebug();
       } else {
+        if (result.registerApi) setLastRegisterResponse(result.registerApi);
         setRegisterApiError(result.registerErrorDetail ?? result.message);
         await refreshTokenDebug();
       }
@@ -262,6 +273,8 @@ export function PushNotificationProvider({
       regenerating,
       tokenDebug,
       lastPushResult,
+      lastRegisterResponse,
+      setLastRegisterResponse,
       enableNotifications,
       regenerateToken,
       refreshDiagnostics,
@@ -283,6 +296,7 @@ export function PushNotificationProvider({
       regenerating,
       tokenDebug,
       lastPushResult,
+      lastRegisterResponse,
       enableNotifications,
       regenerateToken,
       refreshDiagnostics,

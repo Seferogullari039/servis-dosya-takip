@@ -32,6 +32,7 @@ export async function registerFcmTokenViaApi(
 
     if (!res.ok || !api?.ok) {
       const errorMessage =
+        api?.debug?.errorCategoryLabel ??
         api?.error ??
         (api && !api.ok ? "Kayıt başarısız" : null) ??
         `HTTP ${res.status}`;

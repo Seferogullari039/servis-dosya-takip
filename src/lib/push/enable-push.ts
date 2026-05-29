@@ -134,10 +134,9 @@ export async function enablePushNotifications(): Promise<EnablePushResult> {
   const register = await registerFcmTokenViaApi(token, deviceType);
 
   if (!register.ok) {
-    const detail = formatRegisterApiError(
-      register.api,
-      register.errorMessage
-    );
+    const detail =
+      register.api?.debug?.errorCategoryLabel ??
+      formatRegisterApiError(register.api, register.errorMessage);
     return {
       ok: false,
       reason: "register_failed",
