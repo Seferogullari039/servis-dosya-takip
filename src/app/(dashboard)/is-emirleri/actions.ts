@@ -1,8 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { guncelleAracDurumu, silIsEmri } from "@/lib/data/work-orders";
-import { notifyWorkOrderVehicleStatus } from "@/lib/push/events";
+import { getIsEmriById, guncelleAracDurumu, silIsEmri } from "@/lib/data/work-orders";
+import {
+  notifyWorkOrderDeleted,
+  notifyWorkOrderVehicleStatus,
+} from "@/lib/push/events";
 import { assertOperationAccess } from "@/lib/operations/auth-action";
 import { getCurrentProfile } from "@/lib/auth/get-current-profile";
 import type { AracDurumu } from "@/types/vehicle-status";
@@ -27,8 +30,18 @@ export async function silIsEmriAction(id: string): Promise<OperationResult> {
     };
   }
 
+  const existing = await getIsEmriById(id);
   const result = await silIsEmri(id);
   if (!result.ok) return { ok: false, error: result.error };
+
+  if (existing.ok && existing.data) {
+    notifyWorkOrderDeleted({
+      workOrderId: id,
+      workOrderNo: existing.data.isEmriNo,
+      plaka: existing.data.plaka,
+      excludeUserId: auth.profile.id,
+    });
+  }
 
   revalidateIsEmriPaths();
   return { ok: true };
@@ -41,6 +54,10 @@ export async function guncelleAracDurumuAction(
   const auth = await assertOperationAccess();
   if (!auth.ok) return { ok: false, error: auth.error };
 
+  const before = await getIsEmriById(id);
+  const previousStatus =
+    before.ok && before.data ? before.data.aracDurumu : undefined;
+
   const result = await guncelleAracDurumu(id, aracDurumu);
   if (!result.ok) return { ok: false, error: result.error };
 
@@ -49,6 +66,7 @@ export async function guncelleAracDurumuAction(
     workOrderNo: result.data.isEmriNo,
     plaka: result.data.plaka,
     status: aracDurumu,
+    previousStatus,
     excludeUserId: auth.profile.id,
   });
 

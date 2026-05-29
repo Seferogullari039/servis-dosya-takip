@@ -111,6 +111,44 @@ export async function olusturIsEmri(
   }
 }
 
+export async function guncelleIsEmri(
+  id: string,
+  form: IsEmriFormState
+): Promise<DataResult<IsEmriKayit>> {
+  if (!form.ruhsatSahibi.trim()) {
+    return fail("Ruhsat sahibi / müşteri adı zorunludur.");
+  }
+  if (!form.plaka.trim()) {
+    return fail("Plaka zorunludur.");
+  }
+
+  try {
+    const supabase = await createClient();
+    const existing = await supabase
+      .from("work_orders")
+      .select("work_order_no")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (existing.error) return fail(supabaseErrorMessage(existing.error));
+    if (!existing.data) return fail("İş emri bulunamadı.");
+
+    const workOrderNo = existing.data.work_order_no;
+    const { data, error } = await supabase
+      .from("work_orders")
+      .update(mapFormToWorkOrderInsert(form, workOrderNo))
+      .eq("id", id)
+      .select("*")
+      .single();
+
+    if (error) return fail(supabaseErrorMessage(error));
+    if (!data) return fail("İş emri bulunamadı.");
+    return ok(mapRowToIsEmriKayit(data));
+  } catch (e) {
+    return fail(e instanceof Error ? e.message : "İş emri güncellenemedi.");
+  }
+}
+
 export async function guncelleAracDurumu(
   id: string,
   aracDurumu: AracDurumu

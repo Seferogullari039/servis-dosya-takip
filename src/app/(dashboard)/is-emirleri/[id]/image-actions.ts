@@ -3,6 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { requireAuth } from "@/lib/auth/require-auth";
 import { getCurrentProfile } from "@/lib/auth/get-current-profile";
+import { getIsEmriById } from "@/lib/data/work-orders";
+import {
+  notifyWorkOrderImageDeleted,
+  notifyWorkOrderImageUploaded,
+} from "@/lib/push/events";
 import {
   deleteWorkOrderImage,
   uploadWorkOrderImage,
@@ -66,9 +71,19 @@ export async function deleteWorkOrderImageAction(
     return { error: "Görsel silme yalnızca yöneticiler içindir." };
   }
 
+  const wo = await getIsEmriById(workOrderId);
   const result = await deleteWorkOrderImage(imageId);
   if (!result.ok) {
     return { error: result.error };
+  }
+
+  if (wo.ok && wo.data) {
+    notifyWorkOrderImageDeleted({
+      workOrderId,
+      workOrderNo: wo.data.isEmriNo,
+      plaka: wo.data.plaka,
+      excludeUserId: profile.id,
+    });
   }
 
   revalidatePath(`/is-emirleri/${workOrderId}`);

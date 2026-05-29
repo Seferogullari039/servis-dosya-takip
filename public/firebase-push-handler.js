@@ -1,4 +1,4 @@
-/* Otomatik üretildi — scripts/generate-firebase-sw.mjs — 2026-05-29T22:27:10.873Z */
+/* Otomatik üretildi — scripts/generate-firebase-sw.mjs — 2026-05-29T22:37:20.813Z */
 var FCM_DEBUG_CACHE = "fcm-debug-v1";
 var FCM_DEBUG_KEY = "/last-fcm-background";
 

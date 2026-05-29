@@ -64,6 +64,10 @@ async function applyStatusUpdate(
   if (!canSetStatus(auth.profile, durum)) {
     return { ok: false, error: "Dosya kapatma yalnızca yönetici içindir." };
   }
+  const current = await getDosyaById(id);
+  const previousDurum =
+    current.ok && current.data ? current.data.durum : undefined;
+
   const result = await guncelleDosya(id, { durum });
   if (!result.ok) return { ok: false, error: result.error };
   if (result.data) {
@@ -72,6 +76,7 @@ async function applyStatusUpdate(
       dosyaNo: result.data.dosyaNo,
       plaka: result.data.plaka,
       durum,
+      previousDurum,
       excludeUserId: auth.profile.id,
     });
   }
