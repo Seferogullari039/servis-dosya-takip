@@ -28,6 +28,10 @@ import {
   type PushTokenDebugState,
 } from "@/lib/push/token-debug";
 import { subscribeForegroundMessages } from "@/lib/firebase/client";
+import {
+  readFcmServiceWorkerDebug,
+  type FcmServiceWorkerDebug,
+} from "@/lib/push/fcm-sw-debug";
 import type { EnablePushResult } from "@/lib/push/enable-push";
 import type {
   PushDashboardStatus,
@@ -60,6 +64,8 @@ interface PushNotificationContextValue {
   refreshDiagnostics: () => void;
   refreshPushStatus: () => Promise<PushStatusApiResponse | null>;
   refreshTokenDebug: () => Promise<PushTokenDebugState>;
+  refreshFcmSwDebug: () => Promise<FcmServiceWorkerDebug>;
+  fcmSwDebug: FcmServiceWorkerDebug;
   setLastPushResult: (result: PushLastPushDisplay | null) => void;
 }
 
@@ -117,8 +123,23 @@ export function PushNotificationProvider({
     initial.serviceRoleAvailable
   );
   const [registerApiError, setRegisterApiError] = useState<string | null>(null);
+  const [fcmSwDebug, setFcmSwDebug] = useState<FcmServiceWorkerDebug>(() => ({
+    fcmSwReachable: false,
+    fcmMessagingSwRegistered: false,
+    fcmMessagingSwScriptUrl: null,
+    controllingSwScriptUrl: null,
+    pushHandlerInWorkboxSw: false,
+    lastBackgroundPayload: null,
+    lastBackgroundReadError: null,
+  }));
 
   const publicFirebaseReady = missingPublicEnv.length === 0;
+
+  const refreshFcmSwDebug = useCallback(async () => {
+    const debug = await readFcmServiceWorkerDebug();
+    setFcmSwDebug(debug);
+    return debug;
+  }, []);
 
   const [diagnostics, setDiagnostics] = useState(() =>
     readPushClientDiagnostics(
@@ -257,6 +278,21 @@ export function PushNotificationProvider({
     void refreshTokenDebug();
   }, [refreshTokenDebug]);
 
+  useEffect(() => {
+    void refreshFcmSwDebug();
+  }, [refreshFcmSwDebug]);
+
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        void refreshFcmSwDebug();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [refreshFcmSwDebug]);
+
   const value = useMemo(
     () => ({
       publicFirebaseReady,
@@ -280,6 +316,8 @@ export function PushNotificationProvider({
       refreshDiagnostics,
       refreshPushStatus,
       refreshTokenDebug,
+      refreshFcmSwDebug,
+      fcmSwDebug,
       setLastPushResult,
     }),
     [
@@ -302,6 +340,8 @@ export function PushNotificationProvider({
       refreshDiagnostics,
       refreshPushStatus,
       refreshTokenDebug,
+      refreshFcmSwDebug,
+      fcmSwDebug,
     ]
   );
 

@@ -9,7 +9,8 @@ import type { PushTestApiResponse } from "@/types/push";
 
 export function PushTestButton() {
   const { profile } = useAuth();
-  const { setLastPushResult, refreshTokenDebug } = usePushNotifications();
+  const { setLastPushResult, refreshTokenDebug, refreshFcmSwDebug } =
+    usePushNotifications();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
@@ -76,6 +77,7 @@ export function PushTestButton() {
         data.ok ? `Push test OK. ${summary}` : `${data.message ?? "Test başarısız"}. ${summary}`,
         data.ok ? "success" : "error"
       );
+      setTimeout(() => void refreshFcmSwDebug(), 2500);
     } catch {
       setLastPushResult({
         ok: false,

@@ -54,6 +54,10 @@ export async function checkFirebaseMessagingSwReachable(): Promise<boolean> {
   }
 }
 
+/**
+ * FCM token için firebase-messaging-sw.js kaydı (push aboneliği bu SW’ye bağlanır).
+ * Arka plan bildirimi: aynı handler workbox /sw.js içine importScripts ile de yüklenir.
+ */
 export async function ensureFirebaseMessagingServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   if (!("serviceWorker" in navigator)) return null;
 
@@ -65,12 +69,15 @@ export async function ensureFirebaseMessagingServiceWorker(): Promise<ServiceWor
     for (const reg of registrations) {
       const script = reg.active?.scriptURL ?? reg.installing?.scriptURL ?? "";
       if (script.includes("firebase-messaging-sw")) {
+        await reg.update().catch(() => undefined);
         return reg;
       }
     }
-    return await navigator.serviceWorker.register("/firebase-messaging-sw.js", {
+    const reg = await navigator.serviceWorker.register("/firebase-messaging-sw.js", {
       scope: "/",
     });
+    await reg.update().catch(() => undefined);
+    return reg;
   } catch {
     return null;
   }

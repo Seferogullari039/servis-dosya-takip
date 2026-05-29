@@ -1,27 +1,4 @@
-/**
- * .env.local → public/firebase-push-handler.js + public/firebase-messaging-sw.js
- * NEXT_PUBLIC_* Firebase değişkenleri gerekli.
- */
-import fs from "node:fs";
-import path from "node:path";
-import { loadEnvLocal } from "./load-env.mjs";
-
-const root = path.resolve(import.meta.dirname, "..");
-loadEnvLocal(true);
-
-const config = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY ?? "",
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ?? "",
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ?? "",
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ?? "",
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ?? "",
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID ?? "",
-};
-
-const hasConfig = Boolean(config.apiKey && config.projectId && config.messagingSenderId);
-const buildStamp = new Date().toISOString();
-
-const pushHandler = `/* Otomatik üretildi — scripts/generate-firebase-sw.mjs — ${buildStamp} */
+/* Otomatik üretildi — scripts/generate-firebase-sw.mjs — 2026-05-29T22:27:10.873Z */
 var FCM_DEBUG_CACHE = "fcm-debug-v1";
 var FCM_DEBUG_KEY = "/last-fcm-background";
 
@@ -156,41 +133,3 @@ self.addEventListener("push", function (event) {
   }
   event.waitUntil(showFcmNotification(payload, "push"));
 });
-`;
-
-const messagingSw = `/* Otomatik üretildi — scripts/generate-firebase-sw.mjs — ${buildStamp} */
-importScripts("/firebase-push-handler.js");
-importScripts("https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js");
-importScripts("https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js");
-
-const firebaseConfig = ${JSON.stringify(config, null, 2)};
-
-if (firebaseConfig.apiKey) {
-  firebase.initializeApp(firebaseConfig);
-  const messaging = firebase.messaging();
-
-  messaging.onBackgroundMessage(function (payload) {
-    console.log("[firebase-messaging-sw] onBackgroundMessage", payload);
-    return showFcmNotification(payload, "onBackgroundMessage");
-  });
-} else {
-  console.warn("[firebase-messaging-sw] Firebase config eksik — FCM handler devre dışı");
-}
-`;
-
-const publicDir = path.join(root, "public");
-fs.mkdirSync(publicDir, { recursive: true });
-
-const handlerPath = path.join(publicDir, "firebase-push-handler.js");
-const swPath = path.join(publicDir, "firebase-messaging-sw.js");
-
-fs.writeFileSync(handlerPath, pushHandler, "utf8");
-fs.writeFileSync(swPath, messagingSw, "utf8");
-
-if (hasConfig) {
-  console.log("[generate-firebase-sw] yazıldı:", handlerPath, swPath);
-} else {
-  console.warn(
-    "[generate-firebase-sw] Firebase env eksik — SW şablonu yazıldı, production push çalışmayabilir."
-  );
-}

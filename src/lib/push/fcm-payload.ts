@@ -19,7 +19,6 @@ export function resolvePushAbsoluteUrl(path: string): string {
 }
 
 export type FcmMulticastFields = {
-  notification: { title: string; body: string };
   data: Record<string, string>;
   webpush: {
     notification: {
@@ -32,11 +31,17 @@ export type FcmMulticastFields = {
     };
     fcmOptions: { link: string };
   };
+  /** Üst seviye notification yok — SW onBackgroundMessage / push tetiklensin */
+  notification?: { title: string; body: string };
 };
 
-/** FCM multicast — iOS PWA uyumlu notification + data + webpush */
+/**
+ * FCM multicast — data ağırlıklı + webpush.notification (iOS PWA).
+ * Varsayılan: top-level notification yok (arka planda SW showNotification).
+ */
 export function buildFcmMulticastFields(
-  payload: PushNotificationPayload
+  payload: PushNotificationPayload,
+  options?: { includeTopLevelNotification?: boolean }
 ): FcmMulticastFields {
   const link = resolvePushAbsoluteUrl(payload.url);
   const icon = resolvePushAbsoluteUrl(ICON_PATH);
@@ -52,13 +57,10 @@ export function buildFcmMulticastFields(
     workOrderId,
     tag,
     icon: ICON_PATH,
+    badge: BADGE_PATH,
   };
 
-  return {
-    notification: {
-      title: payload.title,
-      body: payload.body,
-    },
+  const fields: FcmMulticastFields = {
     data,
     webpush: {
       notification: {
@@ -74,4 +76,13 @@ export function buildFcmMulticastFields(
       },
     },
   };
+
+  if (options?.includeTopLevelNotification) {
+    fields.notification = {
+      title: payload.title,
+      body: payload.body,
+    };
+  }
+
+  return fields;
 }

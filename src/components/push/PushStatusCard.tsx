@@ -29,12 +29,15 @@ export function PushStatusCard() {
     serviceRoleAvailable,
     refreshDiagnostics,
     refreshTokenDebug,
+    fcmSwDebug,
+    refreshFcmSwDebug,
   } = usePushNotifications();
 
   useEffect(() => {
     refreshDiagnostics();
     void refreshTokenDebug();
-  }, [refreshDiagnostics, refreshTokenDebug]);
+    void refreshFcmSwDebug();
+  }, [refreshDiagnostics, refreshTokenDebug, refreshFcmSwDebug]);
 
   const enabled = diagnostics.tokenRegistered;
 
@@ -189,6 +192,45 @@ export function PushStatusCard() {
           </dd>
         </div>
       </dl>
+
+      <details className="mt-4 rounded-lg border border-border bg-surface-muted/50 dark:border-zinc-700 dark:bg-zinc-800/40">
+        <summary className="cursor-pointer px-3 py-2 text-xs font-semibold text-ink dark:text-zinc-200">
+          FCM service worker debug
+        </summary>
+        <dl className="border-t border-border px-3 py-2 text-xs dark:border-zinc-700">
+          {(
+            [
+              ["firebase-messaging-sw.js erişilebilir", fcmSwDebug.fcmSwReachable ? "evet" : "hayır"],
+              ["FCM SW kayıtlı", fcmSwDebug.fcmMessagingSwRegistered ? "evet" : "hayır"],
+              ["FCM SW script", fcmSwDebug.fcmMessagingSwScriptUrl ?? "—"],
+              ["Kontrol eden SW", fcmSwDebug.controllingSwScriptUrl ?? "—"],
+              ["push-handler (workbox)", fcmSwDebug.pushHandlerInWorkboxSw ? "evet" : "hayır"],
+            ] as const
+          ).map(([label, value]) => (
+            <div
+              key={label}
+              className="flex flex-col gap-0.5 border-b border-border/60 py-2 last:border-0 dark:border-zinc-700/60"
+            >
+              <dt className="font-medium text-ink-muted dark:text-zinc-500">{label}</dt>
+              <dd className="break-all font-mono text-[11px] text-ink dark:text-zinc-200">
+                {value}
+              </dd>
+            </div>
+          ))}
+          <div className="py-2">
+            <dt className="font-medium text-ink-muted dark:text-zinc-500">
+              Son FCM arka plan payload
+            </dt>
+            <dd className="mt-1 break-all font-mono text-[11px] text-ink dark:text-zinc-200">
+              {fcmSwDebug.lastBackgroundPayload
+                ? JSON.stringify(fcmSwDebug.lastBackgroundPayload, null, 2)
+                : fcmSwDebug.lastBackgroundReadError
+                  ? `— (${fcmSwDebug.lastBackgroundReadError})`
+                  : "— (henüz kayıt yok — uygulamayı arka plana alıp Push Test deneyin)"}
+            </dd>
+          </div>
+        </dl>
+      </details>
 
       <details className="mt-4 rounded-lg border border-border bg-surface-muted/50 dark:border-zinc-700 dark:bg-zinc-800/40">
         <summary className="cursor-pointer px-3 py-2 text-xs font-semibold text-ink dark:text-zinc-200">
