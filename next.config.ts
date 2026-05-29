@@ -1,0 +1,35 @@
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  // Supabase vendor-chunk kaybını önler; sunucu doğrudan node_modules kullanır
+  webpack: (config, { dev }) => {
+    if (dev) {
+      // Bozuk HMR chunk'larında "__webpack_modules__[id] is not a function" riskini azaltır
+      config.optimization = {
+        ...config.optimization,
+        moduleIds: "named",
+      };
+    }
+    return config;
+  },
+  serverExternalPackages: [
+    "@react-pdf/renderer",
+    "pg",
+    "@supabase/supabase-js",
+    "@supabase/ssr",
+  ],
+  outputFileTracingIncludes: {
+    "/api/pdf/**": [
+      "./public/fonts/pdf/**/*",
+      "./node_modules/@fontsource/roboto/files/roboto-latin-ext-*.woff",
+      "./node_modules/@fontsource/roboto/files/roboto-latin-ext-*.woff2",
+    ],
+  },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "16mb",
+    },
+  },
+};
+
+export default nextConfig;
