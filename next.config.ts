@@ -1,4 +1,8 @@
 import type { NextConfig } from "next";
+import { loadEnvLocal } from "./scripts/load-env.mjs";
+
+// Windows sistem env (ör. example.supabase.co) .env.local'i ezmesin diye
+loadEnvLocal(true);
 
 const nextConfig: NextConfig = {
   // Supabase vendor-chunk kaybını önler; sunucu doğrudan node_modules kullanır
