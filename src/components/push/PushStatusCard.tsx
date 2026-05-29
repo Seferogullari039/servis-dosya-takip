@@ -25,6 +25,7 @@ export function PushStatusCard() {
     serverPushReady,
     lastPushResult,
     tokenDebug,
+    serviceRoleAvailable,
     refreshDiagnostics,
     refreshTokenDebug,
   } = usePushNotifications();
@@ -79,7 +80,21 @@ export function PushStatusCard() {
         serverPushReady={serverPushReady}
       />
 
-      {tokenDebug.issueMessage ? (
+      {tokenDebug.tokenQueryMismatch ? (
+        <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-900 dark:bg-red-950/40 dark:text-red-200">
+          Token kayıtlı ama gönderim sorgusunda bulunamadı. Service role sorgusu
+          kontrol edilmeli.
+        </p>
+      ) : null}
+
+      {!serviceRoleAvailable ? (
+        <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+          SUPABASE_SERVICE_ROLE_KEY eksik veya geçersiz. Sunucu token sayıları 0
+          görünebilir; Vercel ortam değişkenini ekleyin.
+        </p>
+      ) : null}
+
+      {tokenDebug.issueMessage && !tokenDebug.tokenQueryMismatch ? (
         <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm font-medium text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
           {tokenDebug.issueMessage}
         </p>
@@ -114,16 +129,24 @@ export function PushStatusCard() {
         </div>
         <div className="flex justify-between gap-2 rounded-lg bg-surface-muted px-2.5 py-2 dark:bg-zinc-800/60">
           <dt className="text-ink-muted dark:text-zinc-400">
-            push_subscriptions (sizin)
+            push_subscriptions (sizin, SR)
           </dt>
           <dd className="font-medium text-ink dark:text-zinc-200">
-            {tokenDebug.dbSubscriptionCount}
+            {subscriptionCount}
           </dd>
         </div>
         <div className="flex justify-between gap-2 rounded-lg bg-surface-muted px-2.5 py-2 dark:bg-zinc-800/60">
-          <dt className="text-ink-muted dark:text-zinc-400">Ekip token (toplam)</dt>
+          <dt className="text-ink-muted dark:text-zinc-400">
+            Ekip token (toplam, SR)
+          </dt>
           <dd className="font-medium text-ink dark:text-zinc-200">
             {teamTokenCount}
+          </dd>
+        </div>
+        <div className="flex justify-between gap-2 rounded-lg bg-surface-muted px-2.5 py-2 dark:bg-zinc-800/60">
+          <dt className="text-ink-muted dark:text-zinc-400">Service role</dt>
+          <dd className="font-medium text-ink dark:text-zinc-200">
+            {serviceRoleAvailable ? "Aktif" : "Eksik"}
           </dd>
         </div>
         <div className="flex justify-between gap-2 rounded-lg bg-surface-muted px-2.5 py-2 dark:bg-zinc-800/60">
@@ -169,9 +192,10 @@ export function PushStatusCard() {
         <div className="mt-3 rounded-lg bg-surface-muted px-2.5 py-2 text-xs dark:bg-zinc-800/60">
           <p className="text-ink-muted dark:text-zinc-400">
             Son test: {new Date(lastPushResult.at).toLocaleString("tr-TR")}
-            {lastPushResult.sent !== undefined
-              ? ` · gönderilen: ${lastPushResult.sent}, başarısız: ${lastPushResult.failed ?? 0}`
-              : null}
+          </p>
+          <p className="mt-1 font-medium text-ink dark:text-zinc-200">
+            Bulunan token: {lastPushResult.tokensFound ?? "—"} · Gönderilen:{" "}
+            {lastPushResult.sent ?? 0} · Başarısız: {lastPushResult.failed ?? 0}
           </p>
           {lastPushResult.message ? (
             <p className="mt-1 text-ink dark:text-zinc-200">{lastPushResult.message}</p>

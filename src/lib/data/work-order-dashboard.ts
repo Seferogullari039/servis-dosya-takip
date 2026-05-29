@@ -161,6 +161,8 @@ export async function getAracDashboardData(): Promise<
             publicFirebaseReady: false,
             missingPublicEnv: [],
             serverPushReady: false,
+            serviceRoleAvailable: false,
+            serviceRoleConfigured: false,
           }),
     ]);
     const tedarik = tedarikResult.ok

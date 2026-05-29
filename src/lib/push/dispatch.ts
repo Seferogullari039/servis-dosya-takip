@@ -1,7 +1,11 @@
 import { BRAND } from "@/lib/brand";
 import { sendPushToTokens } from "@/lib/push/firebase-admin";
 import { logPush, logPushError } from "@/lib/push/logger";
-import { getTeamPushTokens } from "@/lib/push/subscription-queries";
+import {
+  countTeamPushSubscriptions,
+  getTeamPushTokens,
+  getUserPushTokensAdmin,
+} from "@/lib/push/subscription-queries";
 import { isServerPushConfigured } from "@/lib/push/server-config";
 import type { DispatchPushResult, PushTestResult } from "@/lib/push/types";
 import type { PushNotificationPayload } from "@/types/push";
@@ -37,9 +41,25 @@ export async function dispatchTeamPush(
   }
 
   try {
-    const { tokens, teamTokenCount } = await getTeamPushTokens({
+    const { tokens, teamTokenCount, meta } = await getTeamPushTokens({
       excludeUserId: options?.excludeUserId,
     });
+
+    if (!meta.serviceRoleAvailable) {
+      const result: DispatchPushResult = {
+        ok: false,
+        skipped: true,
+        skipReason: meta.queryError ?? "Service role kullanılamıyor",
+        event,
+        teamTokenCount: 0,
+        targetTokenCount: 0,
+        sent: 0,
+        failed: 0,
+        adminError: meta.queryError,
+      };
+      logPush("dispatch", "dispatchTeamPush skipped — no service role", result);
+      return result;
+    }
 
     logPush("dispatch", "push_subscriptions loaded", {
       event,
@@ -130,30 +150,46 @@ export async function sendTestPushToUser(
 ): Promise<PushTestResult> {
   logPush("test", "sendTestPushToUser started", { userId });
 
-  if (!isServerPushConfigured()) {
+  const { tokens, userTokenCount, meta } = await getUserPushTokensAdmin(userId);
+
+  if (!meta.serviceRoleAvailable) {
     return {
       ok: false,
+      tokensFound: 0,
       sent: 0,
       failed: 0,
       tokenCount: 0,
-      message: "Sunucu push anahtarı eksik",
-      adminError: "FIREBASE_SERVICE_ACCOUNT_JSON eksik",
+      message: meta.queryError ?? "Service role sorgusu kullanılamıyor",
+      serviceRoleAvailable: false,
+      queryError: meta.queryError,
     };
   }
 
-  const tokens = (
-    await getTeamPushTokens({ onlyUserId: userId })
-  ).tokens;
+  if (!isServerPushConfigured()) {
+    return {
+      ok: false,
+      tokensFound: userTokenCount,
+      sent: 0,
+      failed: 0,
+      tokenCount: userTokenCount,
+      message: "Sunucu push anahtarı eksik",
+      adminError: "FIREBASE_SERVICE_ACCOUNT_JSON eksik",
+      serviceRoleAvailable: true,
+    };
+  }
 
-  logPush("test", "user tokens", { userId, tokenCount: tokens.length });
+  logPush("test", "user tokens for test", { userId, tokensFound: tokens.length });
 
   if (tokens.length === 0) {
     return {
       ok: false,
+      tokensFound: 0,
       sent: 0,
       failed: 0,
       tokenCount: 0,
-      message: "Bu kullanıcı için kayıtlı token yok",
+      message: "Bu kullanıcı için kayıtlı token yok (service role sorgusu)",
+      serviceRoleAvailable: true,
+      queryError: meta.queryError,
     };
   }
 
@@ -165,16 +201,20 @@ export async function sendTestPushToUser(
   });
 
   const ok = sendResult.sent > 0;
-  const result = {
+  const result: PushTestResult = {
     ok,
+    tokensFound: tokens.length,
     sent: sendResult.sent,
     failed: sendResult.failed,
     tokenCount: tokens.length,
     message: ok
-      ? "Test bildirimi gönderildi"
-      : "Test bildirimi gönderilemedi",
+      ? `Test bildirimi gönderildi (${sendResult.sent}/${tokens.length} token)`
+      : sendResult.adminError
+        ? `Gönderim başarısız: ${sendResult.adminError}`
+        : `Gönderim başarısız (${sendResult.failed} token hata)`,
     adminError: sendResult.adminError,
     fcmErrors: sendResult.fcmErrors,
+    serviceRoleAvailable: true,
   };
 
   logPush("test", "sendTestPushToUser finished", result);

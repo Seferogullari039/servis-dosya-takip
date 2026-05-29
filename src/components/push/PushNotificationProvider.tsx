@@ -44,6 +44,7 @@ interface PushNotificationContextValue {
   subscriptionCount: number;
   teamTokenCount: number;
   tokenRegistered: boolean;
+  serviceRoleAvailable: boolean;
   unreadCount: number;
   diagnostics: PushClientDiagnostics;
   bellStatus: PushBellStatus;
@@ -96,7 +97,9 @@ export function PushNotificationProvider({
       permission: "default",
       localToken: null,
       dbSubscriptionCount: initial.subscriptionCount,
+      teamTokenCount: initial.teamTokenCount,
       publicFirebaseReady: initial.publicFirebaseReady,
+      serviceRoleAvailable: initial.serviceRoleAvailable,
     })
   );
   const [missingPublicEnv, setMissingPublicEnv] = useState<
@@ -104,6 +107,9 @@ export function PushNotificationProvider({
   >(initial.missingPublicEnv as FirebasePublicEnvKey[]);
   const [serverPushReady, setServerPushReady] = useState<boolean | null>(
     initial.serverPushReady
+  );
+  const [serviceRoleAvailable, setServiceRoleAvailable] = useState(
+    initial.serviceRoleAvailable
   );
 
   const publicFirebaseReady = missingPublicEnv.length === 0;
@@ -134,6 +140,7 @@ export function PushNotificationProvider({
       setSubscriptionCount(data.subscriptionCount);
       setTeamTokenCount(data.teamTokenCount);
       setTokenRegistered(data.tokenRegistered);
+      setServiceRoleAvailable(data.serviceRoleAvailable);
       return data;
     } catch {
       return null;
@@ -143,6 +150,8 @@ export function PushNotificationProvider({
   const refreshTokenDebug = useCallback(async (): Promise<PushTokenDebugState> => {
     const status = await refreshPushStatus();
     const dbCount = status?.subscriptionCount ?? subscriptionCount;
+    const team = status?.teamTokenCount ?? teamTokenCount;
+    const srAvailable = status?.serviceRoleAvailable ?? serviceRoleAvailable;
     const permission = readNotificationPermission();
     const { token } = await readLocalFcmToken();
     const ready = getMissingFirebasePublicEnvVars().length === 0;
@@ -150,11 +159,13 @@ export function PushNotificationProvider({
       permission,
       localToken: token,
       dbSubscriptionCount: dbCount,
+      teamTokenCount: team,
       publicFirebaseReady: ready,
+      serviceRoleAvailable: srAvailable,
     });
     setTokenDebug(next);
     return next;
-  }, [refreshPushStatus, subscriptionCount]);
+  }, [refreshPushStatus, subscriptionCount, teamTokenCount, serviceRoleAvailable]);
 
   const bellStatus: PushBellStatus = useMemo(() => {
     if (!publicFirebaseReady || diagnostics.permission === "unsupported") {
@@ -229,6 +240,7 @@ export function PushNotificationProvider({
       subscriptionCount,
       teamTokenCount,
       tokenRegistered,
+      serviceRoleAvailable,
       unreadCount: 0,
       diagnostics,
       bellStatus,
@@ -250,6 +262,7 @@ export function PushNotificationProvider({
       subscriptionCount,
       teamTokenCount,
       tokenRegistered,
+      serviceRoleAvailable,
       diagnostics,
       bellStatus,
       enabling,

@@ -25,14 +25,17 @@ export type PushPermissionState =
   | "loading";
 
 export interface PushDashboardStatus {
+  /** Service role ile kullanıcı token sayısı */
   subscriptionCount: number;
+  /** Service role ile ekip toplam token */
   teamTokenCount: number;
   tokenRegistered: boolean;
-  /** Tüm NEXT_PUBLIC_FIREBASE_* değişkenleri dolu */
   publicFirebaseReady: boolean;
   missingPublicEnv: string[];
-  /** FIREBASE_SERVICE_ACCOUNT_JSON (sunucu) */
   serverPushReady: boolean;
+  serviceRoleAvailable: boolean;
+  serviceRoleConfigured: boolean;
+  queryError?: string;
 }
 
 export interface PushStatusApiResponse {
@@ -43,24 +46,32 @@ export interface PushStatusApiResponse {
   subscriptionCount: number;
   teamTokenCount: number;
   tokenRegistered: boolean;
+  serviceRoleAvailable: boolean;
+  serviceRoleConfigured: boolean;
+  queryError?: string;
 }
 
 export interface PushLastPushDisplay {
   ok: boolean;
   at: string;
   message?: string;
+  tokensFound?: number;
   sent?: number;
   failed?: number;
   adminError?: string;
   fcmErrors?: string[];
+  queryError?: string;
 }
 
 export interface PushTestApiResponse {
   ok: boolean;
+  tokensFound: number;
   sent: number;
   failed: number;
   tokenCount: number;
   message?: string;
   adminError?: string;
   fcmErrors?: string[];
+  serviceRoleAvailable?: boolean;
+  queryError?: string;
 }

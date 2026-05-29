@@ -10,6 +10,7 @@ import {
   countTeamPushSubscriptions,
   countUserPushSubscriptions,
 } from "@/lib/push/subscription-queries";
+import { isServiceRoleConfigured } from "@/lib/supabase/admin";
 
 export async function GET() {
   const user = await getCurrentUser();
@@ -20,8 +21,16 @@ export async function GET() {
   const missingPublicEnv = getMissingFirebasePublicEnvVars();
   const publicFirebaseReady = isFirebasePublicConfigured();
   const serverPushReady = isServerPushConfigured();
-  const subscriptionCount = await countUserPushSubscriptions(user.id);
-  const teamTokenCount = await countTeamPushSubscriptions();
+
+  const [userResult, teamResult] = await Promise.all([
+    countUserPushSubscriptions(user.id),
+    countTeamPushSubscriptions(),
+  ]);
+
+  const subscriptionCount = userResult.count;
+  const teamTokenCount = teamResult.count;
+  const serviceRoleAvailable =
+    userResult.meta.serviceRoleAvailable && teamResult.meta.serviceRoleAvailable;
 
   return NextResponse.json({
     publicFirebaseReady,
@@ -31,5 +40,8 @@ export async function GET() {
     subscriptionCount,
     teamTokenCount,
     tokenRegistered: subscriptionCount > 0,
+    serviceRoleAvailable,
+    serviceRoleConfigured: isServiceRoleConfigured(),
+    queryError: userResult.meta.queryError ?? teamResult.meta.queryError,
   });
 }

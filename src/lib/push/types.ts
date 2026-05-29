@@ -21,10 +21,14 @@ export interface SendPushResult {
 
 export interface PushTestResult {
   ok: boolean;
+  tokensFound: number;
   sent: number;
   failed: number;
+  /** @deprecated tokensFound kullanın */
   tokenCount: number;
   message?: string;
   adminError?: string;
   fcmErrors?: string[];
+  serviceRoleAvailable?: boolean;
+  queryError?: string;
 }

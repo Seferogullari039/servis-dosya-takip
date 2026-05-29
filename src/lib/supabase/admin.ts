@@ -22,3 +22,19 @@ export function createAdminClient() {
     },
   });
 }
+
+/** Service role yoksa null döner (push sorguları için). */
+export function tryCreateAdminClient() {
+  try {
+    return createAdminClient();
+  } catch {
+    return null;
+  }
+}
+
+export function isServiceRoleConfigured(): boolean {
+  return Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() &&
+      process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()
+  );
+}

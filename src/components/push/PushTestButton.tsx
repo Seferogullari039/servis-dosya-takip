@@ -29,6 +29,7 @@ export function PushTestButton() {
           ok: false,
           at: new Date().toISOString(),
           message: msg,
+          tokensFound: 0,
           sent: 0,
           failed: 0,
         });
@@ -39,14 +40,20 @@ export function PushTestButton() {
       const res = await fetch("/api/push/test", { method: "POST" });
       const data = (await res.json()) as PushTestApiResponse & { error?: string };
 
+      const tokensFound = data.tokensFound ?? data.tokenCount ?? 0;
+
       if (!res.ok) {
         const msg = data.error ?? data.message ?? "Test gönderilemedi";
         setLastPushResult({
           ok: false,
           at: new Date().toISOString(),
           message: msg,
+          tokensFound,
           sent: data.sent ?? 0,
           failed: data.failed ?? 0,
+          adminError: data.adminError,
+          fcmErrors: data.fcmErrors,
+          queryError: data.queryError,
         });
         toast(msg, "error");
         return;
@@ -56,16 +63,17 @@ export function PushTestButton() {
         ok: data.ok,
         at: new Date().toISOString(),
         message: data.message,
+        tokensFound,
         sent: data.sent,
         failed: data.failed,
         adminError: data.adminError,
         fcmErrors: data.fcmErrors,
+        queryError: data.queryError,
       });
 
+      const summary = `Bulunan: ${tokensFound} · Gönderilen: ${data.sent} · Başarısız: ${data.failed}`;
       toast(
-        data.ok
-          ? "Push test bildirimi gönderildi"
-          : data.message ?? "Test başarısız",
+        data.ok ? `Push test OK. ${summary}` : `${data.message ?? "Test başarısız"}. ${summary}`,
         data.ok ? "success" : "error"
       );
     } catch {
@@ -73,6 +81,7 @@ export function PushTestButton() {
         ok: false,
         at: new Date().toISOString(),
         message: "Ağ hatası",
+        tokensFound: 0,
         sent: 0,
         failed: 0,
       });
