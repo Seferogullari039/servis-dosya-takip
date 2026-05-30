@@ -1,3 +1,6 @@
+import { getCurrentProfile } from "@/lib/auth/get-current-profile";
+import { getCurrentUser } from "@/lib/auth/get-current-user";
+import type { Profile } from "@/lib/auth/types";
 import { mapRowToServisDosya } from "@/lib/data/map-dosya";
 import { auditDosyaUpdate } from "@/lib/events/audit";
 import { logCreated } from "@/lib/events/logger";
@@ -77,6 +80,42 @@ const DOSYA_SILINEMEDI = "Dosya silinemedi.";
 
 /** Soft delete sonrası kalıcı silme gecikmesi (ms) */
 export const SOFT_DELETE_GRACE_MS = 10_000;
+
+/** Oturum + admin/personel — insert öncesi (RLS bypass service role ile birlikte). */
+async function assertServisDosyaInsertAccess(): Promise<
+  DataResult<{ userId: string; profile: Profile }>
+> {
+  const user = await getCurrentUser();
+  if (!user) {
+    return fail("Oturum gerekli. Lütfen tekrar giriş yapın.");
+  }
+
+  const profile = await getCurrentProfile();
+  if (!profile?.is_active) {
+    return fail("Hesabınız aktif değil.");
+  }
+
+  if (profile.role !== "admin" && profile.role !== "personel") {
+    return fail("Dosya oluşturma yetkiniz yok.");
+  }
+
+  return ok({ userId: user.id, profile });
+}
+
+function requireAdminClientForInsert(): DataResult<
+  NonNullable<ReturnType<typeof tryCreateAdminClient>>
+> {
+  if (!isServiceRoleConfigured()) {
+    return fail(
+      "SUPABASE_SERVICE_ROLE_KEY tanımlı değil. Dosya sunucu tarafında kaydedilemiyor."
+    );
+  }
+  const admin = tryCreateAdminClient();
+  if (!admin) {
+    return fail("Service role Supabase client oluşturulamadı.");
+  }
+  return ok(admin);
+}
 
 /** Evrak storage nesnelerini siler (DB satırı cascade ile gider). */
 async function purgeServiceFileDocumentStorage(
@@ -188,19 +227,33 @@ export async function getDosyaById(
   }
 }
 
-/** Yeni servis dosyası oluşturur. */
+/** Yeni servis dosyası oluşturur (service role + oturum/yetki kontrolü). */
 export async function olusturDosya(
   form: ServisDosyasiForm
 ): Promise<DataResult<ServisDosyasi>> {
   try {
-    const supabase = await createClient();
-    const { data, error } = await supabase
+    const auth = await assertServisDosyaInsertAccess();
+    if (!auth.ok) return fail(auth.error);
+
+    const adminResult = requireAdminClientForInsert();
+    if (!adminResult.ok) return fail(adminResult.error);
+
+    const insertPayload: ServisDosyasiInsert = {
+      ...mapFormToInsert(form),
+      deleted_at: null,
+    };
+
+    const { data, error } = await adminResult.data
       .from("servis_dosyalari")
-      .insert(mapFormToInsert(form))
+      .insert(insertPayload)
       .select("*")
       .single();
 
-    if (error) return fail(supabaseErrorMessage(error));
+    if (error) {
+      return fail(
+        error.message || supabaseErrorMessage(error)
+      );
+    }
     if (!data) return fail("Dosya oluşturuldu ancak yanıt alınamadı.");
 
     const dosya = mapRowToServisDosya(data);

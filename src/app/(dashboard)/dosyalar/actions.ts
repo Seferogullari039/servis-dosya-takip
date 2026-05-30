@@ -290,11 +290,13 @@ export async function createDosyaAction(
   _prev: CreateDosyaState,
   formData: FormData
 ): Promise<CreateDosyaState> {
-  const profile = await getCurrentProfile();
-  if (!profile?.is_active) {
-    return { error: "Aktif oturum gerekli." };
-  }
-  const writeAccess = assertProductWriteAccess(profile, "yeni dosya oluşturma");
+  const auth = await assertOperationAccess();
+  if (!auth.ok) return { error: auth.error };
+
+  const writeAccess = assertProductWriteAccess(
+    auth.profile,
+    "yeni dosya oluşturma"
+  );
   if (!writeAccess.ok) return { error: writeAccess.error };
 
   const form = parseForm(formData);
