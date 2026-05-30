@@ -7,9 +7,14 @@ import { TopBar } from "@/components/layout/TopBar";
 interface AppShellProps {
   title: string;
   children: React.ReactNode;
+  showQuickActions?: boolean;
 }
 
-export function AppShell({ title, children }: AppShellProps) {
+export function AppShell({
+  title,
+  children,
+  showQuickActions = true,
+}: AppShellProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -34,7 +39,11 @@ export function AppShell({ title, children }: AppShellProps) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="no-print">
-          <TopBar title={title} onMenuClick={() => setMenuOpen(true)} />
+          <TopBar
+            title={title}
+            onMenuClick={() => setMenuOpen(true)}
+            showQuickActions={showQuickActions}
+          />
         </div>
         <main className="flex-1 p-4 md:p-6 lg:p-8 print:p-0">{children}</main>
       </div>

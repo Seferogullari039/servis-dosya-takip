@@ -1,27 +1,30 @@
 "use client";
 
-import { useAuth } from "@/components/layout/AuthProvider";
 import { AlertsPanel } from "@/components/operations/AlertsPanel";
+import { DashboardQuickActions } from "@/components/layout/DashboardQuickActions";
 import { LogoutButton } from "@/components/layout/LogoutButton";
-import { RoleBadge } from "@/components/layout/RoleBadge";
 import { PushBellButton } from "@/components/push/PushBellButton";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { UserProfileCard } from "@/components/layout/UserProfileCard";
 
 interface TopBarProps {
   title: string;
   onMenuClick?: () => void;
+  showQuickActions?: boolean;
 }
 
-export function TopBar({ title, onMenuClick }: TopBarProps) {
-  const { profile } = useAuth();
-
+export function TopBar({
+  title,
+  onMenuClick,
+  showQuickActions = false,
+}: TopBarProps) {
   return (
-    <header className="flex min-h-14 flex-col gap-3 border-b border-border bg-surface px-4 py-3 md:flex-row md:items-center md:justify-between md:px-6 md:py-0">
-      <div className="flex items-center gap-3">
+    <header className="flex min-h-14 flex-col gap-3 border-b border-border bg-surface/95 px-4 py-3 backdrop-blur-md md:flex-row md:items-center md:justify-between md:px-6 md:py-0 dark:border-white/10">
+      <div className="flex min-w-0 items-center gap-3">
         <button
           type="button"
           onClick={onMenuClick}
-          className="rounded-lg p-2 text-ink-muted hover:bg-surface-muted lg:hidden"
+          className="shrink-0 rounded-lg p-2 text-ink-muted hover:bg-surface-muted lg:hidden"
           aria-label="Menüyü aç"
         >
           <svg
@@ -38,21 +41,22 @@ export function TopBar({ title, onMenuClick }: TopBarProps) {
             />
           </svg>
         </button>
-        <h1 className="text-lg font-semibold text-ink">{title}</h1>
+        <h1 className="truncate text-lg font-semibold text-ink">{title}</h1>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 md:gap-3">
+      <div className="flex flex-wrap items-center justify-end gap-2 md:gap-3">
+        {showQuickActions ? (
+          <DashboardQuickActions className="hidden sm:flex" />
+        ) : null}
         <ThemeToggle />
         <PushBellButton />
         <AlertsPanel />
-        <div className="flex items-center gap-2 rounded-lg border border-border bg-surface-muted px-3 py-1.5">
-          <span className="text-sm font-medium text-ink">
-            {profile.full_name}
-          </span>
-          <RoleBadge role={profile.role} />
-        </div>
+        <UserProfileCard />
         <LogoutButton />
       </div>
+      {showQuickActions ? (
+        <DashboardQuickActions className="flex w-full sm:hidden" />
+      ) : null}
     </header>
   );
 }

@@ -7,7 +7,7 @@ import { useAuth } from "@/components/layout/AuthProvider";
 import { cn } from "@/lib/utils/cn";
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: "◉" },
+  { href: "/dashboard", label: "Operasyon Merkezi", icon: "◉" },
   { href: "/", label: "Dosya Özeti", icon: "📊" },
   { href: "/dosyalar", label: "Dosyalar", icon: "☰" },
   { href: "/is-emirleri", label: "İş Emirleri", icon: "📋" },
@@ -15,6 +15,7 @@ const navItems = [
 ] as const;
 
 const adminNavItems = [
+  { href: "/kullanicilar", label: "Kullanıcılar", icon: "👥" },
   { href: "/yedekleme", label: "Yedekleme", icon: "💾" },
 ] as const;
 

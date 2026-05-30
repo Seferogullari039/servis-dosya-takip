@@ -1,13 +1,13 @@
 import { Suspense } from "react";
 import { AppShell } from "@/components/layout/AppShell";
-import { AracDashboard } from "@/components/work-order-dashboard/AracDashboard";
+import { OperasyonMerkeziDashboard } from "@/components/ops-center/OperasyonMerkeziDashboard";
 import { ErrorState, LoadingState } from "@/components/ui/DataState";
 import { requireAuth } from "@/lib/auth/require-auth";
-import { getAracDashboardData } from "@/lib/data/work-order-dashboard";
+import { getOpsCenterDashboardData } from "@/lib/data/ops-center-dashboard";
 
 async function DashboardIcerik() {
   await requireAuth();
-  const result = await getAracDashboardData();
+  const result = await getOpsCenterDashboardData();
 
   if (!result.ok) {
     return (
@@ -18,12 +18,12 @@ async function DashboardIcerik() {
     );
   }
 
-  return <AracDashboard data={result.data} />;
+  return <OperasyonMerkeziDashboard data={result.data} />;
 }
 
-export default function AracDurumDashboardPage() {
+export default function OperasyonMerkeziPage() {
   return (
-    <AppShell title="Araç Durum Takibi">
+    <AppShell title="Operasyon Merkezi">
       <Suspense fallback={<LoadingState message="Dashboard yükleniyor…" />}>
         <DashboardIcerik />
       </Suspense>
