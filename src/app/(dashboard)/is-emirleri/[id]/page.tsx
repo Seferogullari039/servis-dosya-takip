@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { AppShell } from "@/components/layout/AppShell";
+import { EntityAuditHistory } from "@/components/audit/EntityAuditHistory";
 import { IsEmriDetayClient } from "@/components/is-emri/IsEmriDetayClient";
 import { ErrorState, LoadingState } from "@/components/ui/DataState";
 import { requireAuth } from "@/lib/auth/require-auth";
@@ -44,12 +45,19 @@ export default async function IsEmriDetayPage({ params, searchParams }: PageProp
   return (
     <AppShell title={`İş Emri · ${result.data.isEmriNo}`}>
       <Suspense fallback={<LoadingState message="İş emri yükleniyor…" />}>
-        <IsEmriDetayClient
-          kayit={result.data}
-          images={imagesResult.ok ? imagesResult.data : []}
-          isAdmin={profile?.role === "admin"}
-          autoPrint={yazdir === "1"}
-        />
+        <div className="space-y-6">
+          <IsEmriDetayClient
+            kayit={result.data}
+            images={imagesResult.ok ? imagesResult.data : []}
+            isAdmin={profile?.role === "admin"}
+            autoPrint={yazdir === "1"}
+          />
+          <EntityAuditHistory
+            entityType="work_order"
+            entityId={id}
+            title="Bu iş emrine ait son işlemler"
+          />
+        </div>
       </Suspense>
     </AppShell>
   );

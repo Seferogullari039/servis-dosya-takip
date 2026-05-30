@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { olusturIsEmri } from "@/lib/data/work-orders";
+import { AUDIT_ACTIONS } from "@/lib/audit/types";
+import { recordAuditWithProfile } from "@/lib/audit/record";
 import {
   notifyProcurementStatusesOnCreate,
   notifyWorkOrderCreated,
@@ -41,6 +43,17 @@ export async function kaydetIsEmri(
     plaka: kayit.plaka,
     parcalar: form.parcalar,
     excludeUserId: auth.profile.id,
+  });
+
+  await recordAuditWithProfile(auth.profile, {
+    action: AUDIT_ACTIONS.WORK_ORDER_CREATE,
+    entity_type: "work_order",
+    entity_id: kayit.id,
+    entity_label: kayit.isEmriNo,
+    new_value: {
+      plaka: kayit.plaka,
+      aracDurumu: kayit.aracDurumu,
+    },
   });
 
   revalidateIsEmriPaths(kayit.id);

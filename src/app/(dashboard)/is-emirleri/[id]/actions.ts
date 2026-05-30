@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { getIsEmriById, guncelleIsEmri } from "@/lib/data/work-orders";
+import { AUDIT_ACTIONS } from "@/lib/audit/types";
+import { recordAuditWithProfile } from "@/lib/audit/record";
 import { logPushAction, notifyWorkOrderChanges } from "@/lib/push/events";
 import { assertOperationAccess } from "@/lib/operations/auth-action";
 import type { IsEmriFormState } from "@/types/is-emri";
@@ -52,6 +54,21 @@ export async function guncelleIsEmriKayitAction(
   });
 
   console.log("[push:action] guncelleIsEmriKayitAction complete", pushDebug);
+
+  await recordAuditWithProfile(auth.profile, {
+    action: AUDIT_ACTIONS.WORK_ORDER_UPDATE,
+    entity_type: "work_order",
+    entity_id: id,
+    entity_label: updateResult.data.isEmriNo,
+    old_value: {
+      aracDurumu: beforeResult.data.aracDurumu,
+      plaka: beforeResult.data.plaka,
+    },
+    new_value: {
+      aracDurumu: updateResult.data.aracDurumu,
+      plaka: updateResult.data.plaka,
+    },
+  });
 
   revalidateIsEmriPaths(id);
   return { ok: true, pushDebug };

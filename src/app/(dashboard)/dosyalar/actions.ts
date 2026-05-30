@@ -32,7 +32,10 @@ import { invalidateDashboardCache } from "@/lib/cache";
 import { getCurrentProfile } from "@/lib/auth/get-current-profile";
 import { assertProductWriteAccess } from "@/lib/system/feature-freeze";
 import { assertSafeModeOperation } from "@/lib/system/freeze";
+import { AUDIT_ACTIONS } from "@/lib/audit/types";
+import { recordAuditWithProfile } from "@/lib/audit/record";
 import { logPushAction, notifyServiceFileStatus } from "@/lib/push/events";
+import { notifyFileDeleted } from "@/lib/push/security-events";
 
 function revalidateDosya(id: string) {
   invalidateDashboardCache();
@@ -84,6 +87,14 @@ async function applyStatusUpdate(
       durum,
       previousDurum,
       excludeUserId: auth.profile.id,
+    });
+    void recordAuditWithProfile(auth.profile, {
+      action: AUDIT_ACTIONS.SERVICE_FILE_UPDATE,
+      entity_type: "service_file",
+      entity_id: id,
+      entity_label: result.data.dosyaNo,
+      old_value: { durum: previousDurum },
+      new_value: { durum },
     });
   }
   return { ok: true, data: result.data };
@@ -312,6 +323,18 @@ export async function createDosyaAction(
     };
   }
 
+  await recordAuditWithProfile(auth.profile, {
+    action: AUDIT_ACTIONS.SERVICE_FILE_CREATE,
+    entity_type: "service_file",
+    entity_id: result.data.id,
+    entity_label: result.data.dosyaNo,
+    new_value: {
+      dosyaNo: result.data.dosyaNo,
+      plaka: result.data.plaka,
+      durum: result.data.durum,
+    },
+  });
+
   redirect(`/dosyalar/${result.data.id}`);
 }
 
@@ -340,9 +363,29 @@ export async function silDosyaAction(id: string): Promise<OperationResult> {
     };
   }
 
+  const existing = await getDosyaById(id);
   const result = await silDosya(id);
   if (!result.ok) {
     return { ok: false, error: result.error ?? "Dosya silinemedi." };
+  }
+
+  if (existing.ok && existing.data) {
+    await recordAuditWithProfile(auth.profile, {
+      action: AUDIT_ACTIONS.SERVICE_FILE_DELETE,
+      entity_type: "service_file",
+      entity_id: id,
+      entity_label: existing.data.dosyaNo,
+      old_value: {
+        dosyaNo: existing.data.dosyaNo,
+        plaka: existing.data.plaka,
+        durum: existing.data.durum,
+      },
+    });
+    notifyFileDeleted({
+      dosyaNo: existing.data.dosyaNo,
+      plaka: existing.data.plaka,
+      excludeUserId: auth.profile.id,
+    });
   }
 
   invalidateDashboardCache();

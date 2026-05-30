@@ -36,9 +36,20 @@ export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const isLoginPage = pathname === "/login";
   const isSetupPage = pathname === "/setup";
+  const isPublicLegal =
+    pathname === "/kvkk" || pathname === "/gizlilik" || pathname === "/offline";
   const isProtected =
     !isSetupPage &&
-    (pathname === "/" || pathname.startsWith("/dosyalar"));
+    !isPublicLegal &&
+    !isLoginPage &&
+    (pathname === "/" ||
+      pathname.startsWith("/dosyalar") ||
+      pathname.startsWith("/dashboard") ||
+      pathname.startsWith("/is-emir") ||
+      pathname.startsWith("/tedarik") ||
+      pathname.startsWith("/kullanicilar") ||
+      pathname.startsWith("/yedekleme") ||
+      pathname.startsWith("/islem-gecmisi"));
 
   if (!user && isProtected) {
     const redirectUrl = request.nextUrl.clone();

@@ -4,6 +4,7 @@ import { DocumentList } from "@/components/dosyalar/DocumentList";
 import { DosyaDetayTabs } from "@/components/dosyalar/DosyaDetayTabs";
 import { PdfExportButtons } from "@/components/dosyalar/PdfExportButtons";
 import { DosyaTimeline } from "@/components/dosyalar/DosyaTimeline";
+import { EntityAuditHistory } from "@/components/audit/EntityAuditHistory";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { formatTarih } from "@/lib/utils/format";
 import { formatPara, formatParaOzet } from "@/lib/utils/para";
@@ -116,6 +117,12 @@ export function DosyaDetay({
             isAdmin={isAdmin}
           />
         }
+      />
+
+      <EntityAuditHistory
+        entityType="service_file"
+        entityId={dosya.id}
+        title="Bu dosyaya ait son işlemler"
       />
     </div>
   );

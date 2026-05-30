@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { requireAuth } from "@/lib/auth/require-auth";
 import { getCurrentProfile } from "@/lib/auth/get-current-profile";
 import { getIsEmriById } from "@/lib/data/work-orders";
+import { AUDIT_ACTIONS } from "@/lib/audit/types";
+import { recordAuditWithProfile } from "@/lib/audit/record";
 import {
   logPushAction,
   notifyWorkOrderImageDeleted,
@@ -28,6 +30,7 @@ export async function uploadWorkOrderImageAction(
   formData: FormData
 ): Promise<UploadWorkOrderImageState> {
   await requireAuth();
+  const profile = await getCurrentProfile();
 
   const workOrderId = String(formData.get("workOrderId") ?? "");
   const category = String(formData.get("category") ?? "Hasar");
@@ -70,6 +73,15 @@ export async function uploadWorkOrderImageAction(
       plaka: wo.data.plaka,
       category,
     });
+    if (profile) {
+      await recordAuditWithProfile(profile, {
+        action: AUDIT_ACTIONS.WORK_ORDER_IMAGE_UPLOAD,
+        entity_type: "work_order",
+        entity_id: workOrderId,
+        entity_label: wo.data.isEmriNo,
+        new_value: { category, imageId: result.data?.id },
+      });
+    }
   }
 
   revalidatePath(`/is-emirleri/${workOrderId}`);
@@ -101,6 +113,13 @@ export async function deleteWorkOrderImageAction(
       workOrderNo: wo.data.isEmriNo,
       plaka: wo.data.plaka,
       excludeUserId: profile.id,
+    });
+    await recordAuditWithProfile(profile, {
+      action: AUDIT_ACTIONS.WORK_ORDER_IMAGE_DELETE,
+      entity_type: "work_order",
+      entity_id: workOrderId,
+      entity_label: wo.data.isEmriNo,
+      old_value: { imageId },
     });
   }
 

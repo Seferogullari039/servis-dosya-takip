@@ -98,7 +98,8 @@ async function emitPushEventAwait(
   return dispatchResultToSummary(opts.event, result);
 }
 
-function emitPushEvent(
+/** Güvenlik olayları ve diğer modüller için */
+export function emitPushEvent(
   opts: EmitOptions & {
     debugAction?: string;
     previous?: unknown;

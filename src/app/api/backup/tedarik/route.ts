@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { assertAdminAccess } from "@/lib/auth/assert-admin";
+import { auditBackupDownload } from "@/lib/export/backup-audit";
 import { buildTedarikCsv } from "@/lib/export/backup-data";
 import { csvDownloadResponse } from "@/lib/export/http";
 import { exportDateStamp } from "@/lib/export/csv";
@@ -15,8 +16,7 @@ export async function GET() {
     return NextResponse.json({ error: result.error }, { status: 500 });
   }
 
-  return csvDownloadResponse(
-    result.data,
-    `tedarik-${exportDateStamp()}.csv`
-  );
+  const filename = `tedarik-${exportDateStamp()}.csv`;
+  await auditBackupDownload(auth.profile, "tedarik", filename);
+  return csvDownloadResponse(result.data, filename);
 }

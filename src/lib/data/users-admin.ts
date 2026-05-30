@@ -1,3 +1,4 @@
+import { validateStrongPassword } from "@/lib/auth/password-policy";
 import { mapProfileRow } from "@/lib/auth/map-profile";
 import type { Profile, UserRole } from "@/lib/auth/types";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -94,7 +95,8 @@ export async function createManagedUser(
 
   if (!full_name) return fail("Ad soyad zorunludur.");
   if (!email) return fail("E-posta zorunludur.");
-  if (password.length < 6) return fail("Şifre en az 6 karakter olmalıdır.");
+  const passwordCheck = validateStrongPassword(password);
+  if (!passwordCheck.ok) return fail(passwordCheck.error);
 
   try {
     const admin = adminResult.data;
@@ -177,9 +179,8 @@ export async function resetManagedUserPassword(
   if (!adminResult.ok) return adminResult;
 
   const trimmed = password.trim();
-  if (trimmed.length < 6) {
-    return fail("Şifre en az 6 karakter olmalıdır.");
-  }
+  const passwordCheck = validateStrongPassword(trimmed);
+  if (!passwordCheck.ok) return fail(passwordCheck.error);
 
   try {
     const admin = adminResult.data;

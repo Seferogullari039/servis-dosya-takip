@@ -140,8 +140,22 @@ export function LoginForm({ redirectTo = "/", reasonMessage }: LoginFormProps) {
         </form>
       </div>
 
-      <p className="mt-6 text-center text-[11px] text-white/30">
+      <p className="mt-6 text-center text-[11px] leading-relaxed text-white/40">
         Yetkiler hesap rolüne göre belirlenir.
+        <br />
+        <a
+          href="/kvkk"
+          className="text-[#5ba3d4] underline-offset-2 hover:text-white hover:underline"
+        >
+          KVKK Aydınlatma Metni
+        </a>
+        {" · "}
+        <a
+          href="/gizlilik"
+          className="text-[#5ba3d4] underline-offset-2 hover:text-white hover:underline"
+        >
+          Gizlilik Politikası
+        </a>
       </p>
     </div>
   );

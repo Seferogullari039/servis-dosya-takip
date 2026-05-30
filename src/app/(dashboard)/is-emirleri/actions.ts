@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { getIsEmriById, guncelleAracDurumu, silIsEmri } from "@/lib/data/work-orders";
+import { AUDIT_ACTIONS } from "@/lib/audit/types";
+import { recordAuditWithProfile } from "@/lib/audit/record";
 import {
   logPushAction,
   notifyVehicleStatusChanged,
@@ -43,6 +45,16 @@ export async function silIsEmriAction(id: string): Promise<OperationResult> {
       plaka: existing.data.plaka,
       excludeUserId: auth.profile.id,
     });
+    await recordAuditWithProfile(auth.profile, {
+      action: AUDIT_ACTIONS.WORK_ORDER_DELETE,
+      entity_type: "work_order",
+      entity_id: id,
+      entity_label: existing.data.isEmriNo,
+      old_value: {
+        plaka: existing.data.plaka,
+        aracDurumu: existing.data.aracDurumu,
+      },
+    });
   }
 
   revalidateIsEmriPaths();
@@ -80,6 +92,15 @@ export async function guncelleAracDurumuAction(
   });
 
   console.log("[push:action] guncelleAracDurumuAction complete", pushDebug);
+
+  await recordAuditWithProfile(auth.profile, {
+    action: AUDIT_ACTIONS.WORK_ORDER_VEHICLE_STATUS,
+    entity_type: "work_order",
+    entity_id: id,
+    entity_label: result.data.isEmriNo,
+    old_value: { aracDurumu: previousStatus },
+    new_value: { aracDurumu },
+  });
 
   revalidateIsEmriPaths();
   revalidatePath(`/is-emirleri/${id}`);

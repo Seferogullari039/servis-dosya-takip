@@ -170,6 +170,81 @@ export interface Database {
           },
         ];
       };
+      audit_logs: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          user_name: string;
+          user_role: string | null;
+          action: string;
+          entity_type: string | null;
+          entity_id: string | null;
+          entity_label: string | null;
+          old_value: Json | null;
+          new_value: Json | null;
+          ip_address: string | null;
+          user_agent: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string | null;
+          user_name?: string;
+          user_role?: string | null;
+          action: string;
+          entity_type?: string | null;
+          entity_id?: string | null;
+          entity_label?: string | null;
+          old_value?: Json | null;
+          new_value?: Json | null;
+          ip_address?: string | null;
+          user_agent?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string | null;
+          user_name?: string;
+          user_role?: string | null;
+          action?: string;
+          entity_type?: string | null;
+          entity_id?: string | null;
+          entity_label?: string | null;
+          old_value?: Json | null;
+          new_value?: Json | null;
+          ip_address?: string | null;
+          user_agent?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      login_attempts: {
+        Row: {
+          id: string;
+          email: string;
+          success: boolean;
+          ip_address: string | null;
+          user_agent: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          email: string;
+          success?: boolean;
+          ip_address?: string | null;
+          user_agent?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          email?: string;
+          success?: boolean;
+          ip_address?: string | null;
+          user_agent?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       push_subscriptions: {
         Row: {
           id: string;

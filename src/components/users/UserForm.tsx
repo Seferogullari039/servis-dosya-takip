@@ -82,8 +82,8 @@ export function UserForm({ mode, user }: UserFormProps) {
                 name="password"
                 type="password"
                 required
-                minLength={6}
-                placeholder="En az 6 karakter"
+                minLength={8}
+                placeholder="En az 8 karakter, büyük/küçük, rakam, özel"
                 autoComplete="new-password"
               />
             </>
@@ -150,8 +150,8 @@ export function UserForm({ mode, user }: UserFormProps) {
               name="password"
               type="password"
               required
-              minLength={6}
-              placeholder="En az 6 karakter"
+              minLength={8}
+              placeholder="En az 8 karakter, büyük/küçük, rakam, özel"
               autoComplete="new-password"
             />
             <Button type="submit" variant="secondary" fullWidth disabled={resetPending}>

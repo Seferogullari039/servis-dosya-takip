@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { assertAdminAccess } from "@/lib/auth/assert-admin";
+import { auditBackupDownload } from "@/lib/export/backup-audit";
 import { buildTumYedekJson } from "@/lib/export/backup-data";
 import { jsonDownloadResponse } from "@/lib/export/http";
 import { exportDateStamp } from "@/lib/export/csv";
@@ -15,8 +16,7 @@ export async function GET() {
     return NextResponse.json({ error: result.error }, { status: 500 });
   }
 
-  return jsonDownloadResponse(
-    result.data,
-    `tum-yedek-${exportDateStamp()}.json`
-  );
+  const filename = `tum-yedek-${exportDateStamp()}.json`;
+  await auditBackupDownload(auth.profile, "tum", filename);
+  return jsonDownloadResponse(result.data, filename);
 }

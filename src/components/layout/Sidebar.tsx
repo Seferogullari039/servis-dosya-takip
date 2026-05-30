@@ -16,6 +16,7 @@ const navItems = [
 
 const adminNavItems = [
   { href: "/kullanicilar", label: "Kullanıcılar", icon: "👥" },
+  { href: "/islem-gecmisi", label: "İşlem Geçmişi", icon: "📜" },
   { href: "/yedekleme", label: "Yedekleme", icon: "💾" },
 ] as const;
 
