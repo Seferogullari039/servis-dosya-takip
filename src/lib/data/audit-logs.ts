@@ -74,19 +74,61 @@ export async function listEntityAuditLogs(
   }
 }
 
+export type BackupDownloadFormat = "CSV" | "JSON";
+
+export interface LastBackupDownloadInfo {
+  createdAt: string;
+  userName: string;
+  backupTypeKey: string;
+  backupTypeLabel: string;
+  format: BackupDownloadFormat;
+}
+
+const BACKUP_TYPE_LABELS: Record<string, string> = {
+  dosyalar: "Dosyalar",
+  "is-emirleri": "İş emirleri",
+  tedarik: "Tedarik",
+  gorseller: "Görsel kayıtları",
+  tum: "Tüm veriler",
+};
+
+function parseBackupDownloadRow(row: AuditLogRow): LastBackupDownloadInfo {
+  const raw = row.new_value as { type?: string; filename?: string } | null;
+  const key = String(raw?.type ?? "yedek").trim();
+  const filename = String(raw?.filename ?? row.entity_label ?? "");
+  const format: BackupDownloadFormat =
+    key === "tum" || filename.toLowerCase().endsWith(".json") ? "JSON" : "CSV";
+
+  return {
+    createdAt: row.created_at,
+    userName: row.user_name || "—",
+    backupTypeKey: key,
+    backupTypeLabel: BACKUP_TYPE_LABELS[key] ?? key,
+    format,
+  };
+}
+
+/** Son backup_download audit kaydı (tam detay). */
+export async function getLastBackupDownloadInfo(): Promise<LastBackupDownloadInfo | null> {
+  try {
+    const supabase = await getReadClient();
+    const { data, error } = await supabase
+      .from("audit_logs")
+      .select("*")
+      .eq("action", AUDIT_ACTIONS.BACKUP_DOWNLOAD)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error || !data) return null;
+    return parseBackupDownloadRow(data as AuditLogRow);
+  } catch {
+    return null;
+  }
+}
+
+/** @deprecated getLastBackupDownloadInfo kullanın */
 export async function getLastBackupDownloadAt(): Promise<string | null> {
-  if (!isServiceRoleConfigured()) return null;
-  const admin = tryCreateAdminClient();
-  if (!admin) return null;
-
-  const { data, error } = await admin
-    .from("audit_logs")
-    .select("created_at")
-    .eq("action", AUDIT_ACTIONS.BACKUP_DOWNLOAD)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (error || !data) return null;
-  return data.created_at;
+  const info = await getLastBackupDownloadInfo();
+  return info?.createdAt ?? null;
 }
