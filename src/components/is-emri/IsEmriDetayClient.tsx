@@ -147,9 +147,10 @@ export function IsEmriDetayClient({
 
   return (
     <div className="mx-auto max-w-4xl space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="no-print flex flex-wrap items-center gap-2">
         <VehicleStatusBadge durum={kayit.aracDurumu} />
       </div>
+      <div className="no-print">
       <IsEmriActionBar
         workOrderId={kayit.id}
         workOrderNo={kayit.isEmriNo}
@@ -169,6 +170,7 @@ export function IsEmriDetayClient({
           vehicleDebug={vehiclePushDebug}
         />
       ) : null}
+      </div>
       <IsEmriForm
         mode="edit"
         initialForm={initialForm}

@@ -30,7 +30,7 @@ export async function EntityAuditHistory({
   const rows: AuditLogRow[] = result.ok ? result.data : [];
 
   return (
-    <Card>
+    <Card className="no-print is-emri-no-print" data-entity-audit>
       <CardHeader>
         <CardTitle className="text-base">{title}</CardTitle>
       </CardHeader>

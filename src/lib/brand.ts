@@ -3,15 +3,17 @@ export const BRAND = {
   companyName: "Seferoğulları Otomotiv",
   appTagline: "Dosya Takip Sistemi",
   panelSubtitle: "Operasyon Paneli",
+  /** Kurumsal lacivert — iş emri, PWA, panel */
+  corporateBlue: "#0F4C81",
   /** Sol menü — koyu lacivert (gece modundan bağımsız) */
   sidebarBg: "#0c1a2e",
 } as const;
 
 export const PDF_BRAND = {
   companyName: BRAND.companyName,
-  blue: "#1d4ed8",
-  blueDark: "#1e3a8a",
+  blue: BRAND.corporateBlue,
+  blueDark: "#0a3d66",
   blueLight: "#dbeafe",
-  blueSoft: "#eff6ff",
+  blueSoft: "#e8f2fa",
   dotColor: "#ffffff",
 } as const;

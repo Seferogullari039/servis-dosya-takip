@@ -75,7 +75,8 @@ export function WorkOrderPushDebugPanel({
 }) {
   return (
     <aside
-      className="no-print rounded-lg border border-dashed border-violet-400/50 bg-violet-50/50 p-3 dark:border-violet-500/40 dark:bg-violet-950/20"
+      className="no-print is-emri-no-print rounded-lg border border-dashed border-violet-400/50 bg-violet-50/50 p-3 dark:border-violet-500/40 dark:bg-violet-950/20"
+      data-push-debug
       aria-label="Push debug"
     >
       <h3 className="text-xs font-bold uppercase tracking-wide text-violet-900 dark:text-violet-200">

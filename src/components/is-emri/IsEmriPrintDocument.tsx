@@ -1,6 +1,7 @@
 "use client";
 
-import { forwardRef } from "react";
+import { forwardRef, useMemo } from "react";
+import { IsEmriPrintLogo } from "@/components/is-emri/IsEmriPrintLogo";
 import { WorkOrderImagePrintBlock } from "@/components/is-emri/WorkOrderImagePrintBlock";
 import { BRAND } from "@/lib/brand";
 import { calcParcaSatirToplam } from "@/lib/is-emri/calculations";
@@ -31,22 +32,43 @@ function formatTarih(iso: string): string {
   }
 }
 
+function formatBelgeSaati(date: Date): string {
+  return new Intl.DateTimeFormat("tr-TR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function formatBelgeTarihi(date: Date): string {
+  return new Intl.DateTimeFormat("tr-TR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(date);
+}
+
 function PrintSection({
   no,
   title,
   children,
+  compact,
 }: {
   no: string;
   title: string;
   children: React.ReactNode;
+  compact?: boolean;
 }) {
   return (
-    <section className="is-emri-doc-section">
+    <section
+      className={
+        compact ? "is-emri-doc-section is-emri-doc-section-compact" : "is-emri-doc-section"
+      }
+    >
       <div className="is-emri-doc-section-head">
         <span className="is-emri-doc-section-no">{no}</span>
         <h2 className="is-emri-doc-section-title">{title}</h2>
       </div>
-      {children}
+      <div className="is-emri-doc-section-body">{children}</div>
     </section>
   );
 }
@@ -85,6 +107,7 @@ export const IsEmriPrintDocument = forwardRef<
   },
   ref
 ) {
+  const belgeZamani = useMemo(() => new Date(), []);
   const parcalar = form.parcalar.filter(
     (p) => p.parcaAdi.trim() || p.adet.trim() || p.birimFiyat.trim()
   );
@@ -99,76 +122,104 @@ export const IsEmriPrintDocument = forwardRef<
       aria-label="İş emri yazdırma formu"
     >
       <header className="is-emri-doc-header">
-        <div className="is-emri-doc-header-main">
-          <p className="is-emri-doc-company">{BRAND.companyName}</p>
-          <h1 className="is-emri-doc-title">Servis İş Emri</h1>
+        <div className="is-emri-doc-header-brand">
+          <IsEmriPrintLogo className="is-emri-doc-logo" />
+          <div className="is-emri-doc-header-titles">
+            <p className="is-emri-doc-company">{BRAND.companyName}</p>
+            <h1 className="is-emri-doc-title">SERVİS İŞ EMRİ</h1>
+            <p className="is-emri-doc-subtitle">Yetkili Servis · Ekspertiz Formu</p>
+          </div>
         </div>
-        <div className="is-emri-doc-meta">
-          <div>
+        <div className="is-emri-doc-meta-box" aria-label="İş emri bilgileri">
+          <div className="is-emri-doc-meta-row">
             <span className="is-emri-doc-meta-label">İş Emri No</span>
             <span className="is-emri-doc-meta-value">{isEmriNo}</span>
           </div>
-          <div>
-            <span className="is-emri-doc-meta-label">Giriş tarihi</span>
+          <div className="is-emri-doc-meta-row">
+            <span className="is-emri-doc-meta-label">Tarih</span>
             <span className="is-emri-doc-meta-value">
-              {formatTarih(form.serviseGirisTarihi)}
+              {formatTarih(form.serviseGirisTarihi) !== "—"
+                ? formatTarih(form.serviseGirisTarihi)
+                : formatBelgeTarihi(belgeZamani)}
             </span>
           </div>
-          <div>
-            <span className="is-emri-doc-meta-label">Araç durumu</span>
-            <span className="is-emri-doc-meta-value">{form.aracDurumu}</span>
+          <div className="is-emri-doc-meta-row">
+            <span className="is-emri-doc-meta-label">Saat</span>
+            <span className="is-emri-doc-meta-value">
+              {formatBelgeSaati(belgeZamani)}
+            </span>
+          </div>
+          <div className="is-emri-doc-meta-row">
+            <span className="is-emri-doc-meta-label">Araç Durumu</span>
+            <span className="is-emri-doc-meta-value is-emri-doc-meta-status">
+              {form.aracDurumu}
+            </span>
           </div>
         </div>
       </header>
 
-      <PrintSection no="1" title="Müşteri bilgileri">
-        <InfoGrid
-          rows={[
-            { label: "Ruhsat sahibi", value: form.ruhsatSahibi },
-            { label: "Telefon", value: form.telefon },
-            { label: "Plaka", value: form.plaka },
-          ]}
-        />
-      </PrintSection>
-
-      <PrintSection no="2" title="Araç bilgileri">
-        <InfoGrid
-          rows={[
-            { label: "Marka / Model", value: `${form.marka} ${form.model}`.trim() },
-            { label: "KM", value: form.km },
-            { label: "Servise giriş", value: formatTarih(form.serviseGirisTarihi) },
-          ]}
-        />
-      </PrintSection>
+      <div className="is-emri-doc-cards-row">
+        <div className="is-emri-doc-card">
+          <PrintSection no="1" title="Müşteri bilgileri" compact>
+            <InfoGrid
+              rows={[
+                { label: "Ruhsat sahibi", value: form.ruhsatSahibi },
+                { label: "Telefon", value: form.telefon },
+                { label: "Plaka", value: form.plaka },
+              ]}
+            />
+          </PrintSection>
+        </div>
+        <div className="is-emri-doc-card">
+          <PrintSection no="2" title="Araç bilgileri" compact>
+            <InfoGrid
+              rows={[
+                {
+                  label: "Marka / Model",
+                  value: `${form.marka} ${form.model}`.trim(),
+                },
+                { label: "KM", value: form.km },
+                {
+                  label: "Servise giriş",
+                  value: formatTarih(form.serviseGirisTarihi),
+                },
+              ]}
+            />
+          </PrintSection>
+        </div>
+      </div>
 
       <PrintSection no="3" title="Ekspertiz kontrol listesi">
-        <table className="is-emri-doc-table is-emri-doc-table-compact">
-          <thead>
-            <tr>
-              <th className="w-10">✓</th>
-              <th>Kontrol</th>
-              <th>Not</th>
-            </tr>
-          </thead>
-          <tbody>
-            {form.ekspertizChecklist.map((item) => (
-              <tr key={item.key}>
-                <td className="text-center font-bold">
-                  {item.checked ? "✓" : "—"}
-                </td>
-                <td>{item.label}</td>
-                <td>{item.note || "—"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="is-emri-doc-checklist" role="list">
+          {form.ekspertizChecklist.map((item) => (
+            <div
+              key={item.key}
+              role="listitem"
+              className={
+                item.checked
+                  ? "is-emri-doc-check-item is-emri-doc-check-item--checked"
+                  : "is-emri-doc-check-item"
+              }
+            >
+              <span className="is-emri-doc-check-mark" aria-hidden>
+                {item.checked ? "✓" : ""}
+              </span>
+              <div className="is-emri-doc-check-content">
+                <span className="is-emri-doc-check-label">{item.label}</span>
+                {item.note ? (
+                  <span className="is-emri-doc-check-note">{item.note}</span>
+                ) : null}
+              </div>
+            </div>
+          ))}
+        </div>
       </PrintSection>
 
       <PrintSection no="4" title="Parça listesi">
         {parcalar.length === 0 ? (
           <p className="is-emri-doc-empty">Parça kaydı yok.</p>
         ) : (
-          <table className="is-emri-doc-table">
+          <table className="is-emri-doc-table is-emri-doc-table-zebra">
             <thead>
               <tr>
                 <th>Parça</th>
@@ -208,7 +259,7 @@ export const IsEmriPrintDocument = forwardRef<
         {iscilik.length === 0 ? (
           <p className="is-emri-doc-empty">İşçilik kaydı yok.</p>
         ) : (
-          <table className="is-emri-doc-table">
+          <table className="is-emri-doc-table is-emri-doc-table-zebra">
             <thead>
               <tr>
                 <th>Açıklama</th>
@@ -229,35 +280,37 @@ export const IsEmriPrintDocument = forwardRef<
         )}
       </PrintSection>
 
-      <section className="is-emri-doc-totals">
-        <table className="is-emri-doc-totals-table">
-          <tbody>
-            <tr>
-              <th>Parça toplamı</th>
-              <td>{formatPara(parcaToplam)}</td>
-            </tr>
-            <tr>
-              <th>Servis satın alma</th>
-              <td>{formatPara(servisSatinAlmaToplam)}</td>
-            </tr>
-            <tr>
-              <th>İşçilik toplamı</th>
-              <td>{formatPara(iscilikToplam)}</td>
-            </tr>
-            <tr className="is-emri-doc-totals-grand">
-              <th>Genel toplam</th>
-              <td>{formatPara(genelToplam)}</td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-
       {form.ekspertizAlani.trim() ? (
         <section className="is-emri-doc-notes">
           <p className="is-emri-doc-note-label">Ekspertiz / servis notları</p>
           <p className="is-emri-doc-note-text">{form.ekspertizAlani}</p>
         </section>
       ) : null}
+
+      <div className="is-emri-doc-totals-wrap">
+        <section className="is-emri-doc-totals" aria-label="Toplamlar">
+          <table className="is-emri-doc-totals-table">
+            <tbody>
+              <tr>
+                <th>Parça toplamı</th>
+                <td>{formatPara(parcaToplam)}</td>
+              </tr>
+              <tr>
+                <th>Servis satın alma</th>
+                <td>{formatPara(servisSatinAlmaToplam)}</td>
+              </tr>
+              <tr>
+                <th>İşçilik toplamı</th>
+                <td>{formatPara(iscilikToplam)}</td>
+              </tr>
+              <tr className="is-emri-doc-totals-grand">
+                <th>Genel toplam</th>
+                <td>{formatPara(genelToplam)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+      </div>
 
       {printImages.length > 0 ? (
         <section className="is-emri-doc-images">
@@ -267,17 +320,18 @@ export const IsEmriPrintDocument = forwardRef<
 
       <footer className="is-emri-doc-signatures">
         <div className="is-emri-doc-signature-col">
-          <p className="is-emri-doc-signature-title">Müşteri İmzası</p>
+          <p className="is-emri-doc-signature-title">Müşteri Onayı</p>
           <div className="is-emri-signature-pad-box" />
           <p className="is-emri-doc-signature-name">
-            {form.musteriImza || "Ad Soyad: _________________________"}
+            {form.musteriImza || "Ad Soyad: _________________________________"}
           </p>
         </div>
         <div className="is-emri-doc-signature-col">
           <p className="is-emri-doc-signature-title">Servis Yetkilisi</p>
           <div className="is-emri-signature-pad-box" />
           <p className="is-emri-doc-signature-name">
-            {form.servisYetkilisi || "Ad Soyad / Unvan: ___________________"}
+            {form.servisYetkilisi ||
+              "Ad Soyad / Unvan: _________________________________"}
           </p>
         </div>
       </footer>
