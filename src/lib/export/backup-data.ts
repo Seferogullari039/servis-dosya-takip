@@ -1,7 +1,11 @@
 import { mapRowToServisDosya } from "@/lib/data/map-dosya";
 import { mapRowToIsEmriKayit } from "@/lib/data/map-work-order";
 import { listeleTedarikParcalari } from "@/lib/data/tedarik";
-import { rowsToCsv } from "@/lib/export/csv";
+import {
+  formatCsvDate,
+  formatCsvDateTime,
+  rowsToCsv,
+} from "@/lib/export/csv";
 import {
   isServiceRoleConfigured,
   tryCreateAdminClient,
@@ -51,7 +55,7 @@ export async function buildDosyalarCsv(): Promise<DataResult<string>> {
         d.odemeDurumu,
         d.dosyaTutari ?? "",
         d.odenenTutar,
-        d.olusturulmaTarihi,
+        formatCsvDateTime(d.olusturulmaTarihi),
       ];
     });
 
@@ -94,7 +98,7 @@ export async function buildIsEmirleriCsv(): Promise<DataResult<string>> {
         k.model,
         k.aracDurumu,
         k.toplamTutar,
-        k.createdAt,
+        formatCsvDateTime(k.createdAt),
       ];
     });
 
@@ -130,8 +134,8 @@ export async function buildTedarikCsv(): Promise<DataResult<string>> {
     p.adet,
     p.birimFiyat,
     p.toplamFiyat,
-    p.tedarikTarihi,
-    p.geldiTarihi,
+    formatCsvDate(p.tedarikTarihi),
+    formatCsvDate(p.geldiTarihi),
   ]);
 
   return ok(rowsToCsv(headers, rows));
@@ -183,7 +187,7 @@ export async function buildGorsellerCsv(): Promise<DataResult<string>> {
         row.note ?? "",
         row.image_url,
         row.storage_path,
-        row.created_at,
+        formatCsvDateTime(row.created_at),
       ];
     });
 
