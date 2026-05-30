@@ -18,7 +18,11 @@ import {
 
 const initialState: CreateDosyaState = {};
 
-export function DosyaForm() {
+interface DosyaFormProps {
+  isAdmin?: boolean;
+}
+
+export function DosyaForm({ isAdmin = false }: DosyaFormProps) {
   const router = useRouter();
   const [state, formAction, isPending] = useActionState(
     createDosyaAction,
@@ -28,7 +32,23 @@ export function DosyaForm() {
   return (
     <form action={formAction} className="space-y-6">
       {state.error && (
-        <ErrorState title="Kayıt başarısız" description={state.error} />
+        <div className="space-y-3">
+          <ErrorState title="Kayıt başarısız" description={state.error} />
+          {isAdmin && state.debug ? (
+            <div
+              className="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950/50"
+              role="region"
+              aria-label="Hata debug bilgisi"
+            >
+              <p className="text-xs font-semibold uppercase tracking-wide text-red-800 dark:text-red-200">
+                Debug (yalnızca admin)
+              </p>
+              <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap break-all rounded-lg bg-red-100/80 p-3 font-mono text-xs text-red-900 dark:bg-red-950 dark:text-red-100">
+                {JSON.stringify(state.debug, null, 2)}
+              </pre>
+            </div>
+          ) : null}
+        </div>
       )}
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

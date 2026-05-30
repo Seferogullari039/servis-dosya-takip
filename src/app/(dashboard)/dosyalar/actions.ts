@@ -10,6 +10,7 @@ import {
   restoreDosya,
   softSilDosya,
 } from "@/lib/data/dosyalar";
+import type { CreateDosyaInsertDebug } from "@/lib/data/servis-dosya-create";
 import {
   assertOperationAccess,
   canEditExpert,
@@ -254,6 +255,7 @@ export async function bulkAddNote(
 export type CreateDosyaState = {
   error?: string;
   fieldErrors?: Partial<Record<keyof ServisDosyasiForm, string>>;
+  debug?: CreateDosyaInsertDebug;
 };
 
 function parseForm(formData: FormData): ServisDosyasiForm {
@@ -303,8 +305,14 @@ export async function createDosyaAction(
   const fieldErrors = validate(form);
   if (fieldErrors) return { fieldErrors };
 
+  // Tek oluşturma yolu: olusturDosya → service role insert
   const result = await olusturDosya(form);
-  if (!result.ok) return { error: result.error };
+  if (!result.ok) {
+    return {
+      error: result.error,
+      debug: result.debug,
+    };
+  }
 
   redirect(`/dosyalar/${result.data.id}`);
 }
