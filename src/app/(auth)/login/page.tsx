@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/auth/LoginForm";
+import { LoginPageShell } from "@/components/auth/LoginPageShell";
 import { SetupRequired } from "@/components/auth/SetupRequired";
 import { getLoginMessageFromReason } from "@/lib/auth/errors";
 import { getCurrentUser } from "@/lib/auth/get-current-user";
@@ -14,15 +15,17 @@ export default async function LoginPage({ searchParams }: PageProps) {
 
   if (!hasSupabaseEnv()) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-surface-muted p-4">
-        <SetupRequired />
-        <a
-          href="/setup"
-          className="mt-4 text-sm font-medium text-accent underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-        >
-          Supabase key&apos;lerini yapıştır → /setup
-        </a>
-      </div>
+      <LoginPageShell>
+        <div className="w-full max-w-md text-center">
+          <SetupRequired />
+          <a
+            href="/setup"
+            className="mt-4 inline-block text-sm font-medium text-[#5ba3d4] underline underline-offset-2 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0F4C81]"
+          >
+            Supabase key&apos;lerini yapıştır → /setup
+          </a>
+        </div>
+      </LoginPageShell>
     );
   }
 
@@ -39,8 +42,8 @@ export default async function LoginPage({ searchParams }: PageProps) {
       : "/";
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-surface-muted p-4">
+    <LoginPageShell>
       <LoginForm redirectTo={safeRedirect} reasonMessage={reasonMessage} />
-    </div>
+    </LoginPageShell>
   );
 }
