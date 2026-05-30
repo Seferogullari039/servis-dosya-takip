@@ -319,7 +319,7 @@ async function fetchDashboardAggregation(
     const startIso = start.toISOString();
 
     const [dosyalarRes, eventsRes] = await Promise.all([
-      supabase.from("servis_dosyalari").select("*").is("deleted_at", null),
+      supabase.from("servis_dosyalari").select("*"),
       supabase
         .from("service_file_events")
         .select(

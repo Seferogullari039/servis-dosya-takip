@@ -5,10 +5,11 @@ import {
 import { mapRowToServisDosya } from "@/lib/data/map-dosya";
 import { auditDosyaUpdate } from "@/lib/events/audit";
 import { STORAGE_BUCKET } from "@/lib/storage/constants";
+import { createAdminClient } from "@/lib/supabase/admin";
 import {
-  isServiceRoleConfigured,
-  tryCreateAdminClient,
-} from "@/lib/supabase/admin";
+  getServiceRoleKeyIssue,
+  isServiceRoleApiKey,
+} from "@/lib/supabase/service-role";
 import { createClient } from "@/lib/supabase/server";
 import type { DataResult } from "@/types/data-result";
 import { fail, ok } from "@/types/data-result";
@@ -78,17 +79,11 @@ function supabaseErrorMessage(error: { message: string; code?: string }): string
 
 const DOSYA_SILINEMEDI = "Dosya silinemedi.";
 
-/** Soft delete sonrası kalıcı silme gecikmesi (ms) */
-export const SOFT_DELETE_GRACE_MS = 10_000;
-
 /** Evrak storage nesnelerini siler (DB satırı cascade ile gider). */
 async function purgeServiceFileDocumentStorage(
-  serviceFileId: string
+  serviceFileId: string,
+  admin: ReturnType<typeof createAdminClient>
 ): Promise<void> {
-  if (!isServiceRoleConfigured()) return;
-
-  const admin = tryCreateAdminClient();
-  if (!admin) return;
 
   const { data: docs, error } = await admin
     .from("service_file_documents")
@@ -115,42 +110,15 @@ async function purgeServiceFileDocumentStorage(
   }
 }
 
-/** Süresi dolmuş soft-delete kayıtlarını kalıcı siler. */
-export async function purgeExpiredSoftDeletedDosyalar(): Promise<void> {
-  if (!isServiceRoleConfigured()) return;
-
-  const admin = tryCreateAdminClient();
-  if (!admin) return;
-
-  const cutoff = new Date(Date.now() - SOFT_DELETE_GRACE_MS).toISOString();
-  const { data, error } = await admin
-    .from("servis_dosyalari")
-    .select("id")
-    .not("deleted_at", "is", null)
-    .lt("deleted_at", cutoff);
-
-  if (error || !data?.length) return;
-
-  for (const row of data) {
-    const result = await kaliciSilDosya(row.id, admin);
-    if (!result.ok) {
-      console.warn("[dosya] purge failed", row.id, result.error);
-    }
-  }
-}
-
 /** Tüm dosyaları listeler; arama plaka ve dosya_no üzerinde (ilike). */
 export async function listeleDosyalar(
   arama?: string
 ): Promise<DataResult<ServisDosyasi[]>> {
   try {
-    await purgeExpiredSoftDeletedDosyalar();
-
     const supabase = await createClient();
     let query = supabase
       .from("servis_dosyalari")
       .select("*")
-      .is("deleted_at", null)
       .order("created_at", { ascending: false });
 
     const term = arama?.trim();
@@ -180,7 +148,6 @@ export async function getDosyaById(
       .from("servis_dosyalari")
       .select("*")
       .eq("id", id)
-      .is("deleted_at", null)
       .maybeSingle();
 
     if (error) return fail(supabaseErrorMessage(error));
@@ -214,7 +181,6 @@ export async function guncelleDosya(
       .from("servis_dosyalari")
       .select("*")
       .eq("id", id)
-      .is("deleted_at", null)
       .maybeSingle();
 
     if (fetchError) return fail(supabaseErrorMessage(fetchError));
@@ -242,73 +208,25 @@ export async function guncelleDosya(
   }
 }
 
-/** Soft delete — 10 sn içinde geri alınabilir. */
-export async function softSilDosya(id: string): Promise<DataResult<null>> {
+/** Kalıcı silme — service role (RLS bypass) + evrak storage temizliği */
+export async function silDosya(id: string): Promise<DataResult<null>> {
   try {
-    const supabase = await createClient();
+    const keyIssue = getServiceRoleKeyIssue(
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+    if (keyIssue) return fail(keyIssue);
+    if (!isServiceRoleApiKey(process.env.SUPABASE_SERVICE_ROLE_KEY)) {
+      return fail("SUPABASE_SERVICE_ROLE_KEY eksik veya okunamıyor");
+    }
 
-    const { data: existing, error: fetchError } = await supabase
-      .from("servis_dosyalari")
-      .select("id, deleted_at")
-      .eq("id", id)
-      .maybeSingle();
+    let admin;
+    try {
+      admin = createAdminClient();
+    } catch {
+      return fail("SUPABASE_SERVICE_ROLE_KEY eksik veya okunamıyor");
+    }
 
-    if (fetchError) return fail(supabaseErrorMessage(fetchError));
-    if (!existing) return fail("Dosya bulunamadı.");
-    if (existing.deleted_at) return ok(null);
-
-    const { error } = await supabase
-      .from("servis_dosyalari")
-      .update({ deleted_at: new Date().toISOString() })
-      .eq("id", id);
-
-    if (error) return fail(supabaseErrorMessage(error));
-
-    return ok(null);
-  } catch (e) {
-    return fail(e instanceof Error ? e.message : DOSYA_SILINEMEDI);
-  }
-}
-
-/** Soft delete geri al */
-export async function restoreDosya(id: string): Promise<DataResult<null>> {
-  try {
-    const client = isServiceRoleConfigured()
-      ? tryCreateAdminClient() ?? (await createClient())
-      : await createClient();
-
-    const { data: existing, error: fetchError } = await client
-      .from("servis_dosyalari")
-      .select("id, deleted_at")
-      .eq("id", id)
-      .maybeSingle();
-
-    if (fetchError) return fail(supabaseErrorMessage(fetchError));
-    if (!existing) return fail("Dosya bulunamadı.");
-    if (!existing.deleted_at) return ok(null);
-
-    const { error } = await client
-      .from("servis_dosyalari")
-      .update({ deleted_at: null })
-      .eq("id", id);
-
-    if (error) return fail(supabaseErrorMessage(error));
-
-    return ok(null);
-  } catch (e) {
-    return fail(e instanceof Error ? e.message : "Dosya geri alınamadı.");
-  }
-}
-
-/** Kalıcı silme + evrak storage temizliği */
-export async function kaliciSilDosya(
-  id: string,
-  client?: Awaited<ReturnType<typeof createClient>>
-): Promise<DataResult<null>> {
-  try {
-    const supabase = client ?? (await createClient());
-
-    const { data: existing, error: fetchError } = await supabase
+    const { data: existing, error: fetchError } = await admin
       .from("servis_dosyalari")
       .select("id")
       .eq("id", id)
@@ -317,9 +235,9 @@ export async function kaliciSilDosya(
     if (fetchError) return fail(supabaseErrorMessage(fetchError));
     if (!existing) return ok(null);
 
-    await purgeServiceFileDocumentStorage(id);
+    await purgeServiceFileDocumentStorage(id, admin);
 
-    const { error } = await supabase
+    const { error } = await admin
       .from("servis_dosyalari")
       .delete()
       .eq("id", id);
@@ -330,9 +248,4 @@ export async function kaliciSilDosya(
   } catch (e) {
     return fail(e instanceof Error ? e.message : DOSYA_SILINEMEDI);
   }
-}
-
-/** @deprecated softSilDosya kullanın */
-export async function silDosya(id: string): Promise<DataResult<null>> {
-  return softSilDosya(id);
 }

@@ -108,7 +108,7 @@ export function DosyaListesiClient({
     startRefresh(() => router.refresh());
   }, [router]);
 
-  const onSoftDeleted = useCallback((id: string) => {
+  const onDeleted = useCallback((id: string) => {
     setItems((prev) => prev.filter((d) => d.id !== id));
     setSelected((prev) => {
       const next = new Set(prev);
@@ -117,10 +117,6 @@ export function DosyaListesiClient({
     });
     if (sheetDosya?.id === id) setSheetDosya(null);
   }, [sheetDosya?.id]);
-
-  const onRestored = useCallback(() => {
-    startRefresh(() => router.refresh());
-  }, [router]);
 
   const selectedIds = useMemo(() => Array.from(selected), [selected]);
   const isAdmin = role === "admin";
@@ -195,8 +191,7 @@ export function DosyaListesiClient({
                       onSelect={onSelect}
                       onOptimistic={onOptimistic}
                       onRollback={onRollback}
-                      onSoftDeleted={onSoftDeleted}
-                      onRestored={onRestored}
+                      onDeleted={onDeleted}
                     />
                   ))}
                 </tbody>
@@ -246,8 +241,7 @@ export function DosyaListesiClient({
                       <DosyaDeleteButton
                         dosyaId={d.id}
                         compact
-                        onSoftDeleted={onSoftDeleted}
-                        onRestored={onRestored}
+                        onDeleted={onDeleted}
                       />
                     </div>
                   ) : null}

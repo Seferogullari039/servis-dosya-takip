@@ -6,9 +6,7 @@ import {
   guncelleDosya,
   getDosyaById,
   olusturDosya,
-  kaliciSilDosya,
-  restoreDosya,
-  softSilDosya,
+  silDosya,
 } from "@/lib/data/dosyalar";
 import type { CreateDosyaInsertDebug } from "@/lib/data/servis-dosya-create";
 import {
@@ -331,19 +329,18 @@ export async function loadMoreEventsAction(
   return listEventsByServiceFileId(serviceFileId, { page, pageSize });
 }
 
-export async function softSilDosyaAction(id: string): Promise<OperationResult> {
+export async function silDosyaAction(id: string): Promise<OperationResult> {
   const auth = await assertOperationAccess();
   if (!auth.ok) return { ok: false, error: auth.error };
 
-  const profile = await getCurrentProfile();
-  if (profile?.role !== "admin") {
+  if (auth.profile.role !== "admin") {
     return {
       ok: false,
       error: "Silme işlemi yalnızca admin tarafından yapılabilir.",
     };
   }
 
-  const result = await softSilDosya(id);
+  const result = await silDosya(id);
   if (!result.ok) {
     return { ok: false, error: result.error ?? "Dosya silinemedi." };
   }
@@ -353,59 +350,4 @@ export async function softSilDosyaAction(id: string): Promise<OperationResult> {
   revalidatePath(`/dosyalar/${id}`);
   revalidatePath("/");
   return { ok: true };
-}
-
-export async function restoreDosyaAction(id: string): Promise<OperationResult> {
-  const auth = await assertOperationAccess();
-  if (!auth.ok) return { ok: false, error: auth.error };
-
-  const profile = await getCurrentProfile();
-  if (profile?.role !== "admin") {
-    return {
-      ok: false,
-      error: "Geri alma yalnızca admin tarafından yapılabilir.",
-    };
-  }
-
-  const result = await restoreDosya(id);
-  if (!result.ok) {
-    return { ok: false, error: result.error ?? "Dosya geri alınamadı." };
-  }
-
-  invalidateDashboardCache();
-  revalidatePath("/dosyalar");
-  revalidatePath(`/dosyalar/${id}`);
-  revalidatePath("/");
-  return { ok: true };
-}
-
-export async function finalizeDosyaSilmeAction(
-  id: string
-): Promise<OperationResult> {
-  const auth = await assertOperationAccess();
-  if (!auth.ok) return { ok: false, error: auth.error };
-
-  const profile = await getCurrentProfile();
-  if (profile?.role !== "admin") {
-    return {
-      ok: false,
-      error: "Kalıcı silme yalnızca admin tarafından yapılabilir.",
-    };
-  }
-
-  const result = await kaliciSilDosya(id);
-  if (!result.ok) {
-    return { ok: false, error: result.error ?? "Dosya silinemedi." };
-  }
-
-  invalidateDashboardCache();
-  revalidatePath("/dosyalar");
-  revalidatePath(`/dosyalar/${id}`);
-  revalidatePath("/");
-  return { ok: true };
-}
-
-/** @deprecated softSilDosyaAction kullanın */
-export async function silDosyaAction(id: string): Promise<OperationResult> {
-  return softSilDosyaAction(id);
 }

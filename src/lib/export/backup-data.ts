@@ -24,7 +24,6 @@ export async function buildDosyalarCsv(): Promise<DataResult<string>> {
     const { data, error } = await supabase
       .from("servis_dosyalari")
       .select("*")
-      .is("deleted_at", null)
       .order("created_at", { ascending: false });
 
     if (error) return fail(error.message);
@@ -204,7 +203,6 @@ export async function buildTumYedekJson(): Promise<DataResult<Record<string, unk
         return supabase
           .from("servis_dosyalari")
           .select("*")
-          .is("deleted_at", null)
           .order("created_at", { ascending: false });
       })(),
       (async () => {

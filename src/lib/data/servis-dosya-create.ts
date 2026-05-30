@@ -171,10 +171,7 @@ export async function olusturDosyaWithServiceRole(
     };
   }
 
-  const insertPayload: ServisDosyasiInsert = {
-    ...mapFormToInsert(form),
-    deleted_at: null,
-  };
+  const insertPayload: ServisDosyasiInsert = mapFormToInsert(form);
 
   return insertServisDosyasiWithServiceRole(
     insertPayload,
