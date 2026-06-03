@@ -3,6 +3,7 @@
 
 
 import { useCallback, useEffect, useMemo, useState, type RefObject } from "react";
+import { createPortal } from "react-dom";
 
 import { IsEmriOdemeKarti } from "@/components/is-emri/IsEmriOdemeKarti";
 import { IsEmriPrintDocument } from "@/components/is-emri/IsEmriPrintDocument";
@@ -123,6 +124,11 @@ export function IsEmriForm({
   );
 
   const [vehicleStatusSaving, setVehicleStatusSaving] = useState(false);
+  const [printPortalReady, setPrintPortalReady] = useState(false);
+
+  useEffect(() => {
+    setPrintPortalReady(true);
+  }, []);
 
   useEffect(() => {
     if (initialForm) setForm(initialForm);
@@ -255,29 +261,24 @@ export function IsEmriForm({
 
 
 
+  const printDocument = (
+    <IsEmriPrintDocument
+      ref={assignPrintDocRef}
+      form={form}
+      isEmriNo={isEmriNo}
+      parcaToplam={parcaToplam}
+      servisSatinAlmaToplam={servisSatinAlmaToplam}
+      iscilikToplam={iscilikToplam}
+      genelToplam={genelToplam}
+      printImages={printImages}
+    />
+  );
+
   return (
 
     <div className={cn(!readOnly && "mx-auto max-w-4xl")}>
 
-      <IsEmriPrintDocument
-
-        ref={assignPrintDocRef}
-
-        form={form}
-
-        isEmriNo={isEmriNo}
-
-        parcaToplam={parcaToplam}
-
-        servisSatinAlmaToplam={servisSatinAlmaToplam}
-
-        iscilikToplam={iscilikToplam}
-
-        genelToplam={genelToplam}
-
-        printImages={printImages}
-
-      />
+      {printPortalReady ? createPortal(printDocument, document.body) : null}
 
 
 

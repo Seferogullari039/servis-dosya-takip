@@ -1,6 +1,8 @@
 import { isEmriPdfFilename } from "@/lib/is-emri/pdf-filename";
 import {
+  onCloneForPdfCapture,
   prepareIsEmriElementForPdfCapture,
+  validatePdfCanvas,
   waitForPrintDocumentReady,
 } from "@/lib/is-emri/pdf-capture";
 
@@ -10,9 +12,16 @@ export interface DownloadIsEmriPdfOptions {
   onProgress?: (percent: number) => void;
 }
 
+interface Html2PdfWorkerInternal {
+  prop: { canvas?: HTMLCanvasElement };
+  toCanvas: () => Promise<Html2PdfWorkerInternal>;
+  toPdf: () => Promise<Html2PdfWorkerInternal>;
+  save: () => Promise<void>;
+}
+
 /**
- * Yazdırma alanından A4 PDF oluşturur (html2pdf.js).
- * Off-screen belge yakalamadan önce geçici olarak görünür yapılır.
+ * Yazdırma belgesinden A4 PDF oluşturur.
+ * Belge body'ye portal edilir, html2canvas onclone ile yakalanır, canvas doğrulanır.
  */
 export async function downloadIsEmriPdf({
   element,
@@ -25,18 +34,19 @@ export async function downloadIsEmriPdf({
 
   onProgress?.(10);
   await waitForPrintDocumentReady();
-  onProgress?.(25);
+  onProgress?.(20);
 
   const restoreCapture = prepareIsEmriElementForPdfCapture(element);
   await waitForPrintDocumentReady();
+  onProgress?.(35);
 
   try {
     const html2pdf = (await import("html2pdf.js")).default;
-    onProgress?.(40);
+    onProgress?.(45);
 
     const filename = isEmriPdfFilename(workOrderNo);
 
-    await html2pdf()
+    const worker = html2pdf()
       .set({
         margin: [8, 8, 8, 8],
         filename,
@@ -49,6 +59,8 @@ export async function downloadIsEmriPdf({
           windowWidth: 794,
           scrollX: 0,
           scrollY: 0,
+          backgroundColor: "#ffffff",
+          onclone: onCloneForPdfCapture,
         },
         jsPDF: {
           unit: "mm",
@@ -56,9 +68,20 @@ export async function downloadIsEmriPdf({
           orientation: "portrait",
         },
       })
-      .from(element)
-      .save();
+      .from(element) as unknown as Html2PdfWorkerInternal;
 
+    await worker.toCanvas();
+    onProgress?.(70);
+
+    const canvas = worker.prop.canvas;
+    if (!canvas) {
+      throw new Error("PDF oluşturulamadı — canvas oluşturulamadı.");
+    }
+
+    validatePdfCanvas(canvas);
+    onProgress?.(85);
+
+    await worker.toPdf().then((w) => w.save());
     onProgress?.(100);
   } finally {
     restoreCapture();

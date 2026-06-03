@@ -8,12 +8,14 @@ declare module "html2pdf.js" {
     pagebreak?: { mode?: string | string[] };
   }
 
-  interface Html2PdfWorker {
-    set(opt: Html2PdfOptions): Html2PdfWorker;
-    from(element: HTMLElement): Html2PdfWorker;
-    save(): Promise<void>;
-    outputPdf?(type?: string): Promise<unknown>;
-  }
+interface Html2PdfWorker {
+  set(opt: Html2PdfOptions): Html2PdfWorker;
+  from(element: HTMLElement): Html2PdfWorker;
+  toCanvas(): Promise<Html2PdfWorker>;
+  toPdf(): Promise<Html2PdfWorker>;
+  save(): Promise<void>;
+  outputPdf?(type?: string): Promise<unknown>;
+}
 
   interface Html2Pdf {
     (): Html2PdfWorker;
