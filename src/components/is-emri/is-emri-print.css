@@ -27,8 +27,12 @@
   left: 0 !important;
   top: 0 !important;
   z-index: 999999 !important;
-  width: 210mm !important;
-  max-width: 210mm !important;
+  width: 794px !important;
+  max-width: 794px !important;
+  min-height: 1123px !important;
+  height: auto !important;
+  display: block !important;
+  box-sizing: border-box !important;
   visibility: visible !important;
   opacity: 1 !important;
   pointer-events: none !important;

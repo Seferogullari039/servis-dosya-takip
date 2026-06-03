@@ -1,7 +1,10 @@
 import { isEmriPdfFilename } from "@/lib/is-emri/pdf-filename";
 import {
+  getPdfCanvasDimensions,
+  logPdfElementLayout,
   onCloneForPdfCapture,
   prepareIsEmriElementForPdfCapture,
+  resolvePdfCaptureTarget,
   validatePdfCanvas,
   waitForPrintDocumentReady,
 } from "@/lib/is-emri/pdf-capture";
@@ -21,7 +24,7 @@ interface Html2PdfWorkerInternal {
 
 /**
  * Yazdırma belgesinden A4 PDF oluşturur.
- * Belge body'ye portal edilir, html2canvas onclone ile yakalanır, canvas doğrulanır.
+ * Belge body'ye portal edilir, kesin px ölçülerle yakalanır, canvas doğrulanır.
  */
 export async function downloadIsEmriPdf({
   element,
@@ -36,11 +39,20 @@ export async function downloadIsEmriPdf({
   await waitForPrintDocumentReady();
   onProgress?.(20);
 
-  const restoreCapture = prepareIsEmriElementForPdfCapture(element);
+  const session = prepareIsEmriElementForPdfCapture(element);
   await waitForPrintDocumentReady();
   onProgress?.(35);
 
+  let cleanupClone: (() => void) | null = null;
+
   try {
+    const resolved = resolvePdfCaptureTarget(session);
+    cleanupClone = resolved.cleanupClone;
+    const { captureTarget, measureElement } = resolved;
+
+    const { width: captureWidth, height: captureHeight } =
+      getPdfCanvasDimensions(measureElement);
+
     const html2pdf = (await import("html2pdf.js")).default;
     onProgress?.(45);
 
@@ -56,7 +68,10 @@ export async function downloadIsEmriPdf({
           useCORS: true,
           logging: false,
           letterRendering: true,
+          width: captureWidth,
+          height: captureHeight,
           windowWidth: 794,
+          windowHeight: captureHeight,
           scrollX: 0,
           scrollY: 0,
           backgroundColor: "#ffffff",
@@ -68,7 +83,7 @@ export async function downloadIsEmriPdf({
           orientation: "portrait",
         },
       })
-      .from(element) as unknown as Html2PdfWorkerInternal;
+      .from(captureTarget) as unknown as Html2PdfWorkerInternal;
 
     await worker.toCanvas();
     onProgress?.(70);
@@ -78,12 +93,14 @@ export async function downloadIsEmriPdf({
       throw new Error("PDF oluşturulamadı — canvas oluşturulamadı.");
     }
 
+    logPdfElementLayout(measureElement, "pre-validate");
     validatePdfCanvas(canvas);
     onProgress?.(85);
 
     await worker.toPdf().then((w) => w.save());
     onProgress?.(100);
   } finally {
-    restoreCapture();
+    cleanupClone?.();
+    session.restore();
   }
 }
