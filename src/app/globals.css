@@ -50,10 +50,251 @@
 
 .login-grid {
   background-image:
-    linear-gradient(rgb(255 255 255 / 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(255 255 255 / 0.04) 1px, transparent 1px);
-  background-size: 48px 48px;
-  mask-image: radial-gradient(ellipse 80% 70% at 50% 45%, black 20%, transparent 75%);
+    linear-gradient(rgb(255 255 255 / 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.035) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse 85% 75% at 50% 40%, black 15%, transparent 78%);
+}
+
+@keyframes login-orb-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  33% {
+    transform: translate3d(24px, -18px, 0) scale(1.04);
+  }
+  66% {
+    transform: translate3d(-16px, 12px, 0) scale(0.98);
+  }
+}
+
+@keyframes login-orb-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: translate3d(-12px, -20px, 0) scale(1.08);
+  }
+}
+
+.login-orb {
+  animation: login-orb-float 20s ease-in-out infinite;
+}
+
+.login-orb-delay {
+  animation-delay: -10s;
+}
+
+.login-orb-slow {
+  animation: login-orb-pulse 14s ease-in-out infinite;
+}
+
+.login-glass-card {
+  position: relative;
+}
+
+.login-glass-card::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    145deg,
+    rgb(126 200 255 / 0.35),
+    rgb(255 255 255 / 0.06) 40%,
+    rgb(15 76 129 / 0.2)
+  );
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+}
+
+@keyframes login-car-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -10px, 0);
+  }
+}
+
+@keyframes login-hero-scan {
+  0%,
+  68%,
+  100% {
+    transform: translateY(-120%);
+    opacity: 0;
+  }
+  70% {
+    opacity: 0.35;
+  }
+  74% {
+    opacity: 1;
+  }
+  86% {
+    transform: translateY(320%);
+    opacity: 1;
+  }
+  91% {
+    transform: translateY(320%);
+    opacity: 0;
+  }
+}
+
+@keyframes login-hero-wheel-pulse {
+  0%,
+  100% {
+    opacity: 0.18;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes login-hero-wheel-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes login-hero-scan-point {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes login-hero-body-flash {
+  0%,
+  67%,
+  100% {
+    opacity: 0;
+  }
+  72% {
+    opacity: 0.08;
+  }
+  78%,
+  86% {
+    opacity: 0.32;
+  }
+  90% {
+    opacity: 0.12;
+  }
+  94% {
+    opacity: 0;
+  }
+}
+
+@keyframes login-hero-body-neon {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+
+@keyframes login-hero-particle {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(1.35);
+  }
+}
+
+@keyframes login-hero-orbit-pulse {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: translate3d(0, -3px, 0) scale(1.04);
+    opacity: 1;
+  }
+}
+
+.login-hero-car-float {
+  animation: login-car-float 12s ease-in-out infinite;
+  will-change: transform;
+}
+
+.login-hero-scan-mask {
+  isolation: isolate;
+}
+
+.login-hero-scan-line {
+  animation: login-hero-scan 11s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.login-hero-scan-band {
+  animation: login-hero-scan 11s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.login-hero-scan-band-glow {
+  animation: login-hero-scan 11s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.login-hero-wheel-glow {
+  animation: login-hero-wheel-pulse 4s ease-in-out infinite;
+}
+
+.login-hero-wheel-ring {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: login-hero-wheel-spin 10s linear infinite;
+}
+
+.login-hero-scan-point {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: login-hero-scan-point 3.5s ease-in-out infinite;
+}
+
+.login-hero-body-flash {
+  animation: login-hero-body-flash 11s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.login-hero-body-neon-edge {
+  animation: login-hero-body-neon 5s ease-in-out infinite;
+}
+
+.login-hero-particle {
+  animation: login-hero-particle 7s ease-in-out infinite;
+}
+
+.login-hero-orbit-icon {
+  animation: login-hero-orbit-pulse 5s ease-in-out infinite;
+}
+
+.login-hero-visual-glow {
+  animation: login-orb-pulse 16s ease-in-out infinite;
 }
 
 @media print {
