@@ -29,10 +29,11 @@
   z-index: 999999 !important;
   width: 794px !important;
   max-width: 794px !important;
-  min-height: 1123px !important;
+  min-height: 0 !important;
   height: auto !important;
   display: block !important;
   box-sizing: border-box !important;
+  overflow: hidden !important;
   visibility: visible !important;
   opacity: 1 !important;
   pointer-events: none !important;

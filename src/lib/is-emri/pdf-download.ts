@@ -1,10 +1,16 @@
 import { isEmriPdfFilename } from "@/lib/is-emri/pdf-filename";
 import {
+  PDF_MARGINS_ARRAY,
+  PDF_WIDTH_PX,
+  fitPdfCaptureToContent,
+  getHtml2CanvasScale,
   getPdfCanvasDimensions,
   logPdfElementLayout,
+  logPdfPagePlan,
   onCloneForPdfCapture,
   prepareIsEmriElementForPdfCapture,
   resolvePdfCaptureTarget,
+  trimCanvasToSinglePage,
   validatePdfCanvas,
   waitForPrintDocumentReady,
 } from "@/lib/is-emri/pdf-capture";
@@ -50,27 +56,36 @@ export async function downloadIsEmriPdf({
     cleanupClone = resolved.cleanupClone;
     const { captureTarget, measureElement } = resolved;
 
+    if (resolved.cleanupClone) {
+      fitPdfCaptureToContent(measureElement, captureTarget);
+    }
+
+    const pagePlan = logPdfPagePlan(measureElement);
     const { width: captureWidth, height: captureHeight } =
-      getPdfCanvasDimensions(measureElement);
+      getPdfCanvasDimensions(measureElement, pagePlan);
+    const canvasScale = getHtml2CanvasScale();
 
     const html2pdf = (await import("html2pdf.js")).default;
     onProgress?.(45);
 
     const filename = isEmriPdfFilename(workOrderNo);
 
-    const worker = html2pdf()
-      .set({
-        margin: [8, 8, 8, 8],
+    const pdfOptions = {
+        margin: PDF_MARGINS_ARRAY,
         filename,
+        pagebreak:
+          pagePlan.pageCount === 1
+            ? { mode: [] as string[] }
+            : { mode: ["css", "legacy"] as string[] },
         image: { type: "jpeg", quality: 0.92 },
         html2canvas: {
-          scale: 1.75,
+          scale: canvasScale,
           useCORS: true,
           logging: false,
           letterRendering: true,
           width: captureWidth,
           height: captureHeight,
-          windowWidth: 794,
+          windowWidth: PDF_WIDTH_PX,
           windowHeight: captureHeight,
           scrollX: 0,
           scrollY: 0,
@@ -82,15 +97,26 @@ export async function downloadIsEmriPdf({
           format: "a4",
           orientation: "portrait",
         },
-      })
+      };
+
+    const worker = html2pdf()
+      .set(pdfOptions as never)
       .from(captureTarget) as unknown as Html2PdfWorkerInternal;
 
     await worker.toCanvas();
     onProgress?.(70);
 
-    const canvas = worker.prop?.canvas;
+    let canvas = worker.prop?.canvas;
     if (!canvas) {
       throw new Error("PDF canvas oluşturulamadı.");
+    }
+
+    if (pagePlan.fitsSinglePage) {
+      const trimmed = trimCanvasToSinglePage(canvas);
+      if (worker.prop) {
+        worker.prop.canvas = trimmed;
+      }
+      canvas = trimmed;
     }
 
     logPdfElementLayout(measureElement, "pre-validate");
@@ -103,6 +129,7 @@ export async function downloadIsEmriPdf({
       worker,
       save: worker.save,
       saveType: typeof worker.save,
+      pageCount: pagePlan.pageCount,
     });
 
     if (typeof worker.save !== "function") {
