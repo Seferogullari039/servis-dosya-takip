@@ -11,6 +11,7 @@ export function mapRowToServisDosya(row: ServisDosyasiRow): ServisDosyasi {
     telefon: row.telefon ?? "",
     aracMarkaModel: row.arac_marka_model ?? "",
     eksperAdi: row.eksper_adi ?? "",
+    sigortaSirketi: row.sigorta_sirketi ?? "",
     durum: row.durum as DosyaDurumu,
     odemeDurumu: row.odeme_durumu as OdemeDurumu,
     dosyaTutari: parseTutarOptional(row.dosya_tutari),

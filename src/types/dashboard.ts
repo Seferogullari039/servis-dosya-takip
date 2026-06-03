@@ -23,11 +23,17 @@ export interface FinansMetrikleri {
   odemeBekleyen: number;
   kismiOdenen: number;
   tamamlananOdeme: number;
-  /** Tüm dosyalarda tahsil edilen toplam (TL) */
+  /** Gerçekten tahsil edilen toplam (TL) */
   toplamTahsilat: number;
-  /** Tanımlı dosya tutarlarının toplamı (TL) */
+  /** Yalnızca Kapandı durumundaki dosyaların kapanış tutarı toplamı (TL) */
+  kapananDosyaTutari: number;
+  /** Aktif (kapanmamış) dosyaların tahmini tutar toplamı (TL) */
+  aktifDosyaTahminiTutari: number;
+  /** Tahsilat bekleyen kalan alacak (TL) */
+  tahsilatBekleyen: number;
+  /** @deprecated use kapananDosyaTutari */
   toplamDosyaTutari: number;
-  /** Kalan alacak: dosya tutarı − ödenen (TL) */
+  /** @deprecated use tahsilatBekleyen */
   bekleyenTutar: number;
   sonOdemeHareketleri: OdemeHareketi[];
 }

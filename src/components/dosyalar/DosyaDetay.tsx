@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SigortaSirketiEditor } from "@/components/dosyalar/SigortaSirketiEditor";
 import { DosyaDetayOdemeBar } from "@/components/dosyalar/DosyaDetayOdemeBar";
 import { DocumentList } from "@/components/dosyalar/DocumentList";
 import { DosyaDetayTabs } from "@/components/dosyalar/DosyaDetayTabs";
@@ -52,6 +53,13 @@ function BilgilerPanel({ dosya }: { dosya: ServisDosyasi }) {
         <DetaySatir label="Telefon" value={dosya.telefon} />
         <DetaySatir label="Araç Marka / Model" value={dosya.aracMarkaModel} />
         <DetaySatir label="Eksper Adı" value={dosya.eksperAdi || "—"} />
+        <DetaySatir
+          label="Sigorta Şirketi"
+          value={dosya.sigortaSirketi || "—"}
+        />
+        <div className="border-b border-border/60 py-3 last:border-0">
+          <SigortaSirketiEditor dosyaId={dosya.id} value={dosya.sigortaSirketi} />
+        </div>
         <DetaySatir
           label="Dosya tutarı"
           value={

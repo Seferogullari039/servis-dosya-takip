@@ -1,5 +1,6 @@
 import { mapRowToServisDosya } from "@/lib/data/map-dosya";
 import { mapRowToIsEmriKayit } from "@/lib/data/map-work-order";
+import { parseTutarInput } from "@/lib/utils/para";
 import { listeleTedarikParcalari } from "@/lib/data/tedarik";
 import {
   formatCsvDate,
@@ -50,7 +51,7 @@ export async function buildDosyalarCsv(): Promise<DataResult<string>> {
         d.dosyaNo,
         d.plaka,
         d.musteriAdi,
-        d.eksperAdi,
+        d.sigortaSirketi || "",
         d.durum,
         d.odemeDurumu,
         d.dosyaTutari ?? "",
@@ -82,8 +83,13 @@ export async function buildIsEmirleriCsv(): Promise<DataResult<string>> {
       "plaka",
       "marka",
       "model",
+      "is_emri_tipi",
       "arac_durumu",
+      "is_emri_durumu",
+      "odeme_durumu",
       "toplam_tutar",
+      "tahsil_edilen",
+      "kalan_tutar",
       "created_at",
     ];
 
@@ -96,8 +102,13 @@ export async function buildIsEmirleriCsv(): Promise<DataResult<string>> {
         k.plaka,
         k.marka,
         k.model,
+        k.isEmriTipi,
         k.aracDurumu,
+        k.isEmriDurumu,
+        k.odemeDurumu,
         k.toplamTutar,
+        parseTutarInput(k.tahsilEdilenTutar) ?? 0,
+        k.kalanTutar,
         formatCsvDateTime(k.createdAt),
       ];
     });

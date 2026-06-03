@@ -11,6 +11,7 @@ const FIELD_LABELS: Record<string, string> = {
   telefon: "Telefon",
   arac_marka_model: "Araç marka/model",
   eksper_adi: "Eksper adı",
+  sigorta_sirketi: "Sigorta şirketi",
   durum: "Durum",
   odeme_durumu: "Ödeme durumu",
   notlar: "Notlar",
@@ -84,6 +85,7 @@ export function snapshotFromDomain(
     telefon: dosya.telefon || null,
     arac_marka_model: dosya.aracMarkaModel || null,
     eksper_adi: dosya.eksperAdi || null,
+    sigorta_sirketi: dosya.sigortaSirketi || null,
     durum: dosya.durum,
     odeme_durumu: dosya.odemeDurumu,
     notlar: dosya.notlar || null,
@@ -108,6 +110,7 @@ export function snapshotFromRow(row: {
   telefon: string | null;
   arac_marka_model: string | null;
   eksper_adi: string | null;
+  sigorta_sirketi: string | null;
   durum: string;
   odeme_durumu: string;
   notlar: string | null;
@@ -119,6 +122,7 @@ export function snapshotFromRow(row: {
     telefon: row.telefon,
     arac_marka_model: row.arac_marka_model,
     eksper_adi: row.eksper_adi,
+    sigorta_sirketi: row.sigorta_sirketi ?? null,
     durum: row.durum,
     odeme_durumu: row.odeme_durumu,
     notlar: row.notlar,

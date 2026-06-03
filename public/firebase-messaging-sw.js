@@ -1,4 +1,4 @@
-/* Otomatik üretildi — scripts/generate-firebase-sw.mjs — 2026-05-30T02:01:22.488Z */
+/* Otomatik üretildi — scripts/generate-firebase-sw.mjs — 2026-06-03T22:49:12.652Z */
 importScripts("/firebase-push-handler.js");
 importScripts("https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js");
 importScripts("https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js");

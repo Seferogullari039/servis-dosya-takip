@@ -32,10 +32,25 @@ export interface IscilikSatir {
 
 import type { AracDurumu } from "@/types/vehicle-status";
 import { DEFAULT_ARAC_DURUMU } from "@/types/vehicle-status";
+import type {
+  IsEmriDurumu,
+  IsEmriOdemeDurumu,
+  IsEmriTipi,
+} from "@/types/work-order-payment";
+import {
+  DEFAULT_IS_EMRI_DURUMU,
+  DEFAULT_IS_EMRI_ODEME_DURUMU,
+  DEFAULT_IS_EMRI_TIPI,
+} from "@/types/work-order-payment";
 
-export type { AracDurumu };
+export type { AracDurumu, IsEmriDurumu, IsEmriOdemeDurumu, IsEmriTipi };
 
 export interface IsEmriFormState {
+  isEmriTipi: IsEmriTipi;
+  isEmriDurumu: IsEmriDurumu;
+  odemeDurumu: IsEmriOdemeDurumu;
+  tahsilEdilenTutar: string;
+  odemeNotu: string;
   aracDurumu: AracDurumu;
   ruhsatSahibi: string;
   telefon: string;
@@ -105,6 +120,11 @@ export interface IsEmriOzet {
   musteriAdi: string;
   tarih: string;
   toplamTutar: number;
+  tahsilEdilenTutar: number;
+  kalanTutar: number;
+  isEmriTipi: IsEmriTipi;
+  isEmriDurumu: IsEmriDurumu;
+  odemeDurumu: IsEmriOdemeDurumu;
   aracDurumu: AracDurumu;
   createdAt: string;
 }
@@ -122,12 +142,19 @@ export interface IsEmriKayit extends IsEmriFormState {
   parcaToplam: number;
   iscilikToplam: number;
   toplamTutar: number;
+  /** Genel toplam − tahsil (salt okunur) */
+  kalanTutar: number;
   createdAt: string;
 }
 
 export function initialIsEmriState(): IsEmriFormState {
   const today = new Date().toISOString().slice(0, 10);
   return {
+    isEmriTipi: DEFAULT_IS_EMRI_TIPI,
+    isEmriDurumu: DEFAULT_IS_EMRI_DURUMU,
+    odemeDurumu: DEFAULT_IS_EMRI_ODEME_DURUMU,
+    tahsilEdilenTutar: "",
+    odemeNotu: "",
     aracDurumu: DEFAULT_ARAC_DURUMU,
     ruhsatSahibi: "",
     telefon: "",

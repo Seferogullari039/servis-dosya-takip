@@ -44,6 +44,9 @@ export function TedarikPanel({
                     {row.plaka}
                   </Link>
                   <p className="text-sm text-ink-muted">{row.musteriAdi}</p>
+                  {row.sigortaSirketi ? (
+                    <p className="text-xs text-ink-faint">{row.sigortaSirketi}</p>
+                  ) : null}
                   <p className="mt-0.5 text-xs font-medium text-ink">
                     {row.parcaAdi}
                   </p>

@@ -34,6 +34,7 @@ function mapFormToInsert(form: ServisDosyasiForm): ServisDosyasiInsert {
     telefon: form.telefon.trim() || null,
     arac_marka_model: form.aracMarkaModel.trim() || null,
     eksper_adi: form.eksperAdi.trim() || null,
+    sigorta_sirketi: form.sigortaSirketi.trim() || null,
     durum: form.durum,
     odeme_durumu: form.odemeDurumu,
     dosya_tutari: form.dosyaTutari ?? null,
@@ -54,6 +55,8 @@ function mapGuncellemeToUpdate(
     update.arac_marka_model = form.aracMarkaModel.trim() || null;
   if (form.eksperAdi !== undefined)
     update.eksper_adi = form.eksperAdi.trim() || null;
+  if (form.sigortaSirketi !== undefined)
+    update.sigorta_sirketi = form.sigortaSirketi.trim() || null;
   if (form.durum !== undefined) update.durum = form.durum;
   if (form.odemeDurumu !== undefined) update.odeme_durumu = form.odemeDurumu;
   if (form.dosyaTutari !== undefined) update.dosya_tutari = form.dosyaTutari;

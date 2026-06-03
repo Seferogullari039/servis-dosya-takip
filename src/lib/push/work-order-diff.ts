@@ -68,6 +68,11 @@ export function hasWorkOrderChanges(
   after: IsEmriKayit
 ): boolean {
   if (before.aracDurumu !== after.aracDurumu) return true;
+  if (before.isEmriTipi !== after.isEmriTipi) return true;
+  if (before.isEmriDurumu !== after.isEmriDurumu) return true;
+  if (before.odemeDurumu !== after.odemeDurumu) return true;
+  if (before.tahsilEdilenTutar !== after.tahsilEdilenTutar) return true;
+  if (before.odemeNotu !== after.odemeNotu) return true;
   if (expertiseChecklistChanged(before, after)) return true;
   if (workOrderHeaderFieldsChanged(before, after)) return true;
   const parcaDiff = diffParcaLines(before.parcalar, after.parcalar);

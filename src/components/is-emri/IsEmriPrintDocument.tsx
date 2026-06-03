@@ -5,7 +5,8 @@ import { IsEmriPrintLogo } from "@/components/is-emri/IsEmriPrintLogo";
 import { WorkOrderImagePrintBlock } from "@/components/is-emri/WorkOrderImagePrintBlock";
 import { BRAND } from "@/lib/brand";
 import { calcParcaSatirToplam } from "@/lib/is-emri/calculations";
-import { formatPara } from "@/lib/utils/para";
+import { formatPara, parseTutarInput } from "@/lib/utils/para";
+import { calcKalanTutar } from "@/types/work-order-payment";
 import type { IsEmriFormState } from "@/types/is-emri";
 import type { WorkOrderImage } from "@/types/work-order-image";
 
@@ -114,6 +115,8 @@ export const IsEmriPrintDocument = forwardRef<
   const iscilik = form.iscilikSatirlari.filter(
     (s) => s.aciklama.trim() || s.tutar.trim()
   );
+  const tahsilEdilen = parseTutarInput(form.tahsilEdilenTutar) ?? 0;
+  const kalanTutar = calcKalanTutar(genelToplam, tahsilEdilen);
 
   return (
     <article
@@ -127,7 +130,7 @@ export const IsEmriPrintDocument = forwardRef<
           <div className="is-emri-doc-header-titles">
             <p className="is-emri-doc-company">{BRAND.companyName}</p>
             <h1 className="is-emri-doc-title">SERVİS İŞ EMRİ</h1>
-            <p className="is-emri-doc-subtitle">Yetkili Servis · Ekspertiz Formu</p>
+            <p className="is-emri-doc-subtitle">Özel Servis · Ekspertiz Formu</p>
           </div>
         </div>
         <div className="is-emri-doc-meta-box" aria-label="İş emri bilgileri">
@@ -150,9 +153,21 @@ export const IsEmriPrintDocument = forwardRef<
             </span>
           </div>
           <div className="is-emri-doc-meta-row">
+            <span className="is-emri-doc-meta-label">İş Emri Tipi</span>
+            <span className="is-emri-doc-meta-value is-emri-doc-meta-status">
+              {form.isEmriTipi}
+            </span>
+          </div>
+          <div className="is-emri-doc-meta-row">
             <span className="is-emri-doc-meta-label">Araç Durumu</span>
             <span className="is-emri-doc-meta-value is-emri-doc-meta-status">
               {form.aracDurumu}
+            </span>
+          </div>
+          <div className="is-emri-doc-meta-row">
+            <span className="is-emri-doc-meta-label">Ödeme Durumu</span>
+            <span className="is-emri-doc-meta-value is-emri-doc-meta-status">
+              {form.odemeDurumu}
             </span>
           </div>
         </div>
@@ -288,6 +303,28 @@ export const IsEmriPrintDocument = forwardRef<
       ) : null}
 
       <div className="is-emri-doc-totals-wrap">
+        <section className="is-emri-doc-notes is-emri-doc-payment-summary">
+          <p className="is-emri-doc-note-label">Ödeme özeti</p>
+          <table className="is-emri-doc-info-table">
+            <tbody>
+              <tr>
+                <th>Tahsil edilen</th>
+                <td>{formatPara(tahsilEdilen)}</td>
+              </tr>
+              <tr>
+                <th>Kalan tutar</th>
+                <td>{formatPara(kalanTutar)}</td>
+              </tr>
+              <tr>
+                <th>İş emri durumu</th>
+                <td>{form.isEmriDurumu}</td>
+              </tr>
+            </tbody>
+          </table>
+          {form.odemeNotu.trim() ? (
+            <p className="is-emri-doc-note-text mt-2">{form.odemeNotu}</p>
+          ) : null}
+        </section>
         <section className="is-emri-doc-totals" aria-label="Toplamlar">
           <table className="is-emri-doc-totals-table">
             <tbody>

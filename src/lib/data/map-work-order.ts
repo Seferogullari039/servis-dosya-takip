@@ -5,6 +5,14 @@ import {
   calcParcaSatirToplam,
   syncParcaToplamFiyat,
 } from "@/lib/is-emri/calculations";
+import { parseTutarInput } from "@/lib/utils/para";
+import {
+  calcKalanTutar,
+  parseIsEmriDurumu,
+  parseIsEmriOdemeDurumu,
+  parseIsEmriTipi,
+  validateWorkOrderPayment,
+} from "@/types/work-order-payment";
 import {
   createDefaultEkspertizChecklist,
   createEmptyIscilikSatir,
@@ -180,6 +188,24 @@ export function mapFormToWorkOrderInsert(
   const partsTotal = calcParcaToplam(form.parcalar);
   const laborTotal = calcIscilikToplam(form.iscilikSatirlari);
   const grandTotal = partsTotal + laborTotal;
+  const tahsilRaw = parseTutarInput(form.tahsilEdilenTutar) ?? 0;
+
+  const paymentCheck = validateWorkOrderPayment({
+    genelToplam: grandTotal,
+    tahsilEdilen: tahsilRaw,
+    odemeDurumu: form.odemeDurumu,
+    isEmriDurumu: form.isEmriDurumu,
+  });
+
+  if (!paymentCheck.ok) {
+    throw new Error(paymentCheck.error ?? "Ödeme bilgileri geçersiz.");
+  }
+
+  const tahsil = paymentCheck.normalizedTahsil ?? tahsilRaw;
+  const odemeDurumu =
+    paymentCheck.normalizedOdemeDurumu ?? form.odemeDurumu;
+  const isEmriDurumu =
+    paymentCheck.normalizedIsEmriDurumu ?? form.isEmriDurumu;
 
   return {
     work_order_no: workOrderNo,
@@ -204,6 +230,11 @@ export function mapFormToWorkOrderInsert(
     parts: mapPartsToStored(form.parcalar) as unknown as WorkOrderInsert["parts"],
     customer_signature: null,
     vehicle_status: form.aracDurumu,
+    work_order_type: form.isEmriTipi,
+    is_emri_durumu: isEmriDurumu,
+    odeme_durumu: odemeDurumu,
+    tahsil_edilen_tutar: tahsil,
+    odeme_notu: form.odemeNotu.trim() || null,
   };
 }
 
@@ -217,10 +248,18 @@ export function mapRowToIsEmriKayit(row: WorkOrderRow): IsEmriKayit {
   const iscilikToplam = Number(
     row.labor_total ?? calcIscilikToplam(iscilikSatirlari)
   );
+  const toplamTutar = Number(row.grand_total ?? parcaToplam + iscilikToplam);
+  const tahsilNum = Number(row.tahsil_edilen_tutar ?? 0);
 
   return {
     id: row.id,
     isEmriNo: row.work_order_no,
+    isEmriTipi: parseIsEmriTipi(row.work_order_type),
+    isEmriDurumu: parseIsEmriDurumu(row.is_emri_durumu),
+    odemeDurumu: parseIsEmriOdemeDurumu(row.odeme_durumu),
+    tahsilEdilenTutar: tahsilNum > 0 ? String(tahsilNum) : "",
+    odemeNotu: row.odeme_notu ?? "",
+    kalanTutar: calcKalanTutar(toplamTutar, tahsilNum),
     ruhsatSahibi: row.customer_name,
     telefon: row.phone ?? "",
     plaka: row.plate,
@@ -239,19 +278,26 @@ export function mapRowToIsEmriKayit(row: WorkOrderRow): IsEmriKayit {
     aracDurumu: parseAracDurumu(row.vehicle_status),
     parcaToplam,
     iscilikToplam,
-    toplamTutar: Number(row.grand_total ?? parcaToplam + iscilikToplam),
+    toplamTutar,
     createdAt: row.created_at,
   };
 }
 
 export function mapRowToIsEmriOzet(row: WorkOrderRow): IsEmriOzet {
+  const toplamTutar = Number(row.grand_total ?? 0);
+  const tahsilEdilenTutar = Number(row.tahsil_edilen_tutar ?? 0);
   return {
     id: row.id,
     isEmriNo: row.work_order_no,
     plaka: row.plate,
     musteriAdi: row.customer_name,
     tarih: row.entry_date,
-    toplamTutar: Number(row.grand_total ?? 0),
+    toplamTutar,
+    tahsilEdilenTutar,
+    kalanTutar: calcKalanTutar(toplamTutar, tahsilEdilenTutar),
+    isEmriTipi: parseIsEmriTipi(row.work_order_type),
+    isEmriDurumu: parseIsEmriDurumu(row.is_emri_durumu),
+    odemeDurumu: parseIsEmriOdemeDurumu(row.odeme_durumu),
     aracDurumu: parseAracDurumu(row.vehicle_status),
     createdAt: row.created_at,
   };
@@ -259,6 +305,11 @@ export function mapRowToIsEmriOzet(row: WorkOrderRow): IsEmriOzet {
 
 export function isEmriKayitToFormState(kayit: IsEmriKayit): IsEmriFormState {
   return {
+    isEmriTipi: kayit.isEmriTipi,
+    isEmriDurumu: kayit.isEmriDurumu,
+    odemeDurumu: kayit.odemeDurumu,
+    tahsilEdilenTutar: kayit.tahsilEdilenTutar,
+    odemeNotu: kayit.odemeNotu,
     ruhsatSahibi: kayit.ruhsatSahibi,
     telefon: kayit.telefon,
     plaka: kayit.plaka,

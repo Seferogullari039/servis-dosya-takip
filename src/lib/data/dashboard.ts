@@ -143,15 +143,20 @@ function computeFinansMetrikleri(
     }));
 
   let toplamTahsilat = 0;
-  let toplamDosyaTutari = 0;
-  let bekleyenTutar = 0;
+  let kapananDosyaTutari = 0;
+  let aktifDosyaTahminiTutari = 0;
+  let tahsilatBekleyen = 0;
 
   for (const d of dosyalar) {
     toplamTahsilat += d.odenenTutar;
-    if (d.dosyaTutari != null && d.dosyaTutari > 0) {
-      toplamDosyaTutari += d.dosyaTutari;
+    if (d.durum === "Kapandı") {
+      if (d.dosyaTutari != null && d.dosyaTutari > 0) {
+        kapananDosyaTutari += d.dosyaTutari;
+      }
+    } else if (d.dosyaTutari != null && d.dosyaTutari > 0) {
+      aktifDosyaTahminiTutari += d.dosyaTutari;
       const kalan = d.dosyaTutari - d.odenenTutar;
-      if (kalan > 0) bekleyenTutar += kalan;
+      if (kalan > 0) tahsilatBekleyen += kalan;
     }
   }
 
@@ -165,8 +170,11 @@ function computeFinansMetrikleri(
     tamamlananOdeme: dosyalar.filter((d) => d.odemeDurumu === "Ödendi")
       .length,
     toplamTahsilat,
-    toplamDosyaTutari,
-    bekleyenTutar,
+    kapananDosyaTutari,
+    aktifDosyaTahminiTutari,
+    tahsilatBekleyen,
+    toplamDosyaTutari: kapananDosyaTutari,
+    bekleyenTutar: tahsilatBekleyen,
     sonOdemeHareketleri,
   };
 }

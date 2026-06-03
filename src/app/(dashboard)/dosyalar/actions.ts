@@ -14,6 +14,7 @@ import {
   canEditExpert,
   canSetStatus,
 } from "@/lib/operations/auth-action";
+import { parseSigortaSirketiFromForm } from "@/components/dosyalar/SigortaSirketiField";
 import { parseTutarInput } from "@/lib/utils/para";
 import {
   DOSYA_DURUMLARI,
@@ -203,6 +204,41 @@ export async function updateExpert(
   return { ok: true, data: result.data };
 }
 
+export async function updateSigortaSirketiAction(
+  id: string,
+  sigortaSirketi: string
+): Promise<OperationResult> {
+  const auth = await assertOperationAccess();
+  if (!auth.ok) return { ok: false, error: auth.error };
+
+  const current = await getDosyaById(id);
+  if (!current.ok || !current.data) {
+    return { ok: false, error: "Dosya bulunamadı." };
+  }
+
+  const trimmed = sigortaSirketi.trim();
+  if (trimmed === current.data.sigortaSirketi) {
+    return { ok: true, data: current.data };
+  }
+
+  const result = await guncelleDosya(id, { sigortaSirketi: trimmed });
+  if (!result.ok) return { ok: false, error: result.error };
+
+  if (result.data) {
+    await recordAuditWithProfile(auth.profile, {
+      action: AUDIT_ACTIONS.SERVICE_FILE_INSURANCE,
+      entity_type: "service_file",
+      entity_id: id,
+      entity_label: result.data.dosyaNo,
+      old_value: { sigorta_sirketi: current.data.sigortaSirketi || null },
+      new_value: { sigorta_sirketi: trimmed || null },
+    });
+  }
+
+  revalidateDosya(id);
+  return { ok: true, data: result.data };
+}
+
 export async function bulkUpdateStatus(
   ids: string[],
   durum: DosyaDurumu
@@ -275,6 +311,7 @@ function parseForm(formData: FormData): ServisDosyasiForm {
     telefon: String(formData.get("telefon") ?? ""),
     aracMarkaModel: String(formData.get("aracMarkaModel") ?? ""),
     eksperAdi: String(formData.get("eksperAdi") ?? ""),
+    sigortaSirketi: parseSigortaSirketiFromForm(formData),
     durum: String(formData.get("durum") ?? "Yeni Açıldı") as DosyaDurumu,
     odemeDurumu: String(
       formData.get("odemeDurumu") ?? "Ödenmedi"

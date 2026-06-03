@@ -24,6 +24,8 @@ export interface ServisDosyasi {
   telefon: string;
   aracMarkaModel: string;
   eksperAdi: string;
+  /** Sigorta şirketi (liste veya serbest metin) */
+  sigortaSirketi: string;
   durum: DosyaDurumu;
   odemeDurumu: OdemeDurumu;
   /** Dosyanın toplam / kapanış tutarı (TL) */

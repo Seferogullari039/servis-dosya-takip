@@ -431,6 +431,90 @@ export async function notifyWorkOrderChanges(params: {
     );
   }
 
+  if (before.isEmriTipi !== after.isEmriTipi) {
+    dispatches.push(
+      await emitPushEventAwait({
+        event: "work_order_type_changed",
+        debugAction: action,
+        previous: before.isEmriTipi,
+        next: after.isEmriTipi,
+        body: `${plaka} · ${after.isEmriNo} iş emri tipi: ${after.isEmriTipi}`,
+        url: `/is-emirleri/${after.id}`,
+        tag: `wo-type-${after.id}-${Date.now()}`,
+        workOrderId: after.id,
+        excludeUserId,
+      })
+    );
+  }
+
+  if (before.odemeDurumu !== after.odemeDurumu) {
+    if (after.odemeDurumu === "Ödendi") {
+      dispatches.push(
+        await emitPushEventAwait({
+          event: "work_order_paid",
+          debugAction: action,
+          previous: before.odemeDurumu,
+          next: after.odemeDurumu,
+          body: `${plaka} plakalı iş emri ödendi. (${after.isEmriNo})`,
+          url: `/is-emirleri/${after.id}`,
+          tag: `wo-paid-${after.id}-${Date.now()}`,
+          workOrderId: after.id,
+          excludeUserId,
+        })
+      );
+    } else if (after.odemeDurumu === "Kısmi Ödendi") {
+      dispatches.push(
+        await emitPushEventAwait({
+          event: "work_order_partial_paid",
+          debugAction: action,
+          previous: before.odemeDurumu,
+          next: after.odemeDurumu,
+          body: `${plaka} plakalı iş emrinde kısmi ödeme kaydedildi. (${after.isEmriNo})`,
+          url: `/is-emirleri/${after.id}`,
+          tag: `wo-partial-${after.id}-${Date.now()}`,
+          workOrderId: after.id,
+          excludeUserId,
+        })
+      );
+    }
+  }
+
+  if (before.isEmriDurumu !== "Kapandı" && after.isEmriDurumu === "Kapandı") {
+    dispatches.push(
+      await emitPushEventAwait({
+        event: "work_order_closed",
+        debugAction: action,
+        previous: before.isEmriDurumu,
+        next: after.isEmriDurumu,
+        body: `${plaka} plakalı iş emri kapandı. (${after.isEmriNo})`,
+        url: `/is-emirleri/${after.id}`,
+        tag: `wo-closed-${after.id}-${Date.now()}`,
+        workOrderId: after.id,
+        excludeUserId,
+      })
+    );
+  }
+
+  if (
+    after.isEmriTipi === "Sigortasız / Müşteri Ödemeli İş" &&
+    (after.odemeDurumu === "Ödenmedi" || after.odemeDurumu === "Kısmi Ödendi") &&
+    after.kalanTutar > 0 &&
+    (before.odemeDurumu !== after.odemeDurumu ||
+      before.tahsilEdilenTutar !== after.tahsilEdilenTutar)
+  ) {
+    dispatches.push(
+      await emitPushEventAwait({
+        event: "work_order_payment_pending",
+        debugAction: action,
+        body: `${plaka} sigortasız iş emrinde tahsilat bekliyor. (${after.isEmriNo})`,
+        url: `/is-emirleri/${after.id}`,
+        tag: `wo-pay-pending-${after.id}-${Date.now()}`,
+        workOrderId: after.id,
+        excludeUserId,
+      })
+    );
+  }
+
   return buildWorkOrderSavePushDebug({
     actionName: action,
     previousVehicleStatus: before.aracDurumu,

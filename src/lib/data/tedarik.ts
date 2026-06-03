@@ -12,8 +12,13 @@ function buildSearchPattern(arama: string): string {
   return `%${cleaned}%`;
 }
 
-function flattenWorkOrderParts(row: WorkOrderRow): TedarikParcaKayit[] {
+function flattenWorkOrderParts(
+  row: WorkOrderRow,
+  sigortaByPlaka: Map<string, string>
+): TedarikParcaKayit[] {
   const parcalar = parseStoredParts(row.parts);
+  const plakaKey = row.plate.trim().toUpperCase();
+  const sigortaSirketi = sigortaByPlaka.get(plakaKey) ?? "";
   return parcalar
     .filter((p) => p.parcaAdi.trim())
     .map((p) => ({
@@ -22,6 +27,7 @@ function flattenWorkOrderParts(row: WorkOrderRow): TedarikParcaKayit[] {
       isEmriNo: row.work_order_no,
       plaka: row.plate,
       musteriAdi: row.customer_name,
+      sigortaSirketi,
       entryDate: row.entry_date,
       parcaAdi: p.parcaAdi,
       adet: p.adet,
@@ -81,8 +87,25 @@ export async function listeleTedarikParcalari(
     const { data, error } = await query;
     if (error) return fail(error.message);
 
+    const plakalar = [...new Set((data ?? []).map((r) => r.plate.trim().toUpperCase()))];
+    const sigortaByPlaka = new Map<string, string>();
+    if (plakalar.length > 0) {
+      const { data: dosyalar } = await supabase
+        .from("servis_dosyalari")
+        .select("plaka, sigorta_sirketi")
+        .in(
+          "plaka",
+          (data ?? []).map((r) => r.plate)
+        );
+      for (const d of dosyalar ?? []) {
+        if (d.sigorta_sirketi?.trim()) {
+          sigortaByPlaka.set(d.plaka.trim().toUpperCase(), d.sigorta_sirketi.trim());
+        }
+      }
+    }
+
     const flat = (data ?? []).flatMap((row) =>
-      flattenWorkOrderParts(row as WorkOrderRow)
+      flattenWorkOrderParts(row as WorkOrderRow, sigortaByPlaka)
     );
 
     return ok(flat.filter((r) => matchesFilters(r, filters)));

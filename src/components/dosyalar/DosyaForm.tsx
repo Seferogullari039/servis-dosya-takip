@@ -6,6 +6,7 @@ import {
   createDosyaAction,
   type CreateDosyaState,
 } from "@/app/(dashboard)/dosyalar/actions";
+import { SigortaSirketiField } from "@/components/dosyalar/SigortaSirketiField";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -84,6 +85,7 @@ export function DosyaForm({ isAdmin = false }: DosyaFormProps) {
           name="aracMarkaModel"
         />
         <Input label="Eksper Adı" name="eksperAdi" />
+        <SigortaSirketiField />
         <Select
           label="Durum"
           name="durum"

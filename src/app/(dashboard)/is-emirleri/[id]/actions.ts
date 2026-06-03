@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getIsEmriById, guncelleIsEmri } from "@/lib/data/work-orders";
+import { recordWorkOrderFieldAudits } from "@/lib/is-emri/work-order-audit";
 import { AUDIT_ACTIONS } from "@/lib/audit/types";
 import { recordAuditWithProfile } from "@/lib/audit/record";
 import { logPushAction, notifyWorkOrderChanges } from "@/lib/push/events";
@@ -55,6 +56,8 @@ export async function guncelleIsEmriKayitAction(
 
   console.log("[push:action] guncelleIsEmriKayitAction complete", pushDebug);
 
+  await recordWorkOrderFieldAudits(auth.profile, beforeResult.data, updateResult.data);
+
   await recordAuditWithProfile(auth.profile, {
     action: AUDIT_ACTIONS.WORK_ORDER_UPDATE,
     entity_type: "work_order",
@@ -63,10 +66,14 @@ export async function guncelleIsEmriKayitAction(
     old_value: {
       aracDurumu: beforeResult.data.aracDurumu,
       plaka: beforeResult.data.plaka,
+      isEmriTipi: beforeResult.data.isEmriTipi,
+      odemeDurumu: beforeResult.data.odemeDurumu,
     },
     new_value: {
       aracDurumu: updateResult.data.aracDurumu,
       plaka: updateResult.data.plaka,
+      isEmriTipi: updateResult.data.isEmriTipi,
+      odemeDurumu: updateResult.data.odemeDurumu,
     },
   });
 

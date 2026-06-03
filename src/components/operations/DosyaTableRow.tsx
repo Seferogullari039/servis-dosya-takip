@@ -50,7 +50,14 @@ export const DosyaTableRow = memo(function DosyaTableRow({
       </td>
       <td className="py-3 pr-4 font-medium text-ink">{dosya.dosyaNo}</td>
       <td className="py-3 pr-4 text-ink">{dosya.plaka}</td>
-      <td className="py-3 pr-4 text-ink-muted">{dosya.musteriAdi}</td>
+      <td className="py-3 pr-4 text-ink-muted">
+        <span className="block text-ink">{dosya.musteriAdi}</span>
+        {dosya.sigortaSirketi ? (
+          <span className="mt-0.5 block text-xs text-ink-faint">
+            {dosya.sigortaSirketi}
+          </span>
+        ) : null}
+      </td>
       <td className="py-3 pr-4">
         <DurumBadge durum={dosya.durum} />
       </td>

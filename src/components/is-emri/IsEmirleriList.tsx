@@ -7,6 +7,7 @@ import {
   guncelleAracDurumuAction,
   silIsEmriAction,
 } from "@/app/(dashboard)/is-emirleri/actions";
+import { IsEmriDurumuBadge, IsEmriTipiBadge } from "@/components/is-emri/IsEmriBadges";
 import { VehicleStatusBadge } from "@/components/is-emri/VehicleStatusBadge";
 import { VehicleStatusSelect } from "@/components/is-emri/VehicleStatusSelect";
 import { Button } from "@/components/ui/Button";
@@ -124,9 +125,11 @@ export function IsEmirleriList({
             <tr>
               <th className="px-4 py-3 font-semibold">Plaka</th>
               <th className="px-4 py-3 font-semibold">Müşteri</th>
-              <th className="px-4 py-3 font-semibold">Durum</th>
+              <th className="px-4 py-3 font-semibold">Tip / Ödeme</th>
+              <th className="px-4 py-3 font-semibold">Araç durumu</th>
               <th className="px-4 py-3 font-semibold">Tarih</th>
               <th className="px-4 py-3 font-semibold text-right">Toplam</th>
+              <th className="px-4 py-3 font-semibold text-right">Kalan</th>
               <th className="px-4 py-3 font-semibold text-right">İşlemler</th>
             </tr>
           </thead>
@@ -135,6 +138,12 @@ export function IsEmirleriList({
               <tr key={row.id} className="hover:bg-surface-muted/30">
                 <td className="px-4 py-3 font-medium text-ink">{row.plaka}</td>
                 <td className="px-4 py-3 text-ink">{row.musteriAdi}</td>
+                <td className="px-4 py-3">
+                  <div className="flex flex-col gap-1.5">
+                    <IsEmriTipiBadge tip={row.isEmriTipi} size="sm" />
+                    <IsEmriDurumuBadge durum={row.isEmriDurumu} size="sm" />
+                  </div>
+                </td>
                 <td className="px-4 py-3">
                   <div className="flex min-w-[200px] flex-col gap-2">
                     <VehicleStatusBadge durum={row.aracDurumu} size="sm" />
@@ -151,6 +160,9 @@ export function IsEmirleriList({
                 </td>
                 <td className="px-4 py-3 text-right font-semibold tabular-nums text-ink">
                   {formatPara(row.toplamTutar)}
+                </td>
+                <td className="px-4 py-3 text-right font-semibold tabular-nums text-amber-700 dark:text-amber-300">
+                  {row.kalanTutar > 0 ? formatPara(row.kalanTutar) : "—"}
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap justify-end gap-2">
@@ -208,9 +220,16 @@ export function IsEmirleriList({
                 <p className="mt-1 text-xs text-ink-faint">
                   {formatTarih(row.tarih)} · {row.isEmriNo}
                 </p>
-                <div className="mt-2">
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  <IsEmriTipiBadge tip={row.isEmriTipi} size="sm" />
+                  <IsEmriDurumuBadge durum={row.isEmriDurumu} size="sm" />
                   <VehicleStatusBadge durum={row.aracDurumu} />
                 </div>
+                {row.kalanTutar > 0 ? (
+                  <p className="mt-1 text-xs font-medium text-amber-700 dark:text-amber-300">
+                    Kalan: {formatPara(row.kalanTutar)}
+                  </p>
+                ) : null}
               </div>
               <p className="shrink-0 text-right text-base font-bold tabular-nums text-accent">
                 {formatPara(row.toplamTutar)}

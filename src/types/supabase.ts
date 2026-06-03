@@ -331,6 +331,11 @@ export interface Database {
           parts: Json;
           customer_signature: string | null;
           vehicle_status: string;
+          work_order_type: string;
+          is_emri_durumu: string;
+          odeme_durumu: string;
+          tahsil_edilen_tutar: number;
+          odeme_notu: string | null;
           created_at: string;
         };
         Insert: {
@@ -353,6 +358,11 @@ export interface Database {
           parts?: Json;
           customer_signature?: string | null;
           vehicle_status?: string;
+          work_order_type?: string;
+          is_emri_durumu?: string;
+          odeme_durumu?: string;
+          tahsil_edilen_tutar?: number;
+          odeme_notu?: string | null;
           created_at?: string;
         };
         Update: {
@@ -375,6 +385,11 @@ export interface Database {
           parts?: Json;
           customer_signature?: string | null;
           vehicle_status?: string;
+          work_order_type?: string;
+          is_emri_durumu?: string;
+          odeme_durumu?: string;
+          tahsil_edilen_tutar?: number;
+          odeme_notu?: string | null;
           created_at?: string;
         };
         Relationships: [];
@@ -388,6 +403,7 @@ export interface Database {
           telefon: string | null;
           arac_marka_model: string | null;
           eksper_adi: string | null;
+          sigorta_sirketi: string | null;
           durum: string;
           odeme_durumu: string;
           dosya_tutari: number | null;
@@ -404,6 +420,7 @@ export interface Database {
           telefon?: string | null;
           arac_marka_model?: string | null;
           eksper_adi?: string | null;
+          sigorta_sirketi?: string | null;
           durum: string;
           odeme_durumu: string;
           dosya_tutari?: number | null;
@@ -420,6 +437,7 @@ export interface Database {
           telefon?: string | null;
           arac_marka_model?: string | null;
           eksper_adi?: string | null;
+          sigorta_sirketi?: string | null;
           durum?: string;
           odeme_durumu?: string;
           dosya_tutari?: number | null;

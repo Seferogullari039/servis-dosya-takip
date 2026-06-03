@@ -9,7 +9,7 @@
   --is-emri-border: #cbd5e1;
 }
 
-/* ——— Ekran: PDF yakalama için off-screen ——— */
+/* ——— Ekran: PDF yakalama için off-screen (visibility:hidden html2canvas bozar) ——— */
 .is-emri-print-document-screen {
   position: fixed;
   left: -12000px;
@@ -18,7 +18,21 @@
   width: 210mm;
   max-width: 210mm;
   pointer-events: none;
-  visibility: hidden;
+  opacity: 1;
+  visibility: visible;
+}
+
+.is-emri-print-document-capture {
+  position: fixed !important;
+  left: 0 !important;
+  top: 0 !important;
+  z-index: 99999 !important;
+  width: 210mm !important;
+  max-width: 210mm !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: none !important;
+  background: #fff !important;
 }
 
 /* ——— Belge gövdesi (A4) ——— */
@@ -387,10 +401,18 @@
 /* ——— Toplam kutusu ——— */
 .is-emri-doc-totals-wrap {
   display: flex;
-  justify-content: flex-end;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
   margin: 8px 0 10px;
   break-inside: avoid;
   page-break-inside: avoid;
+}
+
+.is-emri-doc-payment-summary {
+  width: 100%;
+  max-width: 280px;
+  margin-left: auto;
 }
 
 .is-emri-doc-totals {

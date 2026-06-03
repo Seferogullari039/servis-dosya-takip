@@ -15,19 +15,40 @@ export function FinanceCard({ finans }: FinanceCardProps) {
 
       <div className="mb-4 rounded-xl border border-accent/30 bg-accent/5 p-4 dark:border-accent/40 dark:bg-accent/10">
         <p className="text-sm font-medium text-accent dark:text-blue-300">
-          Toplam tahsilat
+          Tahsil edilen
         </p>
         <p className="mt-1 text-3xl font-bold text-ink">
           {formatPara(finans.toplamTahsilat)}
         </p>
-        {(finans.toplamDosyaTutari > 0 || finans.bekleyenTutar > 0) && (
-          <p className="mt-2 text-xs text-ink-muted">
-            Dosya tutarları toplamı: {formatPara(finans.toplamDosyaTutari)}
-            {finans.bekleyenTutar > 0 && (
-              <> · Bekleyen: {formatPara(finans.bekleyenTutar)}</>
-            )}
+        <p className="mt-2 text-xs text-ink-muted">
+          Gerçekleşen tahsilatların toplamı
+        </p>
+      </div>
+
+      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="rounded-lg border border-border bg-surface-muted/40 p-4">
+          <p className="text-sm text-ink-muted">Kapanan dosya tutarı</p>
+          <p className="mt-1 text-xl font-bold tabular-nums text-ink">
+            {formatPara(finans.kapananDosyaTutari)}
           </p>
-        )}
+        </div>
+        <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-4 dark:border-amber-800 dark:bg-amber-950/50">
+          <p className="text-sm text-amber-800 dark:text-amber-300">
+            Tahsilat bekleyen
+          </p>
+          <p className="mt-1 text-xl font-bold tabular-nums text-amber-900 dark:text-amber-100">
+            {formatPara(finans.tahsilatBekleyen)}
+          </p>
+        </div>
+        <div className="rounded-lg border border-border bg-surface-muted/40 p-4 sm:col-span-2">
+          <p className="text-sm text-ink-muted">Aktif dosya tahmini tutarı</p>
+          <p className="mt-1 text-xl font-bold tabular-nums text-ink">
+            {formatPara(finans.aktifDosyaTahminiTutari)}
+          </p>
+          <p className="mt-1 text-xs text-ink-muted">
+            Kapanmamış dosyaların tanımlı tutar toplamı
+          </p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">

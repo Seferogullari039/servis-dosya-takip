@@ -17,6 +17,7 @@ const TRACKED_FIELDS = [
   "musteri_adi",
   "telefon",
   "arac_marka_model",
+  "sigorta_sirketi",
 ] as const;
 
 /** Güncelleme sonrası alan farklarını audit event olarak yazar (paralel, idempotent). */
@@ -33,6 +34,7 @@ export async function auditDosyaUpdate(
     telefon: newDosya.telefon || null,
     arac_marka_model: newDosya.aracMarkaModel || null,
     eksper_adi: newDosya.eksperAdi || null,
+    sigorta_sirketi: newDosya.sigortaSirketi || null,
     durum: newDosya.durum,
     odeme_durumu: newDosya.odemeDurumu,
     notlar: newDosya.notlar || null,

@@ -209,6 +209,10 @@ export function DosyaListesiClient({
                     <div>
                       <p className="font-semibold text-ink">{d.dosyaNo}</p>
                       <p className="text-sm text-ink-muted">{d.plaka}</p>
+                      <p className="text-sm text-ink-muted">{d.musteriAdi}</p>
+                      {d.sigortaSirketi ? (
+                        <p className="text-xs text-ink-faint">{d.sigortaSirketi}</p>
+                      ) : null}
                     </div>
                     <input
                       type="checkbox"

@@ -97,9 +97,16 @@ export async function olusturIsEmri(
   try {
     const supabase = await createClient();
     const workOrderNo = generateWorkOrderNo();
+    let payload;
+    try {
+      payload = mapFormToWorkOrderInsert(form, workOrderNo);
+    } catch (e) {
+      return fail(e instanceof Error ? e.message : "Ödeme bilgileri geçersiz.");
+    }
+
     const { data, error } = await supabase
       .from("work_orders")
-      .insert(mapFormToWorkOrderInsert(form, workOrderNo))
+      .insert(payload)
       .select("*")
       .single();
 
@@ -134,9 +141,16 @@ export async function guncelleIsEmri(
     if (!existing.data) return fail("İş emri bulunamadı.");
 
     const workOrderNo = existing.data.work_order_no;
+    let payload;
+    try {
+      payload = mapFormToWorkOrderInsert(form, workOrderNo);
+    } catch (e) {
+      return fail(e instanceof Error ? e.message : "Ödeme bilgileri geçersiz.");
+    }
+
     const { data, error } = await supabase
       .from("work_orders")
-      .update(mapFormToWorkOrderInsert(form, workOrderNo))
+      .update(payload)
       .eq("id", id)
       .select("*")
       .single();

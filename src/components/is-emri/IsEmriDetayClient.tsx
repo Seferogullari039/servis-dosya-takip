@@ -7,6 +7,7 @@ import { guncelleIsEmriKayitAction } from "@/app/(dashboard)/is-emirleri/[id]/ac
 import { IsEmriActionBar } from "@/components/is-emri/IsEmriActionBar";
 import { IsEmriForm } from "@/components/is-emri/IsEmriForm";
 import { WorkOrderHasarGorselleriSection } from "@/components/is-emri/WorkOrderHasarGorselleriSection";
+import { IsEmriDurumuBadge, IsEmriTipiBadge } from "@/components/is-emri/IsEmriBadges";
 import { VehicleStatusBadge } from "@/components/is-emri/VehicleStatusBadge";
 import { WorkOrderPushDebugPanel } from "@/components/is-emri/WorkOrderPushDebugPanel";
 import type {
@@ -71,7 +72,13 @@ export function IsEmriDetayClient({
   useEffect(() => {
     if (searchParams.get("pdf") !== "1") return;
     const el = printRef.current;
-    if (!el) return;
+    if (!el) {
+      toast("PDF oluşturulamadı.", "error");
+      const url = new URL(window.location.href);
+      url.searchParams.delete("pdf");
+      window.history.replaceState({}, "", url.pathname + url.search);
+      return;
+    }
 
     let cancelled = false;
     (async () => {
@@ -81,13 +88,8 @@ export function IsEmriDetayClient({
           workOrderNo: kayit.isEmriNo,
         });
         if (!cancelled) toast("PDF indirildi.", "success");
-      } catch (e) {
-        if (!cancelled) {
-          toast(
-            e instanceof Error ? e.message : "PDF oluşturulamadı.",
-            "error"
-          );
-        }
+      } catch {
+        if (!cancelled) toast("PDF oluşturulamadı.", "error");
       } finally {
         const url = new URL(window.location.href);
         url.searchParams.delete("pdf");
@@ -149,6 +151,8 @@ export function IsEmriDetayClient({
     <div className="mx-auto max-w-4xl space-y-4">
       <div className="no-print flex flex-wrap items-center gap-2">
         <VehicleStatusBadge durum={kayit.aracDurumu} />
+        <IsEmriTipiBadge tip={kayit.isEmriTipi} />
+        <IsEmriDurumuBadge durum={kayit.isEmriDurumu} />
       </div>
       <div className="no-print">
       <IsEmriActionBar

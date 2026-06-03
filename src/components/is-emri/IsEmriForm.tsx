@@ -4,6 +4,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type RefObject } from "react";
 
+import { IsEmriOdemeKarti } from "@/components/is-emri/IsEmriOdemeKarti";
 import { IsEmriPrintDocument } from "@/components/is-emri/IsEmriPrintDocument";
 
 import { VehicleStatusSelect } from "@/components/is-emri/VehicleStatusSelect";
@@ -54,8 +55,9 @@ import type { AracDurumu } from "@/types/vehicle-status";
 import type { WorkOrderImage } from "@/types/work-order-image";
 
 import { Button } from "@/components/ui/Button";
-
+import { Select } from "@/components/ui/Select";
 import { cn } from "@/lib/utils/cn";
+import { IS_EMRI_TIPLERI } from "@/types/work-order-payment";
 
 import "./is-emri-print.css";
 
@@ -354,6 +356,21 @@ export function IsEmriForm({
             Giriş: {formatTarih(form.serviseGirisTarihi)}
 
           </p>
+
+          <div className="mt-3 max-w-sm">
+            <Select
+              label="İş emri tipi"
+              options={IS_EMRI_TIPLERI}
+              value={form.isEmriTipi}
+              onChange={(e) =>
+                patch(
+                  "isEmriTipi",
+                  e.target.value as IsEmriFormState["isEmriTipi"]
+                )
+              }
+              disabled={readOnly}
+            />
+          </div>
 
         </header>
 
@@ -672,6 +689,14 @@ export function IsEmriForm({
                 genelToplam={genelToplam}
 
               />
+
+              {!readOnly ? (
+                <IsEmriOdemeKarti
+                  form={form}
+                  genelToplam={genelToplam}
+                  onPatch={patch}
+                />
+              ) : null}
 
             </div>
 

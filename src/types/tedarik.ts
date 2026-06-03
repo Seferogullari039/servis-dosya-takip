@@ -74,6 +74,7 @@ export interface TedarikParcaKayit {
   isEmriNo: string;
   plaka: string;
   musteriAdi: string;
+  sigortaSirketi: string;
   entryDate: string;
   parcaAdi: string;
   adet: string;
