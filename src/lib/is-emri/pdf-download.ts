@@ -88,16 +88,28 @@ export async function downloadIsEmriPdf({
     await worker.toCanvas();
     onProgress?.(70);
 
-    const canvas = worker.prop.canvas;
+    const canvas = worker.prop?.canvas;
     if (!canvas) {
-      throw new Error("PDF oluşturulamadı — canvas oluşturulamadı.");
+      throw new Error("PDF canvas oluşturulamadı.");
     }
 
     logPdfElementLayout(measureElement, "pre-validate");
     validatePdfCanvas(canvas);
     onProgress?.(85);
 
-    await worker.toPdf().then((w) => w.save());
+    await worker.toPdf();
+
+    console.log("[pdf] worker before save", {
+      worker,
+      save: worker.save,
+      saveType: typeof worker.save,
+    });
+
+    if (typeof worker.save !== "function") {
+      throw new Error("PDF oluşturulamadı — worker.save kullanılamıyor.");
+    }
+
+    await worker.save();
     onProgress?.(100);
   } finally {
     cleanupClone?.();
