@@ -38,13 +38,15 @@ export async function updateSession(request: NextRequest) {
   const isSetupPage = pathname === "/setup";
   const isPublicLegal =
     pathname === "/kvkk" || pathname === "/gizlilik" || pathname === "/offline";
+  const isCorporateHome = pathname === "/";
   const isProtected =
     !isSetupPage &&
     !isPublicLegal &&
     !isLoginPage &&
-    (pathname === "/" ||
-      pathname.startsWith("/dosyalar") ||
+    !isCorporateHome &&
+    (pathname.startsWith("/dosyalar") ||
       pathname.startsWith("/dashboard") ||
+      pathname.startsWith("/ozet") ||
       pathname.startsWith("/is-emir") ||
       pathname.startsWith("/tedarik") ||
       pathname.startsWith("/kullanicilar") ||
@@ -64,7 +66,7 @@ export async function updateSession(request: NextRequest) {
   if (user && isLoginPage) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname =
-      request.nextUrl.searchParams.get("redirect") || "/";
+      request.nextUrl.searchParams.get("redirect") || "/ozet";
     redirectUrl.search = "";
     return NextResponse.redirect(redirectUrl);
   }

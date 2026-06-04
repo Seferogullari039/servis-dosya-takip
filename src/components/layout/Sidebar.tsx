@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils/cn";
 
 const navItems = [
   { href: "/dashboard", label: "Operasyon Merkezi", icon: "◉" },
-  { href: "/", label: "Dosya Özeti", icon: "📊" },
+  { href: "/ozet", label: "Dosya Özeti", icon: "📊" },
   { href: "/dosyalar", label: "Dosyalar", icon: "☰" },
   { href: "/is-emirleri", label: "İş Emirleri", icon: "📋" },
   { href: "/tedarik", label: "Tedarik", icon: "📦" },
@@ -48,10 +48,10 @@ export function Sidebar({ onNavigate }: SidebarProps) {
         {[...navItems, ...(profile.role === "admin" ? adminNavItems : [])].map(
           (item) => {
             const active =
-              item.href === "/"
-                ? pathname === "/"
-                : item.href === "/dashboard"
-                  ? pathname === "/dashboard"
+              item.href === "/dashboard"
+                ? pathname === "/dashboard"
+                : item.href === "/ozet"
+                  ? pathname === "/ozet"
                   : pathname.startsWith(item.href);
             return (
               <Link

@@ -23,7 +23,7 @@ export async function loginAction(
 ): Promise<LoginState> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  const redirectTo = String(formData.get("redirectTo") ?? "/").trim() || "/";
+  const redirectTo = String(formData.get("redirectTo") ?? "/ozet").trim() || "/ozet";
 
   if (!email || !password) {
     return { error: "E-posta ve şifre zorunludur.", errorCode: "validation" };
@@ -94,7 +94,7 @@ export async function loginAction(
     }
   }
 
-  redirect(redirectTo.startsWith("/") ? redirectTo : "/");
+  redirect(redirectTo.startsWith("/") ? redirectTo : "/ozet");
 }
 
 export async function logoutAction(): Promise<void> {

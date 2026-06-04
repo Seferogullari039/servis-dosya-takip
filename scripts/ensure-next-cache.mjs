@@ -56,13 +56,18 @@ export function ensureNextCacheHealthy() {
   const routesManifest = join(nextDir, "routes-manifest.json");
   const incompleteBuild =
     existsSync(join(nextDir, "server")) && !existsSync(routesManifest);
+  /** npm run build sonrası kalan önbellek; dev HTML app/layout.css ister, disk hash'li CSS tutar → 404 */
+  const productionBuildCache = existsSync(join(nextDir, "BUILD_ID"));
 
-  const stale = missingChunks.length > 0 || incompleteBuild;
+  const stale =
+    missingChunks.length > 0 || incompleteBuild || productionBuildCache;
 
   if (stale) {
-    const reason = missingChunks.length
-      ? `eksik chunk: ${missingChunks.slice(0, 5).join(", ")}`
-      : "eksik routes-manifest.json";
+    const reason = productionBuildCache
+      ? "production build önbelleği (npm run build — dev ile paylaşılmaz)"
+      : missingChunks.length
+        ? `eksik chunk: ${missingChunks.slice(0, 5).join(", ")}`
+        : "eksik routes-manifest.json";
     console.warn(
       `[dev] Bozuk .next önbelleği algılandı (${reason}). Temizleniyor…`
     );

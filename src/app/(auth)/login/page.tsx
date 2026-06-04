@@ -32,14 +32,14 @@ export default async function LoginPage({ searchParams }: PageProps) {
   const user = await getCurrentUser();
 
   if (user) {
-    redirect(redirectTo?.startsWith("/") ? redirectTo : "/");
+    redirect(redirectTo?.startsWith("/") ? redirectTo : "/ozet");
   }
 
   const reasonMessage = getLoginMessageFromReason(reason);
   const safeRedirect =
     redirectTo?.startsWith("/") && !redirectTo.startsWith("//")
       ? redirectTo
-      : "/";
+      : "/ozet";
 
   return (
     <LoginPageShell>

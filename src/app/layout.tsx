@@ -4,8 +4,14 @@ import { BRAND } from "@/lib/brand";
 import { THEME_STORAGE_KEY } from "@/lib/theme";
 import "./globals.css";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+
 export const metadata: Metadata = {
-  title: `${BRAND.companyName} — ${BRAND.appTagline}`,
+  ...(siteUrl ? { metadataBase: new URL(siteUrl) } : {}),
+  title: {
+    default: `${BRAND.companyName} — ${BRAND.appTagline}`,
+    template: `%s | ${BRAND.companyName}`,
+  },
   description: `${BRAND.companyName} servis dosyaları ve iş emri operasyon paneli`,
   manifest: "/manifest.json",
   appleWebApp: {

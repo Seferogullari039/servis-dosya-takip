@@ -32,7 +32,7 @@ function InputIcon({ children }: { children: ReactNode }) {
   );
 }
 
-export function LoginForm({ redirectTo = "/", reasonMessage }: LoginFormProps) {
+export function LoginForm({ redirectTo = "/ozet", reasonMessage }: LoginFormProps) {
   const [state, formAction, isPending] = useActionState(
     loginAction,
     initialState

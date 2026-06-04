@@ -33,7 +33,9 @@ async function DashboardContent({ period }: { period: DashboardPeriod }) {
   return <OperasyonDashboard data={result.data} todayTasks={todayTasks} />;
 }
 
-export default async function DashboardPage({ searchParams }: PageProps) {
+export default async function DosyaOzetDashboardPage({
+  searchParams,
+}: PageProps) {
   const { period: rawPeriod } = await searchParams;
   const period = parsePeriod(rawPeriod);
 

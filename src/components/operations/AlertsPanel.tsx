@@ -74,7 +74,7 @@ export function AlertsPanel() {
                 )}
               </ul>
             )}
-            <Link href="/" className="mt-3 block">
+            <Link href="/ozet" className="mt-3 block">
               <Button variant="secondary" fullWidth onClick={() => setOpen(false)}>
                 Dashboard&apos;a git
               </Button>
