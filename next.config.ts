@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import withPWAInit from "@ducanh2912/next-pwa";
+import { getNextSecurityHeaders } from "./src/lib/security/security-headers";
 import { loadEnvLocal } from "./scripts/load-env.mjs";
 
 loadEnvLocal(true);
@@ -68,6 +69,15 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig: NextConfig = {
+  async headers() {
+    const securityHeaders = getNextSecurityHeaders();
+    return [
+      {
+        source: "/:path*",
+        headers: securityHeaders,
+      },
+    ];
+  },
   images: {
     remotePatterns: supabaseImageRemotePatterns(),
   },

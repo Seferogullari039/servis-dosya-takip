@@ -256,16 +256,35 @@ export function CorporateLanding() {
                     </span>
                   ))}
                 </address>
-                <div className="relative mt-4 aspect-[4/3] w-full overflow-hidden rounded-xl border border-white/10 sm:aspect-video">
+                <a
+                  href={CORPORATE_CONTACT.mapsOpenHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Konumu Google Maps'te aç"
+                  className="group relative mt-4 block aspect-[4/3] w-full overflow-hidden rounded-xl border border-white/10 transition-colors hover:border-white/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9ecae8] sm:aspect-video"
+                >
                   <iframe
-                    title="Seferoğulları Otomotiv — Google Maps"
+                    title="Seferoğulları Otomotiv — Google Maps önizleme"
                     src={CORPORATE_CONTACT.mapsEmbedSrc}
-                    className="absolute inset-0 h-full w-full border-0"
+                    className="pointer-events-none absolute inset-0 h-full w-full border-0"
                     loading="lazy"
                     referrerPolicy="no-referrer-when-downgrade"
                     allowFullScreen
+                    tabIndex={-1}
                   />
-                </div>
+                  <span
+                    className="absolute inset-0 bg-[#0a1830]/0 transition-colors group-hover:bg-[#0a1830]/20 group-active:bg-[#0a1830]/30"
+                    aria-hidden
+                  />
+                </a>
+                <a
+                  href={CORPORATE_CONTACT.mapsOpenHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 inline-flex h-11 w-full items-center justify-center rounded-xl border border-white/20 bg-white/5 text-sm font-semibold text-white transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9ecae8] sm:w-auto sm:px-6"
+                >
+                  Haritada Aç
+                </a>
               </div>
             </div>
           </div>

@@ -23,8 +23,15 @@ const ADDRESS_LINES = [
 
 const ADDRESS_FULL = ADDRESS_LINES.join(", ");
 
-const MAPS_EMBED_QUERY =
+/** Iframe önizleme sorgusu (embed) */
+export const MAPS_LOCATION_QUERY =
   "Atatürk Mahallesi Yeni Sanayi Sitesi G2 Blok No:21 Lüleburgaz Kırklareli";
+
+/** Kart tıklama + Haritada Aç — doğrudan Google Maps konum linki */
+export const MAPS_OPEN_HREF =
+  "https://maps.app.goo.gl/6kHXwkdsNVmnN9Sy9";
+
+const mapsQueryEncoded = encodeURIComponent(MAPS_LOCATION_QUERY);
 
 /** Kurumsal site iletişim bilgileri */
 export const CORPORATE_CONTACT = {
@@ -35,7 +42,8 @@ export const CORPORATE_CONTACT = {
   whatsappLabel: "WhatsApp'tan Ulaş",
   addressLines: ADDRESS_LINES,
   addressFull: ADDRESS_FULL,
-  mapsEmbedSrc: `https://www.google.com/maps?q=${encodeURIComponent(MAPS_EMBED_QUERY)}&hl=tr&z=16&output=embed`,
+  mapsEmbedSrc: `https://www.google.com/maps?q=${mapsQueryEncoded}&hl=tr&z=16&output=embed`,
+  mapsOpenHref: MAPS_OPEN_HREF,
   workingHours: [
     { label: "Hafta içi", value: "08:00 – 18:00" },
     { label: "Cumartesi", value: "08:00 – 16:00" },
