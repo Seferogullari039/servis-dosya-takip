@@ -14,6 +14,10 @@ import { WetSignatureBlock } from "@/components/is-emri/WetSignatureBlock";
 
 import { EkspertizChecklist } from "@/components/is-emri/EkspertizChecklist";
 
+import {
+  HizliParcaIscilikGiris,
+  type HizliParcaIscilikAppendPayload,
+} from "@/components/is-emri/HizliParcaIscilikGiris";
 import { IscilikListesi } from "@/components/is-emri/IscilikListesi";
 
 import { IsEmriToplamKartlari } from "@/components/is-emri/IsEmriToplamKartlari";
@@ -49,6 +53,11 @@ import {
   calcServisSatinAlmaToplam,
 
 } from "@/lib/is-emri/calculations";
+import {
+  ensureMinimumFormLines,
+  mergeIscilikSatirlari,
+  mergeParcaSatirlari,
+} from "@/lib/is-emri/merge-form-lines";
 
 import { initialIsEmriState, type IsEmriFormState } from "@/types/is-emri";
 import type { AracDurumu } from "@/types/vehicle-status";
@@ -207,6 +216,31 @@ export function IsEmriForm({
 
     []
 
+  );
+
+  const handleQuickAppend = useCallback(
+    (payload: HizliParcaIscilikAppendPayload) => {
+      setForm((prev) => {
+        let parcalar = prev.parcalar;
+        let iscilikSatirlari = prev.iscilikSatirlari;
+
+        if (payload.parcalar?.length) {
+          parcalar = mergeParcaSatirlari(parcalar, payload.parcalar);
+        }
+        if (payload.iscilik?.length) {
+          iscilikSatirlari = mergeIscilikSatirlari(
+            iscilikSatirlari,
+            payload.iscilik
+          );
+        }
+
+        return {
+          ...prev,
+          ...ensureMinimumFormLines(parcalar, iscilikSatirlari),
+        };
+      });
+    },
+    []
   );
 
 
@@ -645,7 +679,10 @@ export function IsEmriForm({
 
               </div>
 
-
+              <HizliParcaIscilikGiris
+                readOnly={readOnly}
+                onAppend={handleQuickAppend}
+              />
 
               <ParcaListesi
 

@@ -18,12 +18,14 @@ import { useToast } from "@/components/ui/ToastProvider";
 import { filterImagesForPdf } from "@/types/work-order-image";
 import { downloadIsEmriPdf } from "@/lib/is-emri/pdf-download";
 import { isEmriKayitToFormState } from "@/lib/data/map-work-order";
+import type { DosyaMetaByPlaka } from "@/lib/data/dosyalar";
 import type { IsEmriFormState, IsEmriKayit } from "@/types/is-emri";
 import type { WorkOrderImage } from "@/types/work-order-image";
 import type { AracDurumu } from "@/types/vehicle-status";
 
 interface IsEmriDetayClientProps {
   kayit: IsEmriKayit;
+  dosyaMeta?: DosyaMetaByPlaka | null;
   images: WorkOrderImage[];
   isAdmin?: boolean;
   autoPrint?: boolean;
@@ -31,6 +33,7 @@ interface IsEmriDetayClientProps {
 
 export function IsEmriDetayClient({
   kayit,
+  dosyaMeta = null,
   images,
   isAdmin = false,
   autoPrint = false,
@@ -160,6 +163,8 @@ export function IsEmriDetayClient({
         workOrderNo={kayit.isEmriNo}
         phone={kayit.telefon}
         plaka={kayit.plaka}
+        kayit={kayit}
+        dosyaMeta={dosyaMeta}
         printRootRef={printRef}
         imageUrls={imageUrls}
       />

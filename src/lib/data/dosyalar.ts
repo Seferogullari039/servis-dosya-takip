@@ -252,3 +252,57 @@ export async function silDosya(id: string): Promise<DataResult<null>> {
     return fail(e instanceof Error ? e.message : DOSYA_SILINEMEDI);
   }
 }
+
+export interface DosyaMetaByPlaka {
+  dosyaNo: string;
+  sigortaSirketi: string;
+}
+
+/** Plakaya göre en güncel servis dosyası meta bilgisi (iş emri export için). */
+export async function getDosyaMetaByPlaka(
+  plaka: string
+): Promise<DataResult<DosyaMetaByPlaka | null>> {
+  try {
+    const trimmed = plaka.trim();
+    if (!trimmed) return ok(null);
+
+    const supabase = await createClient();
+
+    const { data: exact, error: exactError } = await supabase
+      .from("servis_dosyalari")
+      .select("dosya_no, sigorta_sirketi, plaka")
+      .eq("plaka", trimmed)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (exactError) return fail(exactError.message);
+    if (exact) {
+      return ok({
+        dosyaNo: exact.dosya_no,
+        sigortaSirketi: exact.sigorta_sirketi?.trim() ?? "",
+      });
+    }
+
+    const pattern = buildSearchPattern(trimmed);
+    const { data: fuzzyRows, error: fuzzyError } = await supabase
+      .from("servis_dosyalari")
+      .select("dosya_no, sigorta_sirketi, plaka")
+      .ilike("plaka", pattern)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (fuzzyError) return fail(fuzzyError.message);
+    const fuzzy = fuzzyRows?.[0];
+    if (!fuzzy) return ok(null);
+
+    return ok({
+      dosyaNo: fuzzy.dosya_no,
+      sigortaSirketi: fuzzy.sigorta_sirketi?.trim() ?? "",
+    });
+  } catch (e) {
+    return fail(
+      e instanceof Error ? e.message : "Dosya bilgisi yüklenemedi."
+    );
+  }
+}

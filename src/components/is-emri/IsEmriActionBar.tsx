@@ -4,15 +4,25 @@ import Link from "next/link";
 import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/ToastProvider";
+import {
+  buildParcaIscilikExportPayloadFromKayit,
+} from "@/lib/is-emri/parca-iscilik-export-data";
+import {
+  downloadParcaIscilikXlsx,
+} from "@/lib/is-emri/build-parca-iscilik-xlsx";
+import type { DosyaMetaByPlaka } from "@/lib/data/dosyalar";
 import { downloadIsEmriPdf } from "@/lib/is-emri/pdf-download";
 import { buildIsEmriWhatsAppUrl } from "@/lib/is-emri/whatsapp";
 import { cn } from "@/lib/utils/cn";
+import type { IsEmriKayit } from "@/types/is-emri";
 
 interface IsEmriActionBarProps {
   workOrderId: string;
   workOrderNo: string;
   phone: string;
   plaka: string;
+  kayit: IsEmriKayit;
+  dosyaMeta?: DosyaMetaByPlaka | null;
   printRootRef: React.RefObject<HTMLElement | null>;
   imageUrls?: string[];
   className?: string;
@@ -23,12 +33,15 @@ export function IsEmriActionBar({
   workOrderNo,
   phone,
   plaka,
+  kayit,
+  dosyaMeta = null,
   printRootRef,
   imageUrls = [],
   className,
 }: IsEmriActionBarProps) {
   const { toast } = useToast();
   const [pdfLoading, setPdfLoading] = useState(false);
+  const [excelLoading, setExcelLoading] = useState(false);
   const [pdfProgress, setPdfProgress] = useState(0);
 
   const handlePrint = () => window.print();
@@ -59,6 +72,22 @@ export function IsEmriActionBar({
     }
   }, [printRootRef, toast, workOrderNo]);
 
+  const handleParcaIscilikExcel = useCallback(async () => {
+    setExcelLoading(true);
+    try {
+      const payload = buildParcaIscilikExportPayloadFromKayit(kayit, dosyaMeta);
+      await downloadParcaIscilikXlsx(payload, workOrderNo);
+      toast("Parça & işçilik Excel dosyası indirildi.", "success");
+    } catch (e) {
+      toast(
+        e instanceof Error ? e.message : "Excel dosyası oluşturulamadı.",
+        "error"
+      );
+    } finally {
+      setExcelLoading(false);
+    }
+  }, [dosyaMeta, kayit, toast, workOrderNo]);
+
   const handleWhatsApp = () => {
     const origin =
       typeof window !== "undefined" ? window.location.origin : "";
@@ -88,7 +117,7 @@ export function IsEmriActionBar({
     >
       <p className="text-sm font-semibold text-ink">İşlemler</p>
       <p className="mt-0.5 text-xs text-ink-muted">
-        Yazdır, PDF indir veya WhatsApp ile paylaşın.
+        Yazdır, PDF / Excel indir veya WhatsApp ile paylaşın.
       </p>
 
       {pdfLoading ? (
@@ -108,7 +137,7 @@ export function IsEmriActionBar({
           type="button"
           variant="secondary"
           className="col-span-1 min-h-11"
-          disabled={pdfLoading}
+          disabled={pdfLoading || excelLoading}
           onClick={handlePrint}
         >
           Yazdır
@@ -116,7 +145,7 @@ export function IsEmriActionBar({
         <Button
           type="button"
           className="col-span-1 min-h-11"
-          disabled={pdfLoading}
+          disabled={pdfLoading || excelLoading}
           onClick={handlePdf}
         >
           {pdfLoading ? "PDF…" : "PDF İndir"}
@@ -125,7 +154,16 @@ export function IsEmriActionBar({
           type="button"
           variant="secondary"
           className="col-span-2 min-h-11 sm:col-span-1"
-          disabled={pdfLoading}
+          disabled={pdfLoading || excelLoading}
+          onClick={handleParcaIscilikExcel}
+        >
+          {excelLoading ? "Excel…" : "Parça & İşçilik Excel İndir"}
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          className="col-span-2 min-h-11 sm:col-span-1"
+          disabled={pdfLoading || excelLoading}
           onClick={handleWhatsApp}
         >
           WhatsApp Gönder
@@ -135,7 +173,7 @@ export function IsEmriActionBar({
             type="button"
             variant="ghost"
             className="h-11 w-full text-sm"
-            disabled={pdfLoading}
+            disabled={pdfLoading || excelLoading}
           >
             ← Liste
           </Button>

@@ -23,6 +23,14 @@ export function rowsToCsv(headers: string[], rows: unknown[][]): string {
   return `${UTF8_BOM}${lines.join("\r\n")}`;
 }
 
+/** Çok bölümlü CSV — her satır ayrı hücre dizisi */
+export function linesToCsv(lines: unknown[][]): string {
+  const body = lines
+    .map((row) => row.map(escapeCsvCell).join(CSV_DELIMITER))
+    .join("\r\n");
+  return `${UTF8_BOM}${body}`;
+}
+
 /** Tarih+saat alanları — örn. created_at */
 export function formatCsvDateTime(
   value: string | null | undefined
