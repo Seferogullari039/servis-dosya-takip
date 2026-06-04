@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   createDosyaAction,
@@ -29,6 +29,12 @@ export function DosyaForm({ isAdmin = false }: DosyaFormProps) {
     createDosyaAction,
     initialState
   );
+
+  useEffect(() => {
+    if (state.success && state.id) {
+      router.push(`/dosyalar/${state.id}`);
+    }
+  }, [state.success, state.id, router]);
 
   return (
     <form action={formAction} className="space-y-6">

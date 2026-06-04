@@ -7,35 +7,24 @@ import {
   SIGORTA_SIRKETLERI,
   SIGORTA_SIRKETI_DIGER,
 } from "@/lib/constants/sigorta-sirketleri";
+import {
+  resolveSigortaSirketiDiger,
+  resolveSigortaSirketiSelect,
+} from "@/lib/dosyalar/sigorta-sirketi-form";
 
 interface SigortaSirketiFieldProps {
   defaultValue?: string;
   error?: string;
 }
 
-function resolveInitialSelect(value?: string): string {
-  if (!value?.trim()) return "";
-  if ((SIGORTA_SIRKETLERI as readonly string[]).includes(value)) {
-    return value;
-  }
-  return SIGORTA_SIRKETI_DIGER;
-}
-
-function resolveInitialDiger(value?: string, select?: string): string {
-  if (select === SIGORTA_SIRKETI_DIGER) {
-    return value?.trim() && value !== SIGORTA_SIRKETI_DIGER ? value : "";
-  }
-  return "";
-}
-
 export function SigortaSirketiField({
   defaultValue = "",
   error,
 }: SigortaSirketiFieldProps) {
-  const initialSelect = resolveInitialSelect(defaultValue);
+  const initialSelect = resolveSigortaSirketiSelect(defaultValue);
   const [select, setSelect] = useState(initialSelect);
   const [diger, setDiger] = useState(
-    resolveInitialDiger(defaultValue, initialSelect)
+    resolveSigortaSirketiDiger(defaultValue, initialSelect)
   );
 
   const hiddenValue =
@@ -63,14 +52,4 @@ export function SigortaSirketiField({
       <input type="hidden" name="sigortaSirketi" value={hiddenValue} />
     </div>
   );
-}
-
-export function parseSigortaSirketiFromForm(formData: FormData): string {
-  const select = String(formData.get("sigortaSirketiSelect") ?? "").trim();
-  if (select === SIGORTA_SIRKETI_DIGER) {
-    return String(formData.get("sigortaSirketiDiger") ?? "").trim();
-  }
-  const hidden = String(formData.get("sigortaSirketi") ?? "").trim();
-  if (hidden) return hidden;
-  return select;
 }

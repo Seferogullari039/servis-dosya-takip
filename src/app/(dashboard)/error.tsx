@@ -1,5 +1,6 @@
 "use client";
 
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { ErrorState } from "@/components/ui/DataState";
@@ -15,6 +16,10 @@ export default function DashboardRouteError({
   error,
   reset,
 }: RouteErrorProps) {
+  if (isRedirectError(error)) {
+    throw error;
+  }
+
   useEffect(() => {
     logger.error("dashboard route error", { message: error.message, digest: error.digest });
   }, [error]);

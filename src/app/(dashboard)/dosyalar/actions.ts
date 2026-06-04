@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import {
   guncelleDosya,
   getDosyaById,
@@ -14,7 +13,7 @@ import {
   canEditExpert,
   canSetStatus,
 } from "@/lib/operations/auth-action";
-import { parseSigortaSirketiFromForm } from "@/components/dosyalar/SigortaSirketiField";
+import { parseSigortaSirketiFromForm } from "@/lib/dosyalar/sigorta-sirketi-form";
 import { parseTutarInput } from "@/lib/utils/para";
 import {
   DOSYA_DURUMLARI,
@@ -42,7 +41,17 @@ function revalidateDosya(id: string) {
   invalidateDashboardCache();
   revalidatePath("/dosyalar");
   revalidatePath(`/dosyalar/${id}`);
+  revalidatePath("/ozet");
+  revalidatePath("/dashboard");
   revalidatePath("/");
+}
+
+function revalidateAfterDosyaCreate(id: string) {
+  invalidateDashboardCache();
+  revalidatePath("/dosyalar");
+  revalidatePath(`/dosyalar/${id}`);
+  revalidatePath("/ozet");
+  revalidatePath("/dashboard");
 }
 
 export async function updateStatus(
@@ -298,6 +307,8 @@ export async function bulkAddNote(
 }
 
 export type CreateDosyaState = {
+  success?: boolean;
+  id?: string;
   error?: string;
   fieldErrors?: Partial<Record<keyof ServisDosyasiForm, string>>;
   debug?: CreateDosyaInsertDebug;
@@ -372,7 +383,9 @@ export async function createDosyaAction(
     },
   });
 
-  redirect(`/dosyalar/${result.data.id}`);
+  revalidateAfterDosyaCreate(result.data.id);
+
+  return { success: true, id: result.data.id };
 }
 
 export async function getAlertsSummaryAction() {
