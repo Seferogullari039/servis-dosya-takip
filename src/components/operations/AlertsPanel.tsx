@@ -72,8 +72,23 @@ export function AlertsPanel() {
                     <strong>{alerts.odemeGecikmeCount}</strong> ödeme bekleyen
                   </li>
                 )}
+                {alerts.pertIncelemesindeCount > 0 && (
+                  <li className="rounded-lg bg-orange-50 px-3 py-2 text-orange-950 dark:bg-orange-950/80 dark:text-orange-200">
+                    <strong>{alerts.pertIncelemesindeCount}</strong> pert
+                    incelemesinde
+                  </li>
+                )}
               </ul>
             )}
+            {alerts && alerts.pertIncelemesindeCount > 0 ? (
+              <Link
+                href="/dosyalar?durum=Pert%20%C4%B0ncelemesinde"
+                className="mt-2 block text-xs font-medium text-accent hover:underline"
+                onClick={() => setOpen(false)}
+              >
+                Pert incelemesindeki dosyaları gör →
+              </Link>
+            ) : null}
             <Link href="/ozet" className="mt-3 block">
               <Button variant="secondary" fullWidth onClick={() => setOpen(false)}>
                 Dashboard&apos;a git

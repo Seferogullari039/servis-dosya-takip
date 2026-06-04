@@ -113,6 +113,10 @@ function computeOperasyonMetrikleri(
         d.durum === "Eksper Sürecinde" || d.durum === "Evrak Bekleniyor"
     ).length,
     onarimda: aktif.filter((d) => d.durum === "Onarımda").length,
+    pertIncelemesinde: aktif.filter(
+      (d) => d.durum === "Pert İncelemesinde"
+    ).length,
+    pertOnaylandi: aktif.filter((d) => d.durum === "Pert Onaylandı").length,
     bugunKapanan: bugunKapananIds.size,
   };
 }

@@ -8,6 +8,7 @@ export interface AlertSummary {
   riskCount: number;
   kritikCount: number;
   odemeGecikmeCount: number;
+  pertIncelemesindeCount: number;
   total: number;
 }
 
@@ -16,7 +17,7 @@ export interface TodayTaskItem {
   dosyaNo: string;
   plaka: string;
   label: string;
-  kind: "geciken" | "odeme" | "tedarik";
+  kind: "geciken" | "odeme" | "tedarik" | "pert";
   href: string;
 }
 
@@ -24,4 +25,5 @@ export interface TodayTasksData {
   geciken: TodayTaskItem[];
   odemeBekleyen: TodayTaskItem[];
   tedarik: TodayTaskItem[];
+  pertIncelemesinde: TodayTaskItem[];
 }

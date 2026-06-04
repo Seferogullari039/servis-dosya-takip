@@ -4,6 +4,8 @@ export const DOSYA_DURUMLARI = [
   "Eksper Sürecinde",
   "Tedarik Sürecinde",
   "Onarımda",
+  "Pert İncelemesinde",
+  "Pert Onaylandı",
   "Ödeme Bekleniyor",
   "Tamamlandı",
   "Kapandı",

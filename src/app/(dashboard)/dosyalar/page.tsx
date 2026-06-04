@@ -6,10 +6,16 @@ import { requireAuth } from "@/lib/auth/require-auth";
 import { listeleDosyalar } from "@/lib/data/dosyalar";
 
 interface PageProps {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; durum?: string }>;
 }
 
-async function DosyalarIcerik({ arama }: { arama?: string }) {
+async function DosyalarIcerik({
+  arama,
+  durum,
+}: {
+  arama?: string;
+  durum?: string;
+}) {
   const { profile } = await requireAuth();
   const result = await listeleDosyalar(arama);
 
@@ -26,21 +32,22 @@ async function DosyalarIcerik({ arama }: { arama?: string }) {
     <DosyaListesiClient
       initialDosyalar={result.data}
       arama={arama ?? ""}
+      durumFilter={durum}
       role={profile.role}
     />
   );
 }
 
 export default async function DosyalarPage({ searchParams }: PageProps) {
-  const { q } = await searchParams;
+  const { q, durum } = await searchParams;
 
   return (
     <AppShell title="Servis Dosyaları">
       <Suspense
-        key={q ?? ""}
+        key={`${q ?? ""}-${durum ?? ""}`}
         fallback={<LoadingState message="Dosyalar yükleniyor…" />}
       >
-        <DosyalarIcerik arama={q} />
+        <DosyalarIcerik arama={q} durum={durum} />
       </Suspense>
     </AppShell>
   );

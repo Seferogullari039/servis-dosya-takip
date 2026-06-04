@@ -102,6 +102,8 @@ export const EMPTY_DASHBOARD_FALLBACK: OperasyonDashboardData = {
     tedarikSurecinde: 0,
     eksperBekleyen: 0,
     onarimda: 0,
+    pertIncelemesinde: 0,
+    pertOnaylandi: 0,
     bugunKapanan: 0,
   },
   finans: {
@@ -134,6 +136,8 @@ export const EMPTY_DASHBOARD_FALLBACK: OperasyonDashboardData = {
       tedarikSurecinde: 0,
       eksperBekleyen: 0,
       onarimda: 0,
+      pertIncelemesinde: 0,
+      pertOnaylandi: 0,
       bugunKapanan: 0,
     },
     finans: {
@@ -163,6 +167,7 @@ export const EMPTY_ALERTS_FALLBACK: AlertSummary = {
   riskCount: 0,
   kritikCount: 0,
   odemeGecikmeCount: 0,
+  pertIncelemesindeCount: 0,
   total: 0,
 };
 

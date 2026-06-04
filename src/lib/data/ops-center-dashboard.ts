@@ -35,7 +35,9 @@ function formatDayLabel(date: Date): string {
 function buildKpis(
   workOrders: WorkOrderRow[],
   aktifDosya: number,
-  tahsilatBekleyen: number
+  tahsilatBekleyen: number,
+  pertIncelemesinde: number,
+  pertOnaylandi: number
 ): OpsCenterKpis {
   const today = todayIso();
   let parcaBekleyen = 0;
@@ -60,6 +62,8 @@ function buildKpis(
     bugunTeslimEdilecek,
     aktifDosya,
     tahsilatBekleyen,
+    pertIncelemesinde,
+    pertOnaylandi,
   };
 }
 
@@ -228,7 +232,9 @@ export async function getOpsCenterDashboardData(): Promise<
     const kpis = buildKpis(
       workOrders,
       operasyon.operasyon.toplamAktif,
-      operasyon.finans.odemeBekleyen
+      operasyon.finans.odemeBekleyen,
+      operasyon.operasyon.pertIncelemesinde,
+      operasyon.operasyon.pertOnaylandi
     );
 
     const columns = buildColumns(gecikenItems, workOrders, tahsilatItems);

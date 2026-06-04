@@ -737,6 +737,8 @@ const DOSYA_DURUM_BILDIRIM_ETIKETI: Record<DosyaDurumu, string> = {
   "Eksper Sürecinde": "Eksper Bekleniyor",
   "Tedarik Sürecinde": "Parça Bekleniyor",
   "Onarımda": "İşlemde",
+  "Pert İncelemesinde": "Pert İncelemesinde",
+  "Pert Onaylandı": "Pert Onaylandı",
   "Ödeme Bekleniyor": "Onay Bekleniyor",
   "Tamamlandı": "Hazır",
   "Kapandı": "Kapandı",

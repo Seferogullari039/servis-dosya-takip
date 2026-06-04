@@ -20,7 +20,11 @@ import { EmptyState, LoadingState } from "@/components/ui/DataState";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { formatTarih } from "@/lib/utils/format";
-import type { ServisDosyasi } from "@/types/servis-dosya";
+import {
+  DOSYA_DURUMLARI,
+  type DosyaDurumu,
+  type ServisDosyasi,
+} from "@/types/servis-dosya";
 import type { UserRole } from "@/lib/auth/types";
 import { Suspense } from "react";
 import { useRouter } from "next/navigation";
@@ -28,12 +32,14 @@ import { useRouter } from "next/navigation";
 interface DosyaListesiClientProps {
   initialDosyalar: ServisDosyasi[];
   arama?: string;
+  durumFilter?: string;
   role: UserRole;
 }
 
 export function DosyaListesiClient({
   initialDosyalar,
   arama = "",
+  durumFilter,
   role,
 }: DosyaListesiClientProps) {
   const router = useRouter();
@@ -48,6 +54,17 @@ export function DosyaListesiClient({
   }, [initialDosyalar]);
 
   const aramaAktif = arama.trim().length > 0;
+
+  const durumFiltreAktif =
+    durumFilter &&
+    (DOSYA_DURUMLARI as readonly string[]).includes(durumFilter)
+      ? (durumFilter as DosyaDurumu)
+      : undefined;
+
+  const visibleItems = useMemo(() => {
+    if (!durumFiltreAktif) return items;
+    return items.filter((d) => d.durum === durumFiltreAktif);
+  }, [items, durumFiltreAktif]);
 
   const onOptimistic = useCallback(
     (id: string, patch: Partial<ServisDosyasi>) => {
@@ -160,11 +177,26 @@ export function DosyaListesiClient({
               : "İlk servis dosyanızı oluşturun."
           }
         />
+      ) : visibleItems.length === 0 ? (
+        <EmptyState
+          title="Bu durumda dosya yok"
+          description={
+            durumFiltreAktif
+              ? `"${durumFiltreAktif}" durumunda kayıt bulunamadı.`
+              : "Filtreyi kaldırıp tekrar deneyin."
+          }
+        />
       ) : (
         <Card className="p-0 md:p-6">
           <div className="p-4 md:p-0">
+            {durumFiltreAktif ? (
+              <p className="mb-2 text-sm font-medium text-orange-800 dark:text-orange-200">
+                Durum filtresi: {durumFiltreAktif}
+              </p>
+            ) : null}
             <p className="mb-4 text-sm text-ink-muted">
-              {items.length} dosya · durum değiştir, not ekle veya detaya git
+              {visibleItems.length} dosya · durum değiştir, not ekle veya detaya
+              git
             </p>
 
             <div className="hidden overflow-x-auto md:block">
@@ -182,7 +214,7 @@ export function DosyaListesiClient({
                   </tr>
                 </thead>
                 <tbody>
-                  {items.map((d) => (
+                  {visibleItems.map((d) => (
                     <DosyaTableRow
                       key={d.id}
                       dosya={d}
@@ -199,7 +231,7 @@ export function DosyaListesiClient({
             </div>
 
             <div className="flex flex-col gap-3 md:hidden">
-              {items.map((d) => (
+              {visibleItems.map((d) => (
                 <Card
                   key={d.id}
                   className="relative"

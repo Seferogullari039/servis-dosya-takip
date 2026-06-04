@@ -16,6 +16,8 @@ export interface OperasyonMetrikleri {
   tedarikSurecinde: number;
   eksperBekleyen: number;
   onarimda: number;
+  pertIncelemesinde: number;
+  pertOnaylandi: number;
   bugunKapanan: number;
 }
 

@@ -25,7 +25,14 @@ const DURUM_COLORS = [
   "#ef4444",
   "#22c55e",
   "#71717a",
+  "#b45309",
+  "#dc2626",
 ];
+
+const DURUM_COLOR_BY_NAME: Record<string, string> = {
+  "Pert İncelemesinde": "#b45309",
+  "Pert Onaylandı": "#dc2626",
+};
 
 const ODEME_COLORS = ["#ef4444", "#f59e0b", "#22c55e"];
 
@@ -71,10 +78,13 @@ export function DashboardCharts({ grafikler }: DashboardChartsProps) {
                   }
                   labelLine={false}
                 >
-                  {grafikler.durumDagilimi.map((_, i) => (
+                  {grafikler.durumDagilimi.map((entry, i) => (
                     <Cell
-                      key={i}
-                      fill={DURUM_COLORS[i % DURUM_COLORS.length]}
+                      key={entry.name}
+                      fill={
+                        DURUM_COLOR_BY_NAME[entry.name] ??
+                        DURUM_COLORS[i % DURUM_COLORS.length]
+                      }
                     />
                   ))}
                 </Pie>

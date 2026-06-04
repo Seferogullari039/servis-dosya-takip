@@ -20,6 +20,16 @@ const KPI_ITEMS: {
     label: "Tahsilat Bekleyen",
     accent: "from-orange-500/15",
   },
+  {
+    key: "pertIncelemesinde",
+    label: "Pert İncelemesinde",
+    accent: "from-orange-600/20",
+  },
+  {
+    key: "pertOnaylandi",
+    label: "Pert Onaylandı",
+    accent: "from-red-500/15",
+  },
 ];
 
 interface OpsKpiGridProps {
@@ -28,7 +38,7 @@ interface OpsKpiGridProps {
 
 export function OpsKpiGrid({ kpis }: OpsKpiGridProps) {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-8">
       {KPI_ITEMS.map((item) => (
         <div
           key={item.key}

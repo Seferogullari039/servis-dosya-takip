@@ -10,9 +10,19 @@ const durumVariant: Record<
   "Eksper Sürecinde": "info",
   "Tedarik Sürecinde": "warning",
   Onarımda: "info",
+  "Pert İncelemesinde": "warning",
+  "Pert Onaylandı": "danger",
   "Ödeme Bekleniyor": "danger",
   Tamamlandı: "success",
   Kapandı: "default",
+};
+
+/** Pert ve özel durum rozetleri (turuncu/kahverengi, kırmızı) */
+const durumBadgeClass: Partial<Record<DosyaDurumu, string>> = {
+  "Pert İncelemesinde":
+    "bg-orange-100 text-orange-950 ring-1 ring-orange-300/60 dark:bg-orange-950/90 dark:text-orange-200 dark:ring-orange-800/80",
+  "Pert Onaylandı":
+    "bg-red-100 text-red-900 ring-1 ring-red-300/60 dark:bg-red-950/90 dark:text-red-200 dark:ring-red-800/80",
 };
 
 const odemeVariant: Record<
@@ -35,6 +45,10 @@ export const odemeBadgeVariant: Record<OdemeDurumu, string> = {
 };
 
 export function DurumBadge({ durum }: { durum: DosyaDurumu }) {
+  const custom = durumBadgeClass[durum];
+  if (custom) {
+    return <Badge className={custom}>{durum}</Badge>;
+  }
   return <Badge variant={durumVariant[durum]}>{durum}</Badge>;
 }
 

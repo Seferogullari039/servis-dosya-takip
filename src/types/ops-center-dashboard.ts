@@ -5,6 +5,8 @@ export interface OpsCenterKpis {
   bugunTeslimEdilecek: number;
   aktifDosya: number;
   tahsilatBekleyen: number;
+  pertIncelemesinde: number;
+  pertOnaylandi: number;
 }
 
 export interface OpsBoardItem {

@@ -9,11 +9,20 @@ export function deriveAlertSummary(data: OperasyonDashboardData): AlertSummary {
     (d) => d.seviye === "kritik"
   ).length;
 
+  const pertIncelemesindeCount = data.dosyalar.filter(
+    (d) => d.durum === "Pert İncelemesinde"
+  ).length;
+
   return {
     riskCount,
     kritikCount,
     odemeGecikmeCount: finans.odemeBekleyen,
-    total: riskCount + kritikCount + finans.odemeBekleyen,
+    pertIncelemesindeCount,
+    total:
+      riskCount +
+      kritikCount +
+      finans.odemeBekleyen +
+      pertIncelemesindeCount,
   };
 }
 
@@ -60,7 +69,19 @@ export function deriveTodayTasksData(
       href: `/dosyalar/${d.id}`,
     }));
 
-  return { geciken, odemeBekleyen, tedarik };
+  const pertIncelemesinde = dosyalar
+    .filter((d) => d.durum === "Pert İncelemesinde")
+    .slice(0, 8)
+    .map((d) => ({
+      id: d.id,
+      dosyaNo: d.dosyaNo,
+      plaka: d.plaka,
+      label: d.durum,
+      kind: "pert" as const,
+      href: `/dosyalar/${d.id}`,
+    }));
+
+  return { geciken, odemeBekleyen, tedarik, pertIncelemesinde };
 }
 
 /** @deprecated Prefer deriveAlertSummary with cached dashboard data */
@@ -74,7 +95,7 @@ export async function getTodayTasksData(): Promise<TodayTasksData> {
   const { getOperasyonDashboard } = await import("@/lib/data/dashboard");
   const result = await getOperasyonDashboard("7");
   if (!result.ok) {
-    return { geciken: [], odemeBekleyen: [], tedarik: [] };
+    return { geciken: [], odemeBekleyen: [], tedarik: [], pertIncelemesinde: [] };
   }
   return deriveTodayTasksData(result.data, result.data.dosyalar);
 }

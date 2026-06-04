@@ -66,10 +66,20 @@ export function OperasyonDashboard({
         summary="Finans, grafikler, personel aktivitesi ve son hareketler"
       >
         <div className="space-y-6">
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8">
             <MetricCard title="Tedarik" value={operasyon.tedarikSurecinde} variant="warning" />
             <MetricCard title="Eksper bekleyen" value={operasyon.eksperBekleyen} variant="warning" />
             <MetricCard title="Onarımda" value={operasyon.onarimda} variant="operation" />
+            <MetricCard
+              title="Pert incelemesinde"
+              value={operasyon.pertIncelemesinde}
+              variant="warning"
+            />
+            <MetricCard
+              title="Pert onaylandı"
+              value={operasyon.pertOnaylandi}
+              variant="warning"
+            />
             <MetricCard title="Bugün kapanan" value={operasyon.bugunKapanan} variant="success" />
           </div>
           <FinanceCard finans={finans} />

@@ -45,7 +45,10 @@ function TaskList({
 
 export const TodayTasks = memo(function TodayTasks({ data }: TodayTasksProps) {
   const total =
-    data.geciken.length + data.odemeBekleyen.length + data.tedarik.length;
+    data.geciken.length +
+    data.odemeBekleyen.length +
+    data.tedarik.length +
+    data.pertIncelemesinde.length;
 
   return (
     <Card>
@@ -64,7 +67,7 @@ export const TodayTasks = memo(function TodayTasks({ data }: TodayTasksProps) {
           description="Operasyon akışı güncel görünüyor."
         />
       ) : (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
           <TaskList
             title="Geciken dosyalar"
             items={data.geciken}
@@ -79,6 +82,11 @@ export const TodayTasks = memo(function TodayTasks({ data }: TodayTasksProps) {
             title="Tedarik sürecinde"
             items={data.tedarik}
             empty="Tedarik bekleyen yok"
+          />
+          <TaskList
+            title="Pert incelemesinde"
+            items={data.pertIncelemesinde}
+            empty="Pert incelemesi yok"
           />
         </div>
       )}
