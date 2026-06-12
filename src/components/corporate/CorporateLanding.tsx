@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { CorporateHeader } from "@/components/corporate/CorporateHeader";
 import {
@@ -5,10 +6,43 @@ import {
   CORPORATE_HERO,
   CORPORATE_PROCESS,
   CORPORATE_SERVICES,
+  CORPORATE_ABOUT,
+  CORPORATE_GALLERY,
   CORPORATE_WHY,
   CORPORATE_BRAND,
 } from "@/lib/corporate-site";
 import { cn } from "@/lib/utils/cn";
+
+function HeroImageCard({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(
+        "relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-white/[0.08] shadow-2xl shadow-black/40 lg:aspect-[5/4]",
+        className
+      )}
+    >
+      <Image
+        src="/site/dis-cephe.jpg"
+        alt="Seferoğulları Otomotiv servis tesisinin dış cephe görünümü"
+        fill
+        sizes="(max-width: 1024px) 100vw, 620px"
+        className="object-cover"
+        priority
+      />
+      <div
+        className="absolute inset-0 bg-gradient-to-t from-[#020610]/35 via-transparent to-transparent"
+        aria-hidden
+      />
+      <div
+        className="absolute inset-0 bg-gradient-to-r from-[#020610]/10 via-transparent to-transparent lg:from-transparent lg:via-transparent lg:to-[#020610]/10"
+        aria-hidden
+      />
+      <p className="absolute left-5 top-5 rounded-full border border-white/20 bg-slate-950/80 px-4 py-2 text-xs font-bold tracking-[0.18em] text-white shadow-lg backdrop-blur-md">
+        1989&apos;DAN BERİ
+      </p>
+    </div>
+  );
+}
 
 function SectionTitle({
   eyebrow,
@@ -58,38 +92,42 @@ export function CorporateLanding() {
           id="hero"
           className="relative mx-auto max-w-6xl px-4 pb-8 pt-8 sm:px-6 sm:pb-10 sm:pt-10 lg:pt-12"
         >
-          <div className="max-w-3xl">
-            <p className="inline-flex rounded-full border border-[#0F4C81]/40 bg-[#0F4C81]/15 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[#9ecae8]">
-              {CORPORATE_BRAND.name}
-            </p>
-            <h1 className="mt-4 text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">
-              {CORPORATE_HERO.title}
-            </h1>
-            <p className="mt-4 max-w-2xl text-base leading-relaxed text-white/70 sm:text-lg">
-              {CORPORATE_HERO.subtitle}
-            </p>
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <a
-                href={CORPORATE_CONTACT.whatsappHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex h-12 items-center justify-center rounded-xl bg-[#0F4C81] px-6 text-sm font-semibold text-white shadow-lg shadow-[#0F4C81]/35 transition-colors hover:bg-[#1a6aad] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4a9fd4]"
-              >
-                {CORPORATE_CONTACT.whatsappLabel}
-              </a>
-              <a
-                href="#iletisim"
-                className="inline-flex h-12 items-center justify-center rounded-xl border border-[#0F4C81]/50 bg-[#0F4C81]/15 px-6 text-sm font-semibold text-[#9ecae8] transition-colors hover:bg-[#0F4C81]/25 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4a9fd4]"
-              >
-                Bize Ulaşın
-              </a>
-              <a
-                href="#hizmetler"
-                className="inline-flex h-12 items-center justify-center rounded-xl border border-white/20 bg-white/5 px-6 text-sm font-semibold text-white transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4a9fd4]"
-              >
-                Hizmetleri İncele
-              </a>
+          <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)] lg:gap-10">
+            <div>
+              <p className="inline-flex rounded-full border border-[#0F4C81]/40 bg-[#0F4C81]/15 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[#9ecae8]">
+                {CORPORATE_BRAND.name}
+              </p>
+              <h1 className="mt-4 text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">
+                {CORPORATE_HERO.title}
+              </h1>
+              <HeroImageCard className="mt-6 lg:hidden" />
+              <p className="mt-4 max-w-2xl text-base leading-relaxed text-white/70 sm:text-lg lg:mt-4">
+                {CORPORATE_HERO.subtitle}
+              </p>
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                <a
+                  href={CORPORATE_CONTACT.whatsappHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex h-12 items-center justify-center rounded-xl bg-[#0F4C81] px-6 text-sm font-semibold text-white shadow-lg shadow-[#0F4C81]/35 transition-colors hover:bg-[#1a6aad] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4a9fd4]"
+                >
+                  {CORPORATE_CONTACT.whatsappLabel}
+                </a>
+                <a
+                  href="#iletisim"
+                  className="inline-flex h-12 items-center justify-center rounded-xl border border-[#0F4C81]/50 bg-[#0F4C81]/15 px-6 text-sm font-semibold text-[#9ecae8] transition-colors hover:bg-[#0F4C81]/25 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4a9fd4]"
+                >
+                  Bize Ulaşın
+                </a>
+                <a
+                  href="#hizmetler"
+                  className="inline-flex h-12 items-center justify-center rounded-xl border border-white/20 bg-white/5 px-6 text-sm font-semibold text-white transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4a9fd4]"
+                >
+                  Hizmetleri İncele
+                </a>
+              </div>
             </div>
+            <HeroImageCard className="hidden lg:block" />
           </div>
         </section>
 
@@ -158,6 +196,80 @@ export function CorporateLanding() {
                 </li>
               ))}
             </ol>
+          </div>
+        </section>
+
+        <section
+          id="hakkimizda"
+          className="scroll-mt-20 border-t border-white/[0.06] py-10 sm:py-12"
+        >
+          <div className="mx-auto max-w-6xl px-4 sm:px-6">
+            <div className="grid gap-6 lg:grid-cols-2 lg:items-center">
+              <SectionTitle
+                eyebrow="Hakkımızda"
+                title="Neden Seferoğulları?"
+                description={CORPORATE_ABOUT.description}
+              />
+              <ul className="space-y-2 sm:space-y-3">
+                {CORPORATE_WHY.map((item) => (
+                  <li
+                    key={item}
+                    className="flex items-start gap-3 rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-2.5 sm:py-3"
+                  >
+                    <span
+                      className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#0F4C81]/30 text-xs text-[#9ecae8]"
+                      aria-hidden
+                    >
+                      ✓
+                    </span>
+                    <span className="text-sm font-medium text-white/85 sm:text-base">
+                      {item}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="galeri"
+          className="scroll-mt-20 border-t border-white/[0.06] bg-[#030812]/40 py-10 sm:py-12"
+        >
+          <div className="mx-auto max-w-6xl px-4 sm:px-6">
+            <SectionTitle
+              eyebrow="Galeri"
+              title={CORPORATE_GALLERY.title}
+              description={CORPORATE_GALLERY.description}
+              center
+            />
+            <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {CORPORATE_GALLERY.items.map((item) => (
+                <article
+                  key={item.title}
+                  className="overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03] shadow-lg shadow-black/25"
+                >
+                  <div className="relative aspect-[4/3] w-full overflow-hidden">
+                    <Image
+                      src={item.image}
+                      alt={item.alt}
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 360px"
+                      className="object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                  <div className="p-5">
+                    <h3 className="text-base font-semibold text-white">
+                      {item.title}
+                    </h3>
+                    <p className="mt-2 text-sm leading-relaxed text-white/60">
+                      {item.description}
+                    </p>
+                  </div>
+                </article>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -286,39 +398,6 @@ export function CorporateLanding() {
                   Haritada Aç
                 </a>
               </div>
-            </div>
-          </div>
-        </section>
-
-        <section
-          id="hakkimizda"
-          className="scroll-mt-20 border-t border-white/[0.06] py-10 sm:py-12"
-        >
-          <div className="mx-auto max-w-6xl px-4 sm:px-6">
-            <div className="grid gap-6 lg:grid-cols-2 lg:items-center">
-              <SectionTitle
-                eyebrow="Hakkımızda"
-                title="Neden Seferoğulları?"
-                description="Sigorta hasar süreçlerinde güven, hız ve kurumsal şeffaflık önceliğimizdir."
-              />
-              <ul className="space-y-2 sm:space-y-3">
-                {CORPORATE_WHY.map((item) => (
-                  <li
-                    key={item}
-                    className="flex items-start gap-3 rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-2.5 sm:py-3"
-                  >
-                    <span
-                      className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#0F4C81]/30 text-xs text-[#9ecae8]"
-                      aria-hidden
-                    >
-                      ✓
-                    </span>
-                    <span className="text-sm font-medium text-white/85 sm:text-base">
-                      {item}
-                    </span>
-                  </li>
-                ))}
-              </ul>
             </div>
           </div>
         </section>

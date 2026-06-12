@@ -93,6 +93,40 @@ export const CORPORATE_PROCESS = [
   { step: "06", title: "Teslim" },
 ] as const;
 
+export const CORPORATE_ABOUT = {
+  description:
+    "1989'dan bu yana otomotiv sektöründe edindiğimiz tecrübe ile müşterilerimize güvenilir, kaliteli ve profesyonel hizmet sunuyoruz. Hasar onarım süreçlerinde titizlik, dürüstlük ve müşteri memnuniyetini her zaman ön planda tutuyoruz.",
+} as const;
+
+export const CORPORATE_GALLERY = {
+  title: "Servisimizden Kareler",
+  description:
+    "Araç kabulden onarıma kadar tüm süreçleri şeffaf ve profesyonel şekilde yönetiyoruz.",
+  items: [
+    {
+      title: "Müşteri Bekleme Alanı",
+      description:
+        "Konforlu bekleme alanımızda sürecinizi rahatlıkla takip edebilirsiniz.",
+      image: "/site/bekleme-salonu.jpg",
+      alt: "Seferoğulları Otomotiv müşteri bekleme alanı",
+    },
+    {
+      title: "Onarım Alanı",
+      description:
+        "Kaporta ve hasar onarım işlemleri uzman ekibimiz tarafından yürütülür.",
+      image: "/site/onarim-alani.jpg",
+      alt: "Seferoğulları Otomotiv onarım alanı",
+    },
+    {
+      title: "Boya Kabini",
+      description:
+        "Profesyonel boya uygulamaları kontrollü kabin ortamında gerçekleştirilir.",
+      image: "/site/boya-kabini.jpg",
+      alt: "Seferoğulları Otomotiv boya kabini",
+    },
+  ],
+} as const;
+
 export const CORPORATE_WHY = [
   "Şeffaf süreç yönetimi",
   "Sigorta dosya takibi",
