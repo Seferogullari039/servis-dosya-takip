@@ -127,6 +127,16 @@
   }
 }
 
+@keyframes login-hero-hologram-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
 @keyframes login-hero-scan {
   0%,
   68%,
@@ -205,10 +215,20 @@
 @keyframes login-hero-body-neon {
   0%,
   100% {
-    opacity: 0.7;
+    opacity: 0.55;
   }
   50% {
-    opacity: 0.95;
+    opacity: 1;
+  }
+}
+
+@keyframes login-hero-hologram-pulse {
+  0%,
+  100% {
+    opacity: 0.34;
+  }
+  50% {
+    opacity: 1;
   }
 }
 
@@ -233,6 +253,37 @@
   50% {
     transform: translate3d(0, -3px, 0) scale(1.04);
     opacity: 1;
+  }
+}
+
+@keyframes login-hero-icon-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.78;
+  }
+  50% {
+    transform: translate3d(0, -6px, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes login-hero-data-ring-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes login-hero-data-ring-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.85;
   }
 }
 
@@ -285,6 +336,16 @@
   animation: login-hero-body-neon 5s ease-in-out infinite;
 }
 
+.login-hero-hologram-pulse {
+  animation: login-hero-hologram-pulse 5s ease-in-out infinite;
+  will-change: opacity;
+}
+
+.login-hero-hologram-float {
+  animation: login-hero-hologram-float 6s ease-in-out infinite;
+  will-change: transform;
+}
+
 .login-hero-particle {
   animation: login-hero-particle 7s ease-in-out infinite;
 }
@@ -293,8 +354,266 @@
   animation: login-hero-orbit-pulse 5s ease-in-out infinite;
 }
 
+.login-hero-icon-float {
+  animation: login-hero-icon-float 6s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.login-hero-data-ring-outer {
+  animation: login-hero-data-ring-spin 32s linear infinite;
+  will-change: transform;
+}
+
+.login-hero-data-ring-mid {
+  animation:
+    login-hero-data-ring-spin 24s linear infinite reverse,
+    login-hero-data-ring-pulse 8s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.login-hero-data-ring-inner {
+  animation: login-hero-data-ring-spin 18s linear infinite;
+  will-change: transform;
+}
+
 .login-hero-visual-glow {
   animation: login-orb-pulse 16s ease-in-out infinite;
+}
+
+@keyframes platformRotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes softGlowPulse {
+  0%,
+  100% {
+    opacity: 0.42;
+  }
+  50% {
+    opacity: 0.68;
+  }
+}
+
+@keyframes orbitRotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes bubbleFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes borderSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes typewriter {
+  from {
+    max-width: 0;
+  }
+  to {
+    max-width: 15ch;
+  }
+}
+
+@keyframes blinkCursor {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.login-hologram-glow {
+  animation: softGlowPulse 7s ease-in-out infinite;
+}
+
+.login-hologram-platform-outer {
+  transform-origin: center center;
+  animation: platformRotate 40s linear infinite;
+}
+
+.login-hologram-platform-inner {
+  transform-origin: center center;
+  animation: platformRotate 45s linear infinite reverse;
+}
+
+.login-hologram-ring-trace {
+  pointer-events: none;
+}
+
+.login-hologram-orbit-track {
+  container-type: size;
+  transform-origin: center center;
+  animation: orbitRotate 28s linear infinite;
+}
+
+.login-hologram-bubble-node {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: rotate(var(--orbit-angle)) translateX(46cqw)
+    rotate(calc(-1 * var(--orbit-angle))) translate(-50%, -50%);
+}
+
+.login-hologram-bubble {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.375rem;
+  height: 2.375rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(126, 200, 255, 0.16);
+  background: rgba(15, 76, 129, 0.22);
+  backdrop-filter: blur(8px);
+  opacity: 0.62;
+  box-shadow: 0 0 10px rgba(74, 159, 212, 0.14);
+  transition: opacity 0.35s ease, box-shadow 0.35s ease;
+  animation: bubbleFloat 8s ease-in-out infinite;
+  animation-delay: var(--orbit-delay, 0s);
+}
+
+.login-hologram-bubble:hover {
+  opacity: 0.86;
+  box-shadow: 0 0 14px rgba(126, 200, 255, 0.26);
+}
+
+.login-hologram-car-image {
+  filter: drop-shadow(0 0 28px rgba(74, 159, 212, 0.24))
+    drop-shadow(0 0 56px rgba(74, 159, 212, 0.1));
+}
+
+.login-typewriter-inner {
+  display: inline-block;
+  overflow: hidden;
+  max-width: 0;
+  white-space: nowrap;
+  vertical-align: bottom;
+  animation: typewriter 1.65s steps(15, end) 0.4s forwards;
+}
+
+.login-typewriter-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 0.88em;
+  margin-left: 3px;
+  vertical-align: bottom;
+  background: #7ec8ff;
+  opacity: 0;
+  animation: blinkCursor 0.85s step-end 2.05s infinite;
+}
+
+.login-feature-card::before {
+  content: "";
+  position: absolute;
+  inset: -120%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(74, 159, 212, 0.22) 36deg,
+    rgba(126, 200, 255, 0.42) 52deg,
+    transparent 88deg,
+    transparent 360deg
+  );
+  animation: borderSpin 6s linear infinite;
+  opacity: 0.22;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.login-feature-card::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  background: rgba(3, 10, 22, 0.72);
+  backdrop-filter: blur(6px);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.login-feature-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.login-feature-card:hover::before {
+  opacity: 0.48;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-hologram-glow,
+  .login-hologram-platform-outer,
+  .login-hologram-platform-inner,
+  .login-hologram-orbit-track,
+  .login-hologram-bubble,
+  .login-hologram-car-image,
+  .login-typewriter-inner,
+  .login-typewriter-cursor,
+  .login-feature-card::before {
+    animation: none !important;
+  }
+
+  .login-hologram-car-image {
+    opacity: 1;
+    transform: none;
+  }
+
+  .login-typewriter-inner {
+    max-width: none;
+  }
+
+  .login-typewriter-cursor {
+    display: none;
+  }
+
+  .login-hero-car-float,
+  .login-hero-scan-line,
+  .login-hero-scan-band,
+  .login-hero-scan-band-glow,
+  .login-hero-wheel-glow,
+  .login-hero-wheel-ring,
+  .login-hero-scan-point,
+  .login-hero-body-flash,
+  .login-hero-body-neon-edge,
+  .login-hero-particle,
+  .login-hero-orbit-icon,
+  .login-hero-icon-float,
+  .login-hero-data-ring-outer,
+  .login-hero-data-ring-mid,
+  .login-hero-data-ring-inner,
+  .login-hero-visual-glow,
+  .login-hero-hologram-pulse,
+  .login-hero-hologram-float {
+    animation: none !important;
+  }
+
+  .login-hero-hologram-pulse {
+    opacity: 0.92;
+  }
 }
 
 @media print {

@@ -44,12 +44,12 @@ export function LoginPageShell({ children }: LoginPageShellProps) {
       </div>
 
       <div className="relative z-10 flex min-h-[100dvh] flex-1 flex-col lg:flex-row">
-        <div className="order-2 flex flex-1 items-center lg:order-1 lg:max-w-[55%]">
-          <LoginHero className="hidden w-full lg:flex" />
+        <div className="order-2 flex flex-1 items-center lg:order-1 lg:max-w-[65%] lg:flex-[1.75] lg:items-start lg:justify-center">
+          <LoginHero className="hidden w-full lg:flex lg:justify-start lg:py-8 lg:pl-6 xl:py-10 xl:pl-10" />
           <LoginHero className="w-full border-t border-white/[0.06] lg:hidden" compact />
         </div>
 
-        <div className="order-1 flex flex-1 items-center justify-center px-4 pb-6 pt-14 sm:px-6 sm:pb-8 lg:order-2 lg:max-w-[45%] lg:px-10 lg:py-12 xl:px-14">
+        <div className="order-1 flex flex-1 items-center justify-center px-4 pb-6 pt-14 sm:px-6 sm:pb-8 lg:order-2 lg:max-w-[35%] lg:flex-1 lg:shrink-0 lg:px-8 lg:py-12 xl:px-12">
           {children}
         </div>
       </div>

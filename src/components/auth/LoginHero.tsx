@@ -88,7 +88,7 @@ export function LoginHero({ className, compact = false }: LoginHeroProps) {
       )}
       aria-label="Platform tanıtımı"
     >
-      <div className="mx-auto w-full max-w-xl lg:max-w-none">
+      <div className="mx-auto w-full max-w-xl lg:mx-0 lg:max-w-none">
         {!compact ? (
           <div className="hidden lg:block">
             <LoginHeroVisual />
@@ -108,13 +108,22 @@ export function LoginHero({ className, compact = false }: LoginHeroProps) {
             "font-bold tracking-tight text-white",
             compact
               ? "mt-5 text-2xl leading-tight sm:text-3xl"
-              : "mt-3 text-3xl leading-[1.1] sm:text-4xl xl:text-[2.65rem]"
+              : "mt-1 text-3xl leading-[1.1] sm:text-4xl xl:text-[2.65rem]"
           )}
         >
           Hasar Süreçlerinin{" "}
-          <span className="bg-gradient-to-r from-[#7ec8ff] via-[#b8e0ff] to-[#4a9fd4] bg-clip-text text-transparent">
-            Dijital Merkezi
-          </span>
+          {compact ? (
+            <span className="bg-gradient-to-r from-[#7ec8ff] via-[#b8e0ff] to-[#4a9fd4] bg-clip-text text-transparent">
+              Dijital Merkezi
+            </span>
+          ) : (
+            <span className="login-typewriter inline-block align-bottom">
+              <span className="login-typewriter-inner bg-gradient-to-r from-[#7ec8ff] via-[#b8e0ff] to-[#4a9fd4] bg-clip-text text-transparent">
+                Dijital Merkezi
+              </span>
+              <span className="login-typewriter-cursor" aria-hidden />
+            </span>
+          )}
         </h2>
 
         <p
@@ -137,7 +146,7 @@ export function LoginHero({ className, compact = false }: LoginHeroProps) {
             <li
               key={feature.title}
               className={cn(
-                "login-feature-card group rounded-xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-sm transition-[border-color,background-color,transform] duration-300",
+                "login-feature-card group relative overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-sm transition-[border-color,background-color,transform] duration-300",
                 "hover:border-[#4a9fd4]/30 hover:bg-white/[0.06]",
                 compact ? "p-3 sm:p-4" : "px-3 py-2.5"
               )}
